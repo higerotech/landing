@@ -1,0 +1,15 @@
+# Owners por ruta — fuerza el dual review.
+# Repositorio de un solo owner por ahora; se reparte cuando crezca el equipo.
+
+*                       @jeremialcala
+
+# Cambios que tocan la superficie de seguridad
+/nginx.conf             @jeremialcala
+/security-headers.conf  @jeremialcala
+/Dockerfile             @jeremialcala
+/docker-compose.yml     @jeremialcala
+/.github/               @jeremialcala
+/.ai-dlc/               @jeremialcala
+
+# Documentación de metodología y diseño
+/docs/                  @jeremialcala
