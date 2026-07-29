@@ -1,79 +1,139 @@
 # Higerotech — Landing Page
 
-Landing page corporativa de **Higerotech**, consultora tecnológica AI-First para el B2B venezolano. Sitio estático en modo oscuro, bilingüe (ES/EN), empaquetado para desplegar con Docker sobre nginx.
+Landing page corporativa de **Higerotech**, consultora tecnológica AI-First para el B2B
+venezolano. Sitio estático en modo oscuro, bilingüe (ES/EN), empaquetado para desplegar con
+Docker sobre nginx.
+
+Este repositorio sigue el estándar **AI-DLC** en su variante polyrepo (ver
+[ADR-0001](docs/00-project/adr/0001-adopcion-estructura-ai-dlc-polyrepo.md)).
+
+## Principio de diseño
+
+El sitio vende arquitecturas resilientes que no dependen de enlaces frágiles. Debe
+**comportarse** como aquello que vende:
+
+- Sin dependencias de paquetes: ni npm, ni build step, ni `node_modules` ([ADR-0003](docs/00-project/adr/0003-sitio-de-un-solo-archivo-sin-build.md)).
+- Sin recursos de terceros: todo same-origin, fuentes incluidas ([ADR-0004](docs/00-project/adr/0004-autoalojar-fuentes.md)).
+- Legible sin JavaScript y sin webfonts ([ADR-0005](docs/00-project/adr/0005-degradacion-explicita-sin-js.md)).
+
+No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qué.
 
 ## Estructura
 
 ```
 .
-├── index.html            # Landing (HTML + CSS + JS en un solo archivo)
-├── assets/               # Logo, isotipo y recursos gráficos
-│   ├── isotipo.svg       # Isotipo vectorial (3 hexágonos, nodo coral)
-│   ├── logo_white_trans.png
-│   └── ...
-├── Dockerfile            # Imagen nginx:alpine con el sitio estático
-├── nginx.conf            # gzip, caché de assets y headers de seguridad
-├── docker-compose.yml    # Orquestación local
-└── .dockerignore
+├── index.html                  # Landing completa (HTML + CSS + JS en un archivo)
+├── 404.html                    # Página de error con la identidad del sitio
+├── robots.txt  sitemap.xml     # Indexación
+├── assets/
+│   ├── fonts/                  # Inter y Space Grotesk autoalojadas (SIL OFL 1.1)
+│   ├── isotipo.svg             # Isotipo (3 hexágonos, nodo coral)
+│   ├── og-card.png             # Tarjeta social 1200×630
+│   └── logo_white_trans.png    # Logotipo
+│
+├── Dockerfile                  # nginx:1.27-alpine, valida la config en build
+├── nginx.conf                  # Rutas, caché y códigos de estado
+├── security-headers.conf       # Cabeceras — incluido en CADA location (ver ADR-0002)
+├── docker-compose.yml          # Contenedor endurecido: read-only, cap_drop, límites
+│
+├── .ai-dlc/                    # La metodología aplicada a este repo
+│   ├── gates/                  # Checklists Gate 0–5 con su estado real
+│   ├── templates/              # Plantillas de ADR, PRD, threat model y runbook
+│   └── owasp-mapping.md        # OWASP Top 10:2025 → controles, con lo que NO aplica
+│
+├── docs/
+│   ├── 00-project/             # Charter, glosario, clasificación de datos, ADRs
+│   ├── 01-requirements/        # PRD (Gate 0)
+│   ├── 02-design/              # Arquitectura C4 y threat model (Gate 1)
+│   ├── 03-implementation/      # Historial derivado de git
+│   └── 05-deployment/          # Topología, pipeline, verificación y rollback
+│
+├── CHANGELOG.md  SECURITY.md  CONTRIBUTING.md
+└── .github/workflows/          # Pipeline con los 7 gates de seguridad
 ```
+
+## Estado de los gates
+
+| Gate | Fase | Estado | Documento |
+|---|---|---|---|
+| 0 | Requisitos | ✅ Superado | [gate-0](.ai-dlc/gates/gate-0-requirements.md) |
+| 1 | Diseño | ✅ Superado | [gate-1](.ai-dlc/gates/gate-1-design.md) |
+| 2 | Implementación | ❌ Abierto — falta CI conectado | [gate-2](.ai-dlc/gates/gate-2-implementation.md) |
+| 3 | Pruebas | ❌ Abierto — no hay suite | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
+| 4 | Despliegue | 🟡 Parcial — falta SBOM y firma | [gate-4](.ai-dlc/gates/gate-4-deployment.md) |
+| 5 | Monitoreo | ❌ Abierto — sin observabilidad | [gate-5](.ai-dlc/gates/gate-5-monitoring.md) |
+
+Los gates abiertos lo están con su razón documentada. Ninguno se marca por conveniencia.
 
 ## Desarrollo local (sin Docker)
 
-Cualquier servidor estático sirve. Por ejemplo:
+Cualquier servidor estático sirve. Ojo: sin nginx **no hay cabeceras de seguridad ni 404
+real**, así que no vale para verificar esos aspectos.
 
 ```bash
 python3 -m http.server 8080
-# abre http://localhost:8080
+# http://localhost:8080
 ```
 
 ## Despliegue con Docker
 
-### Opción A — docker compose (recomendada)
-
 ```bash
-docker compose up -d --build
-```
-
-El sitio queda disponible en **http://localhost:8080**.
-
-Para detenerlo:
-
-```bash
+docker compose up -d --build     # http://localhost:8080
 docker compose down
 ```
 
-### Opción B — docker a mano
+`docker compose build` ejecuta `nginx -t` dentro de la imagen: una configuración inválida
+rompe el build, no el arranque.
+
+## Verificar antes de publicar
+
+Los tres comandos que no deben saltarse:
 
 ```bash
-# construir la imagen
-docker build -t higerotech/landing:latest .
+# 1. Las cinco cabeceras de seguridad deben llegar a la home
+curl -sI http://localhost:8080/ | grep -ci -E 'frame|nosniff|referrer|permissions|content-security'   # => 5
 
-# ejecutar el contenedor
-docker run -d --name higerotech-landing -p 8080:80 higerotech/landing:latest
+# 2. Y también a los assets (aquí es donde fallaba antes)
+curl -sI http://localhost:8080/assets/fonts/fonts.css | grep -ci -E 'frame|nosniff|content-security'  # => 3
+
+# 3. Una ruta inexistente debe devolver 404, no 200
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/no-existe                              # => 404
 ```
 
-## Publicar la imagen en un registro
+Y los diagramas de la documentación:
 
 ```bash
-docker tag higerotech/landing:latest <tu-registro>/higerotech-landing:latest
-docker push <tu-registro>/higerotech-landing:latest
+python "<ruta-skill-ai-dlc>/scripts/validate_mermaid.py" docs/
 ```
 
-Sirve igual para Docker Hub, GitHub Container Registry, AWS ECR o cualquier
-plataforma compatible (Render, Railway, Fly.io, Cloud Run, etc.).
+## Personalización
+
+| Qué | Dónde |
+|---|---|
+| **Número de WhatsApp** | `CONTACT.whatsapp` en `index.html`. Vacío = el botón no se publica |
+| Correo de contacto | `contacto@higerotech.com` en `index.html` (3 apariciones) |
+| Idioma por defecto | `idiomaInicial()` — prioridad `?lang=` → `localStorage` → `es` |
+| Colores y tipografía | Variables CSS en `:root` |
+| Dominio | `canonical`, `hreflang`, Open Graph y JSON-LD en `<head>`, más `robots.txt` y `sitemap.xml` |
+| Política de cabeceras | `security-headers.conf` — un solo archivo para todas las rutas |
+
+**Al editar textos:** cada cadena visible necesita `data-es` **y** `data-en`, y el texto
+visible debe coincidir con `data-es`. Si editas uno y no el otro, el cambio desaparece al
+cargar la página — `setLang()` corre al arrancar. Ver
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Notas técnicas
 
-- **Imagen base:** `nginx:1.27-alpine` (~50 MB, sin dependencias extra).
-- **Puerto interno:** 80 — mapeado a 8080 en el host (ajústalo en `docker-compose.yml`).
-- **Healthcheck:** verificación HTTP contra `/` cada 30 s.
-- **Caché:** los assets se cachean 30 días; el `index.html` siempre se revalida.
-- **Seguridad:** headers `X-Frame-Options`, `X-Content-Type-Options`,
-  `Referrer-Policy` y `Permissions-Policy` aplicados en `nginx.conf`.
+- **Imagen base:** `nginx:1.27-alpine`. Pendiente anclar por digest.
+- **Peso:** ~80 KB de HTML + ~70 KB de fuentes que el visitante ES/EN llega a descargar.
+- **Caché:** assets 30 días con `immutable`; el HTML siempre se revalida.
+- **Contenedor:** rootfs de solo lectura, `cap_drop: ALL`, `no-new-privileges`,
+  0,5 CPU / 128 MB.
+- **Fuentes:** variables, un archivo por familia y subset. `unicode-range` evita descargar
+  `latin-ext` a quien no lo necesita.
 
-## Personalización rápida
+## Pendiente
 
-- **Contacto:** cambia `contacto@higerotech.com` y el enlace de WhatsApp
-  (`https://wa.me/`) en `index.html`.
-- **Idioma por defecto:** función `setLang('es')` al final de `index.html`.
-- **Colores de marca:** variables CSS en `:root` dentro de `index.html`.
+Ver [`CHANGELOG.md`](CHANGELOG.md) §Unreleased. En resumen: confirmar dominio, configurar el
+número de WhatsApp, conectar el pipeline, montar un monitor externo de disponibilidad y
+diagnosticar el contenedor de producción en estado `unhealthy`.
