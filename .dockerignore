@@ -1,0 +1,20 @@
+# Control de versiones
+.git
+.gitignore
+
+# Documentación y fuentes que no van en la imagen
+*.md
+!README.md
+Higerotech_*.md
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode
+.idea
+
+# Assets sin usar / temporales
+assets/icon_calendar.png
+assets/*_b64.txt

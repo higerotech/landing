@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Higerotech — Consultoría Tecnológica AI-First</title>
+  <meta name="description" content="Consultoría tecnológica AI-First para el B2B venezolano. Sistemas resilientes Edge-First, pasarelas de pago multimoneda y arquitecturas distribuidas que no se detienen jamás." />
+  <link rel="icon" type="image/svg+xml" href="assets/isotipo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Design Tokens (Brand: Higerotech) ─────────── */
+    :root {
+      --ink:      #15181B;   /* deep base background */
+      --dark:     #1E2226;   /* primary surface */
+      --dark-2:   #262B30;   /* anthracite */
+      --dark-3:   #2D3134;   /* card / elevated */
+      --dark-4:   #353B41;   /* hover / border accent */
+      --teal:     #8AD6CC;   /* azul cielo digital */
+      --teal-dim: #6FB9B0;
+      --coral:    #F97171;   /* terracota / coral cívico */
+      --sage:     #9EBCB6;   /* verde salvia */
+      --white:    #FFFFFF;
+      --text:     #E7ECEF;
+      --text-muted: #97A4AE;
+      --text-dim: #6C7882;
+      --border:   rgba(255,255,255,0.08);
+      --border-2: rgba(255,255,255,0.14);
+      --radius:   14px;
+      --radius-lg: 22px;
+      --radius-xl: 28px;
+      --maxw: 1180px;
+      --shadow:   0 8px 40px rgba(0,0,0,0.35);
+    }
+
+    /* ─── Reset & Base ──────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--ink);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { display: block; max-width: 100%; }
+    h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+    ::selection { background: var(--teal); color: var(--ink); }
+
+    /* ─── Utilities ─────────────────────────────────── */
+    .container { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(138,214,204,0.10);
+      border: 1px solid rgba(138,214,204,0.28);
+      color: var(--teal);
+      font-size: 12.5px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 7px 15px; border-radius: 100px;
+    }
+    .tag::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--teal); box-shadow: 0 0 10px var(--teal);
+    }
+    .tag.coral { color: var(--coral); border-color: rgba(249,113,113,0.30); background: rgba(249,113,113,0.10); }
+    .tag.coral::before { background: var(--coral); box-shadow: 0 0 10px var(--coral); }
+    .tag.sage { color: var(--sage); border-color: rgba(158,188,182,0.30); background: rgba(158,188,182,0.10); }
+    .tag.sage::before { background: var(--sage); box-shadow: 0 0 10px var(--sage); }
+
+    .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1); }
+    .reveal.in { opacity: 1; transform: none; }
+
+    .eyebrow { display:block; text-align:center; }
+
+    /* Buttons */
+    .btn-primary, .btn-secondary, .btn-nav {
+      display: inline-flex; align-items: center; gap: 9px;
+      font-family: 'Inter', sans-serif; cursor: pointer;
+      border-radius: 100px; transition: all .2s ease; white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--teal); color: var(--ink);
+      font-size: 15px; font-weight: 700; padding: 14px 28px;
+      border: none; box-shadow: 0 6px 26px rgba(138,214,204,0.28);
+    }
+    .btn-primary:hover { background: #9FE0D7; transform: translateY(-2px); box-shadow: 0 10px 34px rgba(138,214,204,0.42); }
+    .btn-secondary {
+      background: transparent; color: var(--text);
+      font-size: 15px; font-weight: 600; padding: 13px 26px;
+      border: 1.5px solid var(--border-2);
+    }
+    .btn-secondary:hover { border-color: var(--teal); color: var(--teal); transform: translateY(-2px); }
+    .btn-nav {
+      background: var(--coral); color: #2A0F0F;
+      font-size: 14px; font-weight: 700; padding: 10px 20px; border: none;
+      box-shadow: 0 4px 18px rgba(249,113,113,0.28);
+    }
+    .btn-nav:hover { background: #FF8585; transform: translateY(-1px); }
+
+    /* ─── Navbar ────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(21,24,27,0.82);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+    .nav-logo img { height: 40px; }
+    .nav-links { display: flex; align-items: center; gap: 30px; }
+    .nav-links a { font-size: 14.5px; font-weight: 500; color: var(--text-muted); transition: color .2s; }
+    .nav-links a:hover { color: var(--teal); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .lang-toggle {
+      display: flex; align-items: center; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border); border-radius: 100px; padding: 3px; gap: 2px;
+    }
+    .lang-btn {
+      background: none; border: none; cursor: pointer; font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 600; letter-spacing: .05em; color: var(--text-dim);
+      padding: 5px 11px; border-radius: 100px; transition: all .2s;
+    }
+    .lang-btn.active { background: var(--teal); color: var(--ink); }
+
+    /* ─── Hero ──────────────────────────────────────── */
+    .hero { position: relative; overflow: hidden; padding: 104px 0 110px; }
+    .hero::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(circle at 78% 28%, rgba(138,214,204,0.13) 0%, transparent 52%),
+        radial-gradient(circle at 12% 88%, rgba(249,113,113,0.09) 0%, transparent 48%),
+        radial-gradient(circle at 50% 0%, rgba(158,188,182,0.06) 0%, transparent 60%);
+    }
+    .hero-grid {
+      position: absolute; inset: 0; opacity: 0.06; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='104'%3E%3Cpolygon points='30,2 58,17 58,47 30,62 2,47 2,17' fill='none' stroke='%238AD6CC' stroke-width='1'/%3E%3Cpolygon points='30,62 58,77 58,102 30,102 2,102 2,77' fill='none' stroke='%238AD6CC' stroke-width='1'/%3E%3C/svg%3E");
+      -webkit-mask-image: radial-gradient(ellipse at 60% 40%, #000 0%, transparent 75%);
+      mask-image: radial-gradient(ellipse at 60% 40%, #000 0%, transparent 75%);
+    }
+    .hero-inner { position: relative; display: flex; align-items: center; gap: 56px; }
+    .hero-content { flex: 1; max-width: 660px; }
+    .hero-content .tag { margin-bottom: 26px; }
+    .hero-title {
+      font-size: clamp(38px, 5.4vw, 66px); font-weight: 700; line-height: 1.06;
+      letter-spacing: -0.03em; margin-bottom: 24px;
+    }
+    .hero-title .grad {
+      background: linear-gradient(120deg, var(--teal), var(--sage));
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-subtitle {
+      font-size: clamp(16px, 2vw, 19px); font-weight: 400; line-height: 1.68;
+      color: var(--text-muted); margin-bottom: 38px; max-width: 540px;
+    }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .hero-visual { flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+    .hero-glow {
+      position: absolute; width: 320px; height: 320px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(138,214,204,0.22), transparent 70%);
+      filter: blur(8px);
+    }
+    .hero-isotipo { width: 300px; height: 300px; position: relative; animation: float 6s ease-in-out infinite; }
+    @keyframes float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-16px) } }
+    .hero-ring {
+      position: absolute; border: 1px dashed rgba(138,214,204,0.25); border-radius: 50%;
+      animation: spin 38s linear infinite;
+    }
+    .hero-ring.r1 { width: 380px; height: 380px; }
+    .hero-ring.r2 { width: 470px; height: 470px; border-color: rgba(249,113,113,0.16); animation-duration: 60s; animation-direction: reverse; }
+    @keyframes spin { to { transform: rotate(360deg) } }
+
+    .hero-stats {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px;
+      margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);
+    }
+    .stat-value { font-family: 'Space Grotesk'; font-size: 34px; font-weight: 700; color: var(--teal); letter-spacing: -0.02em; }
+    .stat-value.coral { color: var(--coral); }
+    .stat-value.sage { color: var(--sage); }
+    .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+
+    /* ─── Section scaffolding ───────────────────────── */
+    section.block { padding: 100px 0; position: relative; }
+    .section-head { text-align: center; max-width: 660px; margin: 0 auto 60px; }
+    .section-head .tag { margin-bottom: 20px; }
+    .section-title {
+      font-size: clamp(28px, 4vw, 44px); font-weight: 700; letter-spacing: -0.025em;
+      line-height: 1.12; margin-bottom: 16px;
+    }
+    .section-title .accent { color: var(--teal); }
+    .section-sub { font-size: 17px; color: var(--text-muted); line-height: 1.65; }
+
+    /* ─── Logos / duality strip ─────────────────────── */
+    .duality { background: var(--dark); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .duality-inner { display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; padding: 30px 0; text-align: center; }
+    .duality-inner p { font-size: 15.5px; color: var(--text-muted); max-width: 760px; line-height: 1.6; }
+    .duality-inner strong { color: var(--text); font-weight: 600; }
+    .pill-pair { display: inline-flex; gap: 10px; }
+    .pill { font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 100px; }
+    .pill.tierra { background: rgba(249,113,113,0.12); color: var(--coral); border: 1px solid rgba(249,113,113,0.25); }
+    .pill.cielo { background: rgba(138,214,204,0.12); color: var(--teal); border: 1px solid rgba(138,214,204,0.25); }
+
+    /* ─── Pains grid ────────────────────────────────── */
+    .pains { background: var(--ink); }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .pain-card {
+      background: linear-gradient(180deg, var(--dark-2), var(--dark));
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 28px 24px; transition: transform .25s, border-color .25s;
+    }
+    .pain-card:hover { transform: translateY(-4px); border-color: rgba(249,113,113,0.4); }
+    .pain-ic { width: 46px; height: 46px; margin-bottom: 16px; color: var(--coral); }
+    .pain-card h3 { font-size: 16.5px; font-weight: 600; margin-bottom: 8px; color: var(--white); }
+    .pain-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ─── Services spectrum ─────────────────────────── */
+    .services { background: var(--dark); }
+    .svc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .svc-card {
+      position: relative; background: var(--dark-3);
+      border: 1px solid var(--border); border-radius: var(--radius-xl);
+      padding: 36px 32px; overflow: hidden;
+      transition: transform .28s, border-color .28s, box-shadow .28s;
+    }
+    .svc-card::after {
+      content: ''; position: absolute; inset: 0 0 auto 0; height: 3px;
+      background: linear-gradient(90deg, var(--teal), var(--sage)); opacity: .0; transition: opacity .28s;
+    }
+    .svc-card:hover { transform: translateY(-6px); border-color: var(--border-2); box-shadow: var(--shadow); }
+    .svc-card:hover::after { opacity: 1; }
+    .svc-num { font-family: 'Space Grotesk'; font-size: 13px; font-weight: 600; letter-spacing: .14em; color: var(--text-dim); margin-bottom: 18px; }
+    .svc-ic { width: 54px; height: 54px; margin-bottom: 20px; color: var(--teal); }
+    .svc-card h3 { font-size: 20px; font-weight: 600; margin-bottom: 12px; color: var(--white); letter-spacing: -0.01em; }
+    .svc-card p { font-size: 14.5px; color: var(--text-muted); line-height: 1.66; margin-bottom: 18px; }
+    .svc-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .svc-list li { display: flex; gap: 9px; font-size: 13.5px; color: var(--text); align-items: flex-start; }
+    .svc-list li svg { flex-shrink: 0; margin-top: 3px; color: var(--teal); }
+
+    .extra-svc { display:grid; grid-template-columns: repeat(2,1fr); gap:24px; margin-top:24px; }
+    .extra-card { display:flex; gap:18px; align-items:flex-start; background: var(--dark-3); border:1px solid var(--border); border-radius: var(--radius-lg); padding:26px 28px; }
+    .extra-card .svc-ic { width:42px; height:42px; margin:0; color: var(--sage); }
+    .extra-card h3 { font-size:17px; margin-bottom:6px; color: var(--white); }
+    .extra-card p { font-size:14px; color: var(--text-muted); line-height:1.6; }
+
+    /* ─── Methodology (AI-DLC) ──────────────────────── */
+    .method { background: var(--ink); position: relative; }
+    .triad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 56px; }
+    .triad-card {
+      background: var(--dark-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 32px 28px; position: relative; transition: transform .25s, border-color .25s;
+    }
+    .triad-card:hover { transform: translateY(-4px); border-color: var(--border-2); }
+    .triad-badge {
+      display:inline-flex; align-items:center; justify-content:center;
+      width: 52px; height: 52px; border-radius: 14px; margin-bottom: 18px;
+      font-family: 'Space Grotesk'; font-weight: 700; font-size: 20px;
+    }
+    .triad-card:nth-child(1) .triad-badge { background: rgba(138,214,204,0.14); color: var(--teal); }
+    .triad-card:nth-child(2) .triad-badge { background: rgba(158,188,182,0.14); color: var(--sage); }
+    .triad-card:nth-child(3) .triad-badge { background: rgba(249,113,113,0.14); color: var(--coral); }
+    .triad-card h3 { font-size: 19px; font-weight: 600; margin-bottom: 4px; color: var(--white); }
+    .triad-card .role { font-size: 12.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); margin-bottom: 14px; }
+    .triad-card p { font-size: 14px; color: var(--text-muted); line-height: 1.64; }
+
+    .bolts { background: var(--dark-2); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 40px; }
+    .bolts-head { display:flex; align-items:center; gap:14px; margin-bottom: 28px; flex-wrap: wrap; }
+    .bolts-head h3 { font-size: 22px; font-weight: 600; color: var(--white); }
+    .bolts-head .lightning { color: var(--coral); }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; counter-reset: step; }
+    .step { position: relative; padding: 0 22px; }
+    .step:not(:last-child)::before {
+      content: ''; position: absolute; top: 16px; left: 50%; right: -50%; height: 2px;
+      background: linear-gradient(90deg, var(--teal), rgba(138,214,204,0.1));
+    }
+    .step-dot {
+      position: relative; width: 34px; height: 34px; border-radius: 50%;
+      background: var(--ink); border: 2px solid var(--teal); color: var(--teal);
+      display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:14px;
+      margin-bottom: 16px; z-index: 1;
+    }
+    .step h4 { font-size: 15.5px; font-weight: 600; color: var(--white); margin-bottom: 7px; }
+    .step p { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+
+    /* ─── Architecture ──────────────────────────────── */
+    .arch { background: var(--dark); }
+    .arch-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+    .arch-feats { display: flex; flex-direction: column; gap: 22px; }
+    .arch-feat { display: flex; gap: 16px; align-items: flex-start; }
+    .arch-feat .ic { flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px; background: rgba(138,214,204,0.12); color: var(--teal); display:flex; align-items:center; justify-content:center; }
+    .arch-feat h4 { font-size: 16.5px; font-weight: 600; color: var(--white); margin-bottom: 5px; }
+    .arch-feat p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+    .sla-card {
+      background: linear-gradient(160deg, var(--dark-3), var(--dark-2));
+      border: 1px solid var(--border-2); border-radius: var(--radius-xl); padding: 36px;
+    }
+    .sla-card .tag { margin-bottom: 22px; }
+    .sla-row { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); }
+    .sla-row:last-child { border-bottom: none; }
+    .sla-num { font-family: 'Space Grotesk'; font-size: 30px; font-weight: 700; color: var(--teal); }
+    .sla-row:nth-child(3) .sla-num { color: var(--sage); }
+    .sla-row:nth-child(4) .sla-num { color: var(--coral); }
+    .sla-desc { text-align: right; }
+    .sla-desc .t { font-size: 14px; font-weight: 600; color: var(--white); }
+    .sla-desc .s { font-size: 12.5px; color: var(--text-muted); }
+
+    /* ─── Compliance ────────────────────────────────── */
+    .compliance { background: var(--ink); }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .comp-card {
+      background: var(--dark-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 32px 28px; transition: transform .25s, border-color .25s;
+    }
+    .comp-card:hover { transform: translateY(-4px); border-color: var(--border-2); }
+    .comp-ic { width: 48px; height: 48px; color: var(--sage); margin-bottom: 18px; }
+    .comp-card .kicker { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--coral); font-weight: 600; margin-bottom: 8px; }
+    .comp-card h3 { font-size: 18px; font-weight: 600; color: var(--white); margin-bottom: 10px; }
+    .comp-card p { font-size: 14px; color: var(--text-muted); line-height: 1.62; }
+
+    /* ─── Values ────────────────────────────────────── */
+    .values { background: var(--dark); }
+    .val-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; }
+    .val-card { background: var(--dark-3); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 22px; transition: transform .25s, border-color .25s; }
+    .val-card:hover { transform: translateY(-4px); border-color: var(--teal); }
+    .val-ic { width: 38px; height: 38px; color: var(--teal); margin-bottom: 14px; }
+    .val-card h4 { font-size: 15.5px; font-weight: 600; color: var(--white); margin-bottom: 8px; }
+    .val-card p { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+
+    /* ─── CTA Band ──────────────────────────────────── */
+    .cta-band { position: relative; overflow: hidden; padding: 96px 0; background: var(--dark-2); }
+    .cta-band::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse at 50% 120%, rgba(138,214,204,0.18) 0%, transparent 60%),
+                  radial-gradient(ellipse at 50% -20%, rgba(249,113,113,0.10) 0%, transparent 55%);
+    }
+    .cta-inner { position: relative; text-align: center; max-width: 680px; margin: 0 auto; }
+    .cta-inner .tag { margin-bottom: 22px; }
+    .cta-title { font-size: clamp(30px, 4.4vw, 48px); font-weight: 700; letter-spacing: -0.025em; line-height: 1.08; margin-bottom: 18px; }
+    .cta-title .accent { color: var(--teal); }
+    .cta-sub { font-size: 17.5px; color: var(--text-muted); margin-bottom: 36px; line-height: 1.6; }
+    .cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    /* ─── Footer ────────────────────────────────────── */
+    footer { background: var(--ink); border-top: 1px solid var(--border); padding: 56px 0 32px; }
+    .footer-top { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 44px; }
+    .footer-brand img { height: 38px; margin-bottom: 16px; }
+    .footer-brand p { font-size: 14px; color: var(--text-muted); line-height: 1.6; max-width: 300px; }
+    .footer-col h5 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--text); margin-bottom: 16px; font-weight: 600; }
+    .footer-col a { display: block; font-size: 14px; color: var(--text-muted); margin-bottom: 11px; transition: color .2s; }
+    .footer-col a:hover { color: var(--teal); }
+    .footer-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; padding-top: 26px; border-top: 1px solid var(--border); }
+    .footer-bottom p { font-size: 13px; color: var(--text-dim); }
+    .footer-bottom .madein { font-size: 13px; color: var(--text-dim); display:flex; align-items:center; gap:7px; }
+    .footer-bottom .madein b { color: var(--coral); }
+
+    /* ─── Responsive ────────────────────────────────── */
+    @media (max-width: 980px) {
+      .nav-links { display: none; }
+      .hero-inner { flex-direction: column-reverse; text-align: center; }
+      .hero-content { max-width: 100%; }
+      .hero-content .tag, .hero-actions { margin-left: auto; margin-right: auto; justify-content: center; }
+      .hero-subtitle { max-width: 100%; margin-left:auto; margin-right:auto; }
+      .hero-isotipo { width: 220px; height: 220px; }
+      .hero-ring.r1 { width:280px; height:280px } .hero-ring.r2 { width:340px; height:340px }
+      .arch-inner { grid-template-columns: 1fr; gap: 36px; }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .svc-grid, .triad, .grid-3 { grid-template-columns: 1fr; }
+      .extra-svc { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: repeat(2,1fr); gap: 30px 0; }
+      .step:nth-child(2)::before { display:none; }
+      .val-grid { grid-template-columns: repeat(2, 1fr); }
+      .footer-top { grid-template-columns: 1fr 1fr; gap: 30px; }
+    }
+    @media (max-width: 560px) {
+      .hero-stats { grid-template-columns: repeat(2, 1fr); gap: 22px; }
+      .grid-4 { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .step::before { display:none !important; }
+      .val-grid { grid-template-columns: 1fr; }
+      .footer-top { grid-template-columns: 1fr; }
+      section.block { padding: 72px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navbar ────────────────────────────────────── -->
+  <nav>
+    <div class="container nav-inner">
+      <a href="#inicio" class="nav-logo"><img src="assets/logo_white_trans.png" alt="Higerotech" /></a>
+      <div class="nav-links">
+        <a href="#servicios" data-es="Servicios" data-en="Services">Servicios</a>
+        <a href="#metodologia" data-es="Metodología" data-en="Methodology">Metodología</a>
+        <a href="#arquitectura" data-es="Arquitectura" data-en="Architecture">Arquitectura</a>
+        <a href="#cumplimiento" data-es="Cumplimiento" data-en="Compliance">Cumplimiento</a>
+      </div>
+      <div class="nav-right">
+        <div class="lang-toggle">
+          <button class="lang-btn active" id="btn-es" onclick="setLang('es')">ES</button>
+          <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+        </div>
+        <a href="#contacto" class="btn-nav" data-es="Hablemos" data-en="Let's talk">Hablemos</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Hero ──────────────────────────────────────── -->
+  <section class="hero" id="inicio">
+    <div class="hero-grid"></div>
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-content">
+          <!--span class="tag" data-es="Consultoría Tecnológica · AI-First · Venezuela" data-en="Technology Consulting · AI-First · Venezuela">Consultoría Tecnológica · AI-First · Venezuela</span-->
+          <h1 class="hero-title" data-es="Tecnología resiliente que <span class='grad'>no se detiene jamás</span>" data-en="Resilient technology that <span class='grad'>never stops</span>">Tecnología resiliente que <span class="grad">no se detiene jamás</span></h1>
+          <p class="hero-subtitle" data-es="Somos la consultora AI-First del B2B venezolano. Diseñamos sistemas distribuidos, pasarelas de pago multimoneda y plataformas Edge-First que mantienen tu operación en marcha pese a los cortes eléctricos, la fricción cambiaria y la complejidad regulatoria." data-en="We are Venezuela's AI-First B2B consultancy. We design distributed systems, multi-currency payment gateways and Edge-First platforms that keep your operation running despite power outages, currency friction and regulatory complexity.">Somos la consultora AI-First del B2B venezolano. Diseñamos sistemas distribuidos, pasarelas de pago multimoneda y plataformas Edge-First que mantienen tu operación en marcha pese a los cortes eléctricos, la fricción cambiaria y la complejidad regulatoria.</p>
+          <div class="hero-actions">
+            <a href="#contacto" class="btn-primary">
+              <span data-es="Agendar diagnóstico" data-en="Book a diagnosis">Agendar diagnóstico</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a href="#servicios" class="btn-secondary"><span data-es="Ver servicios" data-en="Explore services">Ver servicios</span></a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-item">
+              <div class="stat-value">-40%</div>
+              <div class="stat-label" data-es="Tiempo de desarrollo con IA" data-en="Dev time cut with AI">Tiempo de desarrollo con IA</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value sage">99,99%</div>
+              <div class="stat-label" data-es="Disponibilidad (SLA) objetivo" data-en="Target uptime (SLA)">Disponibilidad (SLA) objetivo</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value coral">Bolts</div>
+              <div class="stat-label" data-es="Ciclos de entrega en horas" data-en="Delivery cycles in hours">Ciclos de entrega en horas</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">Edge</div>
+              <div class="stat-label" data-es="Arquitectura First, sin caídas" data-en="First architecture, no downtime">Arquitectura First, sin caídas</div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-glow"></div>
+          <div class="hero-ring r1"></div>
+          <div class="hero-ring r2"></div>
+          <img src="assets/isotipo.svg" alt="Higerotech" class="hero-isotipo" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Duality strip ─────────────────────────────── -->
+  <div class="duality">
+    <div class="container duality-inner">
+      <span class="pill-pair">
+        <span class="pill tierra" data-es="Higero · Tierra" data-en="Higero · Earth">Higero · Tierra</span>
+        <span class="pill cielo" data-es="tech · Cielo" data-en="tech · Sky">tech · Cielo</span>
+      </span>
+      <p data-es="<strong>Cercanía real con rigor técnico de clase mundial.</strong> Entendemos las fricciones locales —desde la intermitencia eléctrica hasta el IGTF— y las resolvemos con estándares de ingeniería globales." data-en="<strong>Local closeness with world-class technical rigor.</strong> We understand local friction —from power instability to the IGTF tax— and solve it with global engineering standards.">
+        <strong>Cercanía real con rigor técnico de clase mundial.</strong> Entendemos las fricciones locales —desde la intermitencia eléctrica hasta el IGTF— y las resolvemos con estándares de ingeniería globales.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Pains ─────────────────────────────────────── -->
+  <section class="block pains" id="dolores">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="tag coral" data-es="El contexto venezolano" data-en="The Venezuelan context">El contexto venezolano</span>
+        <h2 class="section-title" data-es="Operar aquí tiene <span class='accent'>dolores reales</span>" data-en="Operating here has <span class='accent'>real pains</span>">Operar aquí tiene <span class="accent">dolores reales</span></h2>
+        <p class="section-sub" data-es="Construimos asumiendo la alta fricción del entorno, no la ignoramos. Cada solución nace para sobrevivir a las condiciones del mercado local." data-en="We build assuming the high-friction environment, not ignoring it. Every solution is born to survive local market conditions.">Construimos asumiendo la alta fricción del entorno, no la ignoramos. Cada solución nace para sobrevivir a las condiciones del mercado local.</p>
+      </div>
+      <div class="grid-4 reveal">
+        <div class="pain-card">
+          <svg class="pain-ic" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          <h3 data-es="Cortes eléctricos y conectividad" data-en="Power & connectivity outages">Cortes eléctricos y conectividad</h3>
+          <p data-es="La intermitencia paraliza operaciones sincrónicas y hace perder transacciones. La continuidad no puede depender del enlace." data-en="Intermittency halts synchronous operations and loses transactions. Continuity can't depend on the link.">La intermitencia paraliza operaciones sincrónicas y hace perder transacciones. La continuidad no puede depender del enlace.</p>
+        </div>
+        <div class="pain-card">
+          <svg class="pain-ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v10M9.5 9.5c0-1.1 1.1-2 2.5-2s2.5.9 2.5 2-1.1 2-2.5 2-2.5.9-2.5 2 1.1 2 2.5 2 2.5-.9 2.5-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <h3 data-es="Fricción multimoneda e IGTF" data-en="Multi-currency & IGTF friction">Fricción multimoneda e IGTF</h3>
+          <p data-es="Pagos mixtos en bolívares y divisas exigen segregar bases imponibles y aplicar el 3% de IGTF solo donde corresponde." data-en="Mixed payments in bolívares and foreign currency require segregating tax bases and applying the 3% IGTF only where due.">Pagos mixtos en bolívares y divisas exigen segregar bases imponibles y aplicar el 3% de IGTF solo donde corresponde.</p>
+        </div>
+        <div class="pain-card">
+          <svg class="pain-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h3 data-es="Cumplimiento SUDEBAN" data-en="SUDEBAN compliance">Cumplimiento SUDEBAN</h3>
+          <p data-es="La Resolución 001-21 exige auditoría inmutable, prevención AML/CFT y manuales de riesgo. El error sale caro." data-en="Resolution 001-21 demands immutable audit, AML/CFT prevention and risk manuals. Mistakes are costly.">La Resolución 001-21 exige auditoría inmutable, prevención AML/CFT y manuales de riesgo. El error sale caro.</p>
+        </div>
+        <div class="pain-card">
+          <svg class="pain-ic" viewBox="0 0 24 24" fill="none"><path d="M16 8a4 4 0 10-8 0M3 20c0-3.3 2.7-6 6-6m6 0c3.3 0 6 2.7 6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M18 4l1.5 1.5L23 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h3 data-es="Talento y eficiencia operativa" data-en="Talent & operational efficiency">Talento y eficiencia operativa</h3>
+          <p data-es="La escasez de talento técnico frena la modernización. La IA nativa hace más con equipos más pequeños y precisos." data-en="The technical talent shortage slows modernization. Native AI does more with smaller, sharper teams.">La escasez de talento técnico frena la modernización. La IA nativa hace más con equipos más pequeños y precisos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Services ──────────────────────────────────── -->
+  <section class="block services" id="servicios">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="tag" data-es="Espectro de servicios" data-en="Service spectrum">Espectro de servicios</span>
+        <h2 class="section-title" data-es="Del e-commerce a los <span class='accent'>sistemas distribuidos</span>" data-en="From e-commerce to <span class='accent'>distributed systems</span>">Del e-commerce a los <span class="accent">sistemas distribuidos</span></h2>
+        <p class="section-sub" data-es="Un canal continuo de madurez tecnológica que acompaña a tu empresa desde la primera venta en línea hasta la automatización total de tus finanzas corporativas." data-en="A continuous maturity path that takes your company from its first online sale to full automation of its corporate finances.">Un canal continuo de madurez tecnológica que acompaña a tu empresa desde la primera venta en línea hasta la automatización total de tus finanzas corporativas.</p>
+      </div>
+
+      <div class="svc-grid reveal">
+        <div class="svc-card">
+          <div class="svc-num">01</div>
+          <svg class="svc-ic" viewBox="0 0 24 24" fill="none"><path d="M3 6h18l-1.5 9.5a2 2 0 01-2 1.7H6.5a2 2 0 01-2-1.7L3 6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="20" r="1.4" fill="currentColor"/><path d="M3 6L2 3H1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <h3 data-es="E-commerce B2B y omnicanalidad" data-en="B2B e-commerce & omnichannel">E-commerce B2B y omnicanalidad</h3>
+          <p data-es="Tiendas y plataformas B2B con catálogos de precios dinámicos por volumen, aprobación de crédito comercial e integración profunda con tu ERP." data-en="B2B stores and platforms with volume-based dynamic pricing, commercial credit approval and deep ERP integration.">Tiendas y plataformas B2B con catálogos de precios dinámicos por volumen, aprobación de crédito comercial e integración profunda con tu ERP.</p>
+          <ul class="svc-list">
+            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Carga de inventario asistida por agentes IA" data-en="AI-agent-assisted inventory loading">Carga de inventario asistida por agentes IA</span></li>
+            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Headless commerce, Shopify o a medida" data-en="Headless, Shopify or custom commerce">Headless commerce, Shopify o a medida</span></li>
+            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Flujos de adquisición corporativa" data-en="Corporate procurement workflows">Flujos de adquisición corporativa</span></li>
+          </ul>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-num">02</div>
+          <svg class="svc-ic" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 9.5h19" stroke="currentColor" stroke-width="1.6"/><path d="M6 14.5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <h3 data-es="Pasarelas de pago multimoneda" data-en="Multi-currency payment gateways">Pasarelas de pago multimoneda</h3>
+          <p data-es="Checkout híbrido que acepta divisas y pago móvil interbancario en bolívares, con conciliación en tiempo real y gestión del riesgo cambiario." data-en="Hybrid checkout accepting foreign currency and interbank mobile payment in bolívares, with real-time reconciliation and FX risk management.">Checkout híbrido que acepta divisas y pago móvil interbancario en bolívares, con conciliación en tiempo real y gestión del riesgo cambiario.</p>
+          <ul class="svc-list">
+            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Motor de cálculo de IGTF para pagos mixtos" data-en="IGTF tax engine for mixed payments">Motor de cálculo de IGTF para pagos mixtos</span></li>
+            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Enrutamiento al canal de menor costo" data-en="Least-cost transaction routing">Enrutamiento al canal de menor costo</span></li>
+            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Detección de anomalías AML/CFT con IA" data-en="AI-driven AML/CFT anomaly detection">Detección de anomalías AML/CFT con IA</span></li>
+          </ul>
+        </div>
+
+        <div class="svc-card">
+          <div class="svc-num">03</div>
+          <svg class="svc-ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="5" cy="18" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="19" cy="18" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.5 6.8L6.5 15.8M13.5 6.8l4 9M7.4 18h9.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <h3 data-es="Sistemas distribuidos complejos" data-en="Complex distributed systems">Sistemas distribuidos complejos</h3>
+          <p data-es="Microservicios, motores de enrutamiento de alta frecuencia y libros mayores distribuidos para consorcios, franquicias y redes logísticas." data-en="Microservices, high-frequency routing engines and distributed ledgers for consortiums, franchises and logistics networks.">Microservicios, motores de enrutamiento de alta frecuencia y libros mayores distribuidos para consorcios, franquicias y redes logísticas.</p>
+          <ul class="svc-list">
+            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Kubernetes multizona y bases activo-activo" data-en="Multi-zone Kubernetes & active-active DBs">Kubernetes multizona y bases activo-activo</span></li>
+            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Consistencia eventual con CRDTs" data-en="Eventual consistency with CRDTs">Consistencia eventual con CRDTs</span></li>
+            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Sin punto único de fallo (SPOF)" data-en="No single point of failure (SPOF)">Sin punto único de fallo (SPOF)</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="extra-svc reveal">
+        <div class="extra-card">
+          <svg class="svc-ic" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.7"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M11 8v6M8 11h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <div>
+            <h3 data-es="Descubrimiento de clientes con agentes autónomos" data-en="Customer discovery with autonomous agents">Descubrimiento de clientes con agentes autónomos</h3>
+            <p data-es="Agentes IA que monitorean señales de demanda en tiempo real y redactan contacto hiperpersonalizado, sin listas frías ni spam." data-en="AI agents that monitor real-time demand signals and write hyper-personalized outreach — no cold lists, no spam.">Agentes IA que monitorean señales de demanda en tiempo real y redactan contacto hiperpersonalizado, sin listas frías ni spam.</p>
+          </div>
+        </div>
+        <div class="extra-card">
+          <svg class="svc-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+          <div>
+            <h3 data-es="Automatización inteligente de procesos" data-en="Intelligent process automation">Automatización inteligente de procesos</h3>
+            <p data-es="Eliminamos tareas manuales con flujos automatizados, integraciones entre sistemas y agentes que ejecutan reglas de negocio críticas." data-en="We remove manual work with automated flows, system integrations and agents that execute critical business rules.">Eliminamos tareas manuales con flujos automatizados, integraciones entre sistemas y agentes que ejecutan reglas de negocio críticas.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Methodology AI-DLC ────────────────────────── -->
+  <section class="block method" id="metodologia">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="tag sage" data-es="Metodología AI-DLC" data-en="AI-DLC methodology">Metodología AI-DLC</span>
+        <h2 class="section-title" data-es="Humanos y agentes, <span class='accent'>colaborando de forma nativa</span>" data-en="Humans and agents, <span class='accent'>collaborating natively</span>">Humanos y agentes, <span class="accent">colaborando de forma nativa</span></h2>
+        <p class="section-sub" data-es="Reemplazamos los sprints de semanas por «Bolts»: ciclos intensos medidos en horas. Datos, modelos, gobernanza y supervisión humana son ciudadanos de primera clase." data-en="We replace week-long sprints with “Bolts”: intense cycles measured in hours. Data, models, governance and human oversight are first-class citizens.">Reemplazamos los sprints de semanas por «Bolts»: ciclos intensos medidos en horas. Datos, modelos, gobernanza y supervisión humana son ciudadanos de primera clase.</p>
+      </div>
+
+      <div class="triad reveal">
+        <div class="triad-card">
+          <div class="triad-badge">D</div>
+          <h3 data-es="El Director" data-en="The Director">El Director</h3>
+          <div class="role" data-es="Intención humana" data-en="Human intent">Intención humana</div>
+          <p data-es="Nuestros arquitectos definen el contexto estratégico, los objetivos del cliente, las restricciones de SUDEBAN y los parámetros de seguridad, traduciendo la visión en directrices maestras." data-en="Our architects set the strategic context, client objectives, SUDEBAN constraints and security parameters, turning vision into master directives.">Nuestros arquitectos definen el contexto estratégico, los objetivos del cliente, las restricciones de SUDEBAN y los parámetros de seguridad, traduciendo la visión en directrices maestras.</p>
+        </div>
+        <div class="triad-card">
+          <div class="triad-badge">V</div>
+          <h3 data-es="El Verificador" data-en="The Verifier">El Verificador</h3>
+          <div class="role" data-es="Gobernanza y QA" data-en="Governance & QA">Gobernanza y QA</div>
+          <p data-es="Humanos en el bucle y scripts deterministas validan cada salida de la IA: precisión arquitectónica, seguridad criptográfica de las pasarelas y cumplimiento normativo." data-en="Humans-in-the-loop and deterministic scripts validate every AI output: architectural accuracy, cryptographic gateway security and regulatory compliance.">Humanos en el bucle y scripts deterministas validan cada salida de la IA: precisión arquitectónica, seguridad criptográfica de las pasarelas y cumplimiento normativo.</p>
+        </div>
+        <div class="triad-card">
+          <div class="triad-badge">T</div>
+          <h3 data-es="El Transformador" data-en="The Transformer">El Transformador</h3>
+          <div class="role" data-es="Adaptación continua" data-en="Continuous adaptation">Adaptación continua</div>
+          <p data-es="Sistemas de aprendizaje en producción que monitorean el comportamiento, refinan algoritmos según el uso real y previenen la acumulación de deuda técnica." data-en="Learning systems in production that monitor behavior, refine algorithms from real usage and prevent technical debt build-up.">Sistemas de aprendizaje en producción que monitorean el comportamiento, refinan algoritmos según el uso real y previenen la acumulación de deuda técnica.</p>
+        </div>
+      </div>
+
+      <div class="bolts reveal">
+        <div class="bolts-head">
+          <svg width="26" height="26" class="lightning" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          <h3 data-es="El proyecto en Bolts" data-en="The project in Bolts">El proyecto en Bolts</h3>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">1</div>
+            <h4 data-es="Ideación en enjambre" data-en="Mob ideation">Ideación en enjambre</h4>
+            <p data-es="La IA procesa tus dolores en lenguaje natural, hace preguntas aclaratorias y redacta historias de usuario y SOW en horas." data-en="AI processes your pains in natural language, asks clarifying questions and drafts user stories and SOWs in hours.">La IA procesa tus dolores en lenguaje natural, hace preguntas aclaratorias y redacta historias de usuario y SOW en horas.</p>
+          </div>
+          <div class="step">
+            <div class="step-dot">2</div>
+            <h4 data-es="Diseño Machine-First" data-en="Machine-First design">Diseño Machine-First</h4>
+            <p data-es="La arquitectura nace como texto estructurado (Mermaid, C4, ADRs en Markdown). Sin ambigüedad, lista para los LLM." data-en="Architecture is born as structured text (Mermaid, C4, Markdown ADRs). Unambiguous, ready for LLMs.">La arquitectura nace como texto estructurado (Mermaid, C4, ADRs en Markdown). Sin ambigüedad, lista para los LLM.</p>
+          </div>
+          <div class="step">
+            <div class="step-dot">3</div>
+            <h4 data-es="Direccionamiento (Steering)" data-en="Steering">Direccionamiento (Steering)</h4>
+            <p data-es="Reglas de proyecto en el repo instruyen a la IA: cifrado por defecto, SSL forzado, librerías fiscales aprobadas. Seguro por diseño." data-en="Project rules in the repo instruct the AI: encryption by default, enforced SSL, approved tax libraries. Secure by design.">Reglas de proyecto en el repo instruyen a la IA: cifrado por defecto, SSL forzado, librerías fiscales aprobadas. Seguro por diseño.</p>
+          </div>
+          <div class="step">
+            <div class="step-dot">4</div>
+            <h4 data-es="Construcción y verificación" data-en="Build & verify">Construcción y verificación</h4>
+            <p data-es="Los agentes generan código seguro y el Verificador certifica calidad, seguridad y cumplimiento antes de cada despliegue." data-en="Agents generate secure code and the Verifier certifies quality, security and compliance before every deploy.">Los agentes generan código seguro y el Verificador certifica calidad, seguridad y cumplimiento antes de cada despliegue.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Architecture ──────────────────────────────── -->
+  <section class="block arch" id="arquitectura">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="tag" data-es="Arquitectura Edge-First" data-en="Edge-First architecture">Arquitectura Edge-First</span>
+        <h2 class="section-title" data-es="Diseñada para <span class='accent'>la alta fricción</span>" data-en="Built for <span class='accent'>high friction</span>">Diseñada para <span class="accent">la alta fricción</span></h2>
+        <p class="section-sub" data-es="Construir suponiendo conectividad ininterrumpida es un error estratégico. Llevamos el cómputo al borde para que tu operación nunca se detenga." data-en="Building on the assumption of uninterrupted connectivity is a strategic mistake. We push compute to the edge so your operation never stops.">Construir suponiendo conectividad ininterrumpida es un error estratégico. Llevamos el cómputo al borde para que tu operación nunca se detenga.</p>
+      </div>
+
+      <div class="arch-inner reveal">
+        <div class="arch-feats">
+          <div class="arch-feat">
+            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+            <div>
+              <h4 data-es="Cómputo en el borde" data-en="Compute at the edge">Cómputo en el borde</h4>
+              <p data-es="Las mutaciones críticas —validar un pago, registrar una orden— se resuelven en local al instante, sin importar el estado del enlace." data-en="Critical mutations —validating a payment, logging an order— resolve locally and instantly, regardless of link status.">Las mutaciones críticas —validar un pago, registrar una orden— se resuelven en local al instante, sin importar el estado del enlace.</p>
+            </div>
+          </div>
+          <div class="arch-feat">
+            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0114-5M20 12a8 8 0 01-14 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M18 3v4h-4M6 21v-4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <h4 data-es="Consistencia eventual sin corrupción" data-en="Eventual consistency, no corruption">Consistencia eventual sin corrupción</h4>
+              <p data-es="CRDTs, relojes lógicos y vectores de reloj fusionan los historiales de forma determinista. El libro mayor final es matemáticamente preciso." data-en="CRDTs, logical clocks and vector clocks merge histories deterministically. The final ledger is mathematically exact.">CRDTs, relojes lógicos y vectores de reloj fusionan los historiales de forma determinista. El libro mayor final es matemáticamente preciso.</p>
+            </div>
+          </div>
+          <div class="arch-feat">
+            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 18a4 4 0 01-1-7.9A5 5 0 0116 8a3.5 3.5 0 011 6.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 21V12M9 15l3-3 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div>
+              <h4 data-es="Nube híbrida y soberanía de datos" data-en="Hybrid cloud & data sovereignty">Nube híbrida y soberanía de datos</h4>
+              <p data-es="Cargas críticas y ultrabaja latencia en datacenters locales Tier III; entrenamiento de modelos y respaldos inmutables en la nube global." data-en="Critical, ultra-low-latency workloads in local Tier III datacenters; model training and immutable backups in the global cloud.">Cargas críticas y ultrabaja latencia en datacenters locales Tier III; entrenamiento de modelos y respaldos inmutables en la nube global.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="sla-card">
+          <span class="tag sage" data-es="Acuerdos de nivel de servicio" data-en="Service level agreements">Acuerdos de nivel de servicio</span>
+          <div class="sla-row">
+            <span class="sla-num">99,9%</span>
+            <span class="sla-desc"><span class="t" data-es="Tres nueves" data-en="Three nines">Tres nueves</span><br><span class="s" data-es="≈ 8,76 h de inactividad / año" data-en="≈ 8.76 h downtime / year">≈ 8,76 h de inactividad / año</span></span>
+          </div>
+          <div class="sla-row">
+            <span class="sla-num">99,99%</span>
+            <span class="sla-desc"><span class="t" data-es="Cuatro nueves" data-en="Four nines">Cuatro nueves</span><br><span class="s" data-es="≈ 52,6 min de inactividad / año" data-en="≈ 52.6 min downtime / year">≈ 52,6 min de inactividad / año</span></span>
+          </div>
+          <div class="sla-row">
+            <span class="sla-num">99,999%</span>
+            <span class="sla-desc"><span class="t" data-es="Cinco nueves" data-en="Five nines">Cinco nueves</span><br><span class="s" data-es="≈ 5,26 min / año · motores de pago" data-en="≈ 5.26 min / year · payment engines">≈ 5,26 min / año · motores de pago</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Compliance ────────────────────────────────── -->
+  <section class="block compliance" id="cumplimiento">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="tag coral" data-es="Cumplimiento por diseño" data-en="Compliance by design">Cumplimiento por diseño</span>
+        <h2 class="section-title" data-es="El marco legal, <span class='accent'>en el código</span>" data-en="The legal framework, <span class='accent'>in the code</span>">El marco legal, <span class="accent">en el código</span></h2>
+        <p class="section-sub" data-es="No somos solo una fábrica de código: orquestamos el cumplimiento. Las normativas venezolanas viven dentro de la arquitectura, no como un parche posterior." data-en="We're not just a code factory: we orchestrate compliance. Venezuelan regulations live inside the architecture, not as an afterthought.">No somos solo una fábrica de código: orquestamos el cumplimiento. Las normativas venezolanas viven dentro de la arquitectura, no como un parche posterior.</p>
+      </div>
+
+      <div class="grid-3 reveal">
+        <div class="comp-card">
+          <svg class="comp-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="kicker" data-es="Resolución 001-21" data-en="Resolution 001-21">Resolución 001-21</div>
+          <h3 data-es="SUDEBAN" data-en="SUDEBAN">SUDEBAN</h3>
+          <p data-es="Auditoría inmutable por defecto: origen, destino, fecha, hora, IP y usuario en cada esquema. Modelos AML/CFT que perfilan transacciones en tiempo real." data-en="Immutable audit by default: source, destination, date, time, IP and user in every schema. AML/CFT models profiling transactions in real time.">Auditoría inmutable por defecto: origen, destino, fecha, hora, IP y usuario en cada esquema. Modelos AML/CFT que perfilan transacciones en tiempo real.</p>
+        </div>
+        <div class="comp-card">
+          <svg class="comp-ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M9 9h6M9 12h6M10 15h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <div class="kicker" data-es="Impuesto multimoneda" data-en="Multi-currency tax">Impuesto multimoneda</div>
+          <h3 data-es="IGTF inteligente" data-en="Smart IGTF">IGTF inteligente</h3>
+          <p data-es="Motores de cálculo que segregan bases imponibles en pagos mixtos: 0% en bolívares, 3% solo sobre divisas. Reglas modificables ante cada cambio." data-en="Calc engines that segregate tax bases in mixed payments: 0% on bolívares, 3% only on foreign currency. Rules editable on every change.">Motores de cálculo que segregan bases imponibles en pagos mixtos: 0% en bolívares, 3% solo sobre divisas. Reglas modificables ante cada cambio.</p>
+        </div>
+        <div class="comp-card">
+          <svg class="comp-ic" viewBox="0 0 24 24" fill="none"><path d="M5 4h14v16H5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <div class="kicker" data-es="NIC 29 · NIIF 13" data-en="IAS 29 · IFRS 13">NIC 29 · NIIF 13</div>
+          <h3 data-es="Contabilidad hiperinflacionaria" data-en="Hyperinflation accounting">Contabilidad hiperinflacionaria</h3>
+          <p data-es="Almacenamos valores históricos y generamos reportes ajustados por índices de precios. Estimación de pérdidas crediticias y riesgo cambiario con IA." data-en="We store historical values and generate price-index-adjusted reports. Expected credit loss and FX risk estimation with AI.">Almacenamos valores históricos y generamos reportes ajustados por índices de precios. Estimación de pérdidas crediticias y riesgo cambiario con IA.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Values ────────────────────────────────────── -->
+  <section class="block values" id="valores">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="tag" data-es="Nuestros valores" data-en="Our values">Nuestros valores</span>
+        <h2 class="section-title" data-es="La cultura detrás de <span class='accent'>la ingeniería</span>" data-en="The culture behind <span class='accent'>the engineering</span>">La cultura detrás de <span class="accent">la ingeniería</span></h2>
+      </div>
+      <div class="val-grid reveal">
+        <div class="val-card">
+          <svg class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
+          <h4 data-es="Transparencia y confianza" data-en="Transparency & trust">Transparencia y confianza</h4>
+          <p data-es="Claridad sobre cómo decide la IA y cómo se protegen los datos." data-en="Clarity on how AI decides and how data is protected.">Claridad sobre cómo decide la IA y cómo se protegen los datos.</p>
+        </div>
+        <div class="val-card">
+          <svg class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.5-7 10-7 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <h4 data-es="Empatía aplicada" data-en="Applied empathy">Empatía aplicada</h4>
+          <p data-es="Comprendemos el estrés operativo real de las empresas venezolanas." data-en="We understand the real operational stress of Venezuelan firms.">Comprendemos el estrés operativo real de las empresas venezolanas.</p>
+        </div>
+        <div class="val-card">
+          <svg class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <h4 data-es="Resiliencia operativa" data-en="Operational resilience">Resiliencia operativa</h4>
+          <p data-es="Soluciones distribuidas diseñadas para no detenerse jamás." data-en="Distributed solutions designed to never stop.">Soluciones distribuidas diseñadas para no detenerse jamás.</p>
+        </div>
+        <div class="val-card">
+          <svg class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/></svg>
+          <h4 data-es="Adaptabilidad continua" data-en="Continuous adaptability">Adaptabilidad continua</h4>
+          <p data-es="Agilidad para reaccionar a cambios regulatorios, fiscales y tecnológicos." data-en="Agility to react to regulatory, tax and tech changes.">Agilidad para reaccionar a cambios regulatorios, fiscales y tecnológicos.</p>
+        </div>
+        <div class="val-card">
+          <svg class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <h4 data-es="Innovación con propósito" data-en="Innovation with purpose">Innovación con propósito</h4>
+          <p data-es="La tecnología existe para generar resultados medibles, no por moda." data-en="Technology exists to drive measurable results, not for hype.">La tecnología existe para generar resultados medibles, no por moda.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA Band ──────────────────────────────────── -->
+  <section class="cta-band" id="contacto">
+    <div class="container cta-inner reveal">
+      <span class="tag" data-es="Empecemos" data-en="Let's begin">Empecemos</span>
+      <h2 class="cta-title" data-es="Convirtamos los retos de Venezuela en tu <span class='accent'>ventaja competitiva</span>" data-en="Let's turn Venezuela's challenges into your <span class='accent'>competitive edge</span>">Convirtamos los retos de Venezuela en tu <span class="accent">ventaja competitiva</span></h2>
+      <p class="cta-sub" data-es="Agenda una sesión gratuita de diagnóstico. En horas, no semanas, tendrás un mapa claro de cómo la tecnología resiliente puede impulsar tus resultados." data-en="Book a free diagnostic session. In hours, not weeks, you'll have a clear map of how resilient technology can boost your results.">Agenda una sesión gratuita de diagnóstico. En horas, no semanas, tendrás un mapa claro de cómo la tecnología resiliente puede impulsar tus resultados.</p>
+      <div class="cta-actions">
+        <a href="mailto:contacto@higerotech.com" class="btn-primary">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 6.5l7 4.5 7-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span data-es="Escribirnos ahora" data-en="Email us now">Escribirnos ahora</span>
+        </a>
+        <a href="https://wa.me/" class="btn-secondary"><span data-es="Hablar por WhatsApp" data-en="Chat on WhatsApp">Hablar por WhatsApp</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ────────────────────────────────────── -->
+  <footer>
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img src="assets/logo_white_trans.png" alt="Higerotech" />
+          <p data-es="Consultoría tecnológica AI-First para el B2B venezolano. Resiliencia operativa, pagos multimoneda y sistemas distribuidos." data-en="AI-First technology consultancy for Venezuelan B2B. Operational resilience, multi-currency payments and distributed systems.">Consultoría tecnológica AI-First para el B2B venezolano. Resiliencia operativa, pagos multimoneda y sistemas distribuidos.</p>
+        </div>
+        <div class="footer-col">
+          <h5 data-es="Servicios" data-en="Services">Servicios</h5>
+          <a href="#servicios" data-es="E-commerce B2B" data-en="B2B e-commerce">E-commerce B2B</a>
+          <a href="#servicios" data-es="Pasarelas de pago" data-en="Payment gateways">Pasarelas de pago</a>
+          <a href="#servicios" data-es="Sistemas distribuidos" data-en="Distributed systems">Sistemas distribuidos</a>
+          <a href="#servicios" data-es="Automatización IA" data-en="AI automation">Automatización IA</a>
+        </div>
+        <div class="footer-col">
+          <h5 data-es="Empresa" data-en="Company">Empresa</h5>
+          <a href="#metodologia" data-es="Metodología AI-DLC" data-en="AI-DLC methodology">Metodología AI-DLC</a>
+          <a href="#arquitectura" data-es="Arquitectura Edge-First" data-en="Edge-First architecture">Arquitectura Edge-First</a>
+          <a href="#cumplimiento" data-es="Cumplimiento" data-en="Compliance">Cumplimiento</a>
+          <a href="#valores" data-es="Valores" data-en="Values">Valores</a>
+        </div>
+        <div class="footer-col">
+          <h5 data-es="Contacto" data-en="Contact">Contacto</h5>
+          <a href="mailto:contacto@higerotech.com">contacto@higerotech.com</a>
+          <a href="#contacto" data-es="Agendar diagnóstico" data-en="Book a diagnosis">Agendar diagnóstico</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 Higerotech. <span data-es="Todos los derechos reservados." data-en="All rights reserved.">Todos los derechos reservados.</span></p>
+        <span class="madein" data-es="Hecho con <b>♥</b> en Venezuela" data-en="Made with <b>♥</b> in Venezuela">Hecho con <b>♥</b> en Venezuela</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ── Scripts ───────────────────────────────────── -->
+  <script>
+    let currentLang = 'es';
+    function setLang(lang) {
+      currentLang = lang;
+      document.getElementById('btn-es').classList.toggle('active', lang === 'es');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-es][data-en]').forEach(el => {
+        el.innerHTML = el.getAttribute('data-' + lang);
+      });
+    }
+
+    // Scroll reveal
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    setLang('es');
+  </script>
+
+</body>
+</html>
