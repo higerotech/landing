@@ -29,6 +29,7 @@ gitGraph
     commit id: "7c7bc78"
     commit id: "8eca4aa" tag: "v0.1.0"
     commit id: "af85194" tag: "v0.2.0"
+    commit id: "a0b767b" tag: "v0.3.0"
 ```
 
 Historia lineal: sin ramas ni merges todavía. El repositorio se inicializó el 2026-07-29 y
@@ -39,13 +40,15 @@ rama por cambio + PR, como exige `CONTRIBUTING.md`, y el grafo dejará de ser un
 
 | Commit | Tipo | Tags | Autor | Fecha | Mensaje |
 |---|---|---|---|---|---|
+| `a0b767b` | commit | v0.3.0 | Jeremi Alcalá | 2026-07-29 | docs(ai-dlc): fases 03 y 05, changelog y README |
 | `af85194` | commit | v0.2.0 | Jeremi Alcalá | 2026-07-29 | docs(ai-dlc): fase 02 y cierre de Gate 1 |
 | `8eca4aa` | commit | v0.1.0 | Jeremi Alcalá | 2026-07-29 | docs(ai-dlc): fase 00-01 y cierre de Gate 0 |
 | `7c7bc78` | commit | — | Jeremi Alcalá | 2026-07-29 | fix: corregir hallazgos de accesibilidad, SEO y seguridad de la revisión |
 | `f09c213` | commit | — | Jeremi Alcalá | 2026-07-29 | chore: línea base del sitio estático previa a AI-DLC |
 
-> Los commits posteriores a `af85194` (fase 05, changelog, README) no aparecen arriba: el
-> documento se generó en ese punto. Regenerar para incorporarlos.
+> Este documento se generó tras `a0b767b`, así que el commit que lo actualiza no aparece en
+> su propio grafo. Es inherente a derivar del historial: siempre falta el último. Por eso la
+> regla es regenerar tras cada merge o tag, no tras cada commit.
 
 ## Trazabilidad tag ↔ versión ↔ decisión
 
