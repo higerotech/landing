@@ -5,10 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Higerotech — Consultoría Tecnológica AI-First</title>
   <meta name="description" content="Consultoría tecnológica AI-First para el B2B venezolano. Sistemas resilientes Edge-First, pasarelas de pago multimoneda y arquitecturas distribuidas que no se detienen jamás." />
+  <meta name="theme-color" content="#15181B" />
+  <link rel="canonical" href="https://higerotech.com/" />
+  <link rel="alternate" hreflang="es" href="https://higerotech.com/" />
+  <link rel="alternate" hreflang="en" href="https://higerotech.com/?lang=en" />
+  <link rel="alternate" hreflang="x-default" href="https://higerotech.com/" />
+
+  <!-- Previsualización al compartir (WhatsApp, LinkedIn, X) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Higerotech" />
+  <meta property="og:locale" content="es_VE" />
+  <meta property="og:locale:alternate" content="en_US" />
+  <meta property="og:url" content="https://higerotech.com/" />
+  <meta property="og:title" content="Higerotech — Tecnología resiliente que no se detiene jamás" />
+  <meta property="og:description" content="Consultoría tecnológica AI-First para el B2B venezolano. Sistemas distribuidos, pasarelas de pago multimoneda y plataformas Edge-First." />
+  <meta property="og:image" content="https://higerotech.com/assets/og-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Higerotech — consultoría tecnológica AI-First para el B2B venezolano" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Higerotech — Tecnología resiliente que no se detiene jamás" />
+  <meta name="twitter:description" content="Consultoría tecnológica AI-First para el B2B venezolano. Sistemas distribuidos, pasarelas de pago multimoneda y plataformas Edge-First." />
+  <meta name="twitter:image" content="https://higerotech.com/assets/og-card.png" />
+
   <link rel="icon" type="image/svg+xml" href="assets/isotipo.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="apple-touch-icon" href="assets/isotipo_charcoal_lg.png" />
+
+  <!-- Fuentes autoalojadas: sin dependencia de CDN externo (ADR-0004) -->
+  <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="assets/fonts/fonts.css" />
+
+  <!-- Si el JS no corre, el contenido con .reveal debe seguir siendo visible -->
+  <noscript><style>.reveal { opacity: 1 !important; transform: none !important; }</style></noscript>
   <style>
     /* ─── Design Tokens (Brand: Higerotech) ─────────── */
     :root {
@@ -23,8 +52,14 @@
       --sage:     #9EBCB6;   /* verde salvia */
       --white:    #FFFFFF;
       --text:     #E7ECEF;
-      --text-muted: #97A4AE;
-      --text-dim: #6C7882;
+      --text-muted: #97A4AE;   /* 6,97:1 sobre --ink — WCAG AA */
+      /* #6C7882 daba 3,94:1 sobre --ink y 2,9:1 sobre --dark-3: no alcanzaba
+         el 4,5:1 de WCAG AA para texto pequeño. #909EA9 da 6,49:1 sobre --ink
+         y 4,78:1 sobre --dark-3, el peor fondo donde se usa (.svc-num). */
+      --text-dim: #909EA9;
+      /* Pilas de respaldo: si la webfont no carga, no debe caer a serif */
+      --font-sans:    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-display: 'Space Grotesk', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       --border:   rgba(255,255,255,0.08);
       --border-2: rgba(255,255,255,0.14);
       --radius:   14px;
@@ -38,7 +73,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: var(--font-sans);
       background: var(--ink);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
@@ -46,8 +81,10 @@
     }
     a { text-decoration: none; color: inherit; }
     img { display: block; max-width: 100%; }
-    h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+    h1, h2, h3, h4, h5 { font-family: var(--font-display); }
     ::selection { background: var(--teal); color: var(--ink); }
+    /* Foco visible para navegación por teclado (WCAG 2.4.7) */
+    :focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; border-radius: 4px; }
 
     /* ─── Utilities ─────────────────────────────────── */
     .container { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
@@ -72,12 +109,26 @@
     .reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1); }
     .reveal.in { opacity: 1; transform: none; }
 
+    /* ─── Movimiento reducido (WCAG 2.3.3) ──────────────
+       El hero anima en bucle infinito (float + 2 anillos girando). Quien haya
+       pedido movimiento reducido en su sistema no debe recibirlo, y el contenido
+       con .reveal tiene que ser visible sin depender de la animación. */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+      .reveal { opacity: 1 !important; transform: none !important; }
+    }
+
     .eyebrow { display:block; text-align:center; }
 
     /* Buttons */
     .btn-primary, .btn-secondary, .btn-nav {
       display: inline-flex; align-items: center; gap: 9px;
-      font-family: 'Inter', sans-serif; cursor: pointer;
+      font-family: var(--font-sans); cursor: pointer;
       border-radius: 100px; transition: all .2s ease; white-space: nowrap;
     }
     .btn-primary {
@@ -111,13 +162,26 @@
     .nav-links { display: flex; align-items: center; gap: 30px; }
     .nav-links a { font-size: 14.5px; font-weight: 500; color: var(--text-muted); transition: color .2s; }
     .nav-links a:hover { color: var(--teal); }
+    .nav-links a:focus-visible { color: var(--teal); }
     .nav-right { display: flex; align-items: center; gap: 16px; }
+
+    /* Botón hamburguesa — solo visible en el breakpoint móvil */
+    .nav-toggle {
+      display: none; align-items: center; justify-content: center;
+      width: 42px; height: 42px; padding: 0;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); cursor: pointer; transition: all .2s;
+    }
+    .nav-toggle:hover { border-color: var(--teal); color: var(--teal); }
+    .nav-toggle .ic-close { display: none; }
+    .nav-toggle[aria-expanded="true"] .ic-open { display: none; }
+    .nav-toggle[aria-expanded="true"] .ic-close { display: block; }
     .lang-toggle {
       display: flex; align-items: center; background: rgba(255,255,255,0.05);
       border: 1px solid var(--border); border-radius: 100px; padding: 3px; gap: 2px;
     }
     .lang-btn {
-      background: none; border: none; cursor: pointer; font-family: 'Inter', sans-serif;
+      background: none; border: none; cursor: pointer; font-family: var(--font-sans);
       font-size: 12px; font-weight: 600; letter-spacing: .05em; color: var(--text-dim);
       padding: 5px 11px; border-radius: 100px; transition: all .2s;
     }
@@ -174,7 +238,7 @@
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px;
       margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);
     }
-    .stat-value { font-family: 'Space Grotesk'; font-size: 34px; font-weight: 700; color: var(--teal); letter-spacing: -0.02em; }
+    .stat-value { font-family: var(--font-display); font-size: 34px; font-weight: 700; color: var(--teal); letter-spacing: -0.02em; }
     .stat-value.coral { color: var(--coral); }
     .stat-value.sage { color: var(--sage); }
     .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
@@ -228,7 +292,7 @@
     }
     .svc-card:hover { transform: translateY(-6px); border-color: var(--border-2); box-shadow: var(--shadow); }
     .svc-card:hover::after { opacity: 1; }
-    .svc-num { font-family: 'Space Grotesk'; font-size: 13px; font-weight: 600; letter-spacing: .14em; color: var(--text-dim); margin-bottom: 18px; }
+    .svc-num { font-family: var(--font-display); font-size: 13px; font-weight: 600; letter-spacing: .14em; color: var(--text-dim); margin-bottom: 18px; }
     .svc-ic { width: 54px; height: 54px; margin-bottom: 20px; color: var(--teal); }
     .svc-card h3 { font-size: 20px; font-weight: 600; margin-bottom: 12px; color: var(--white); letter-spacing: -0.01em; }
     .svc-card p { font-size: 14.5px; color: var(--text-muted); line-height: 1.66; margin-bottom: 18px; }
@@ -253,7 +317,7 @@
     .triad-badge {
       display:inline-flex; align-items:center; justify-content:center;
       width: 52px; height: 52px; border-radius: 14px; margin-bottom: 18px;
-      font-family: 'Space Grotesk'; font-weight: 700; font-size: 20px;
+      font-family: var(--font-display); font-weight: 700; font-size: 20px;
     }
     .triad-card:nth-child(1) .triad-badge { background: rgba(138,214,204,0.14); color: var(--teal); }
     .triad-card:nth-child(2) .triad-badge { background: rgba(158,188,182,0.14); color: var(--sage); }
@@ -275,7 +339,7 @@
     .step-dot {
       position: relative; width: 34px; height: 34px; border-radius: 50%;
       background: var(--ink); border: 2px solid var(--teal); color: var(--teal);
-      display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:14px;
+      display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-weight:700; font-size:14px;
       margin-bottom: 16px; z-index: 1;
     }
     .step h4 { font-size: 15.5px; font-weight: 600; color: var(--white); margin-bottom: 7px; }
@@ -287,7 +351,7 @@
     .arch-feats { display: flex; flex-direction: column; gap: 22px; }
     .arch-feat { display: flex; gap: 16px; align-items: flex-start; }
     .arch-feat .ic { flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px; background: rgba(138,214,204,0.12); color: var(--teal); display:flex; align-items:center; justify-content:center; }
-    .arch-feat h4 { font-size: 16.5px; font-weight: 600; color: var(--white); margin-bottom: 5px; }
+    .arch-feat h3 { font-size: 16.5px; font-weight: 600; color: var(--white); margin-bottom: 5px; }
     .arch-feat p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
     .sla-card {
       background: linear-gradient(160deg, var(--dark-3), var(--dark-2));
@@ -296,7 +360,7 @@
     .sla-card .tag { margin-bottom: 22px; }
     .sla-row { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); }
     .sla-row:last-child { border-bottom: none; }
-    .sla-num { font-family: 'Space Grotesk'; font-size: 30px; font-weight: 700; color: var(--teal); }
+    .sla-num { font-family: var(--font-display); font-size: 30px; font-weight: 700; color: var(--teal); }
     .sla-row:nth-child(3) .sla-num { color: var(--sage); }
     .sla-row:nth-child(4) .sla-num { color: var(--coral); }
     .sla-desc { text-align: right; }
@@ -322,7 +386,7 @@
     .val-card { background: var(--dark-3); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 22px; transition: transform .25s, border-color .25s; }
     .val-card:hover { transform: translateY(-4px); border-color: var(--teal); }
     .val-ic { width: 38px; height: 38px; color: var(--teal); margin-bottom: 14px; }
-    .val-card h4 { font-size: 15.5px; font-weight: 600; color: var(--white); margin-bottom: 8px; }
+    .val-card h3 { font-size: 15.5px; font-weight: 600; color: var(--white); margin-bottom: 8px; }
     .val-card p { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
 
     /* ─── CTA Band ──────────────────────────────────── */
@@ -344,7 +408,7 @@
     .footer-top { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 44px; }
     .footer-brand img { height: 38px; margin-bottom: 16px; }
     .footer-brand p { font-size: 14px; color: var(--text-muted); line-height: 1.6; max-width: 300px; }
-    .footer-col h5 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--text); margin-bottom: 16px; font-weight: 600; }
+    .footer-col h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--text); margin-bottom: 16px; font-weight: 600; }
     .footer-col a { display: block; font-size: 14px; color: var(--text-muted); margin-bottom: 11px; transition: color .2s; }
     .footer-col a:hover { color: var(--teal); }
     .footer-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; padding-top: 26px; border-top: 1px solid var(--border); }
@@ -354,7 +418,20 @@
 
     /* ─── Responsive ────────────────────────────────── */
     @media (max-width: 980px) {
-      .nav-links { display: none; }
+      .nav-toggle { display: inline-flex; }
+      /* El menú pasa a panel desplegable en vez de desaparecer: antes las cuatro
+         secciones quedaban inalcanzables en móvil salvo por scroll manual. */
+      .nav-links {
+        display: none; position: absolute; top: 100%; left: 0; right: 0;
+        flex-direction: column; align-items: stretch; gap: 0;
+        background: rgba(21,24,27,0.98);
+        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+        padding: 6px 24px 18px; box-shadow: var(--shadow);
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a { font-size: 16px; padding: 15px 2px; border-bottom: 1px solid var(--border); }
+      .nav-links a:last-child { border-bottom: none; }
       .hero-inner { flex-direction: column-reverse; text-align: center; }
       .hero-content { max-width: 100%; }
       .hero-content .tag, .hero-actions { margin-left: auto; margin-right: auto; justify-content: center; }
@@ -384,21 +461,28 @@
 <body>
 
   <!-- ── Navbar ────────────────────────────────────── -->
-  <nav>
+  <nav aria-label="Principal">
     <div class="container nav-inner">
-      <a href="#inicio" class="nav-logo"><img src="assets/logo_white_trans.png" alt="Higerotech" /></a>
-      <div class="nav-links">
+      <a href="#inicio" class="nav-logo"><img src="assets/logo_white_trans.png" alt="Higerotech — inicio" /></a>
+      <div class="nav-links" id="nav-links">
         <a href="#servicios" data-es="Servicios" data-en="Services">Servicios</a>
         <a href="#metodologia" data-es="Metodología" data-en="Methodology">Metodología</a>
         <a href="#arquitectura" data-es="Arquitectura" data-en="Architecture">Arquitectura</a>
         <a href="#cumplimiento" data-es="Cumplimiento" data-en="Compliance">Cumplimiento</a>
       </div>
       <div class="nav-right">
-        <div class="lang-toggle">
-          <button class="lang-btn active" id="btn-es" onclick="setLang('es')">ES</button>
-          <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+        <div class="lang-toggle" role="group" aria-label="Idioma / Language">
+          <button type="button" class="lang-btn active" id="btn-es" aria-pressed="true" lang="es">ES</button>
+          <button type="button" class="lang-btn" id="btn-en" aria-pressed="false" lang="en">EN</button>
         </div>
         <a href="#contacto" class="btn-nav" data-es="Hablemos" data-en="Let's talk">Hablemos</a>
+        <button type="button" class="nav-toggle" id="nav-toggle"
+                aria-expanded="false" aria-controls="nav-links"
+                aria-label="Abrir menú" data-label-open="Abrir menú" data-label-close="Cerrar menú"
+                data-label-open-en="Open menu" data-label-close-en="Close menu">
+          <svg class="ic-open" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="ic-close" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
       </div>
     </div>
   </nav>
@@ -409,13 +493,12 @@
     <div class="container">
       <div class="hero-inner">
         <div class="hero-content">
-          <!--span class="tag" data-es="Consultoría Tecnológica · AI-First · Venezuela" data-en="Technology Consulting · AI-First · Venezuela">Consultoría Tecnológica · AI-First · Venezuela</span-->
           <h1 class="hero-title" data-es="Tecnología resiliente que <span class='grad'>no se detiene jamás</span>" data-en="Resilient technology that <span class='grad'>never stops</span>">Tecnología resiliente que <span class="grad">no se detiene jamás</span></h1>
           <p class="hero-subtitle" data-es="Somos la consultora AI-First del B2B venezolano. Diseñamos sistemas distribuidos, pasarelas de pago multimoneda y plataformas Edge-First que mantienen tu operación en marcha pese a los cortes eléctricos, la fricción cambiaria y la complejidad regulatoria." data-en="We are Venezuela's AI-First B2B consultancy. We design distributed systems, multi-currency payment gateways and Edge-First platforms that keep your operation running despite power outages, currency friction and regulatory complexity.">Somos la consultora AI-First del B2B venezolano. Diseñamos sistemas distribuidos, pasarelas de pago multimoneda y plataformas Edge-First que mantienen tu operación en marcha pese a los cortes eléctricos, la fricción cambiaria y la complejidad regulatoria.</p>
           <div class="hero-actions">
             <a href="#contacto" class="btn-primary">
               <span data-es="Agendar diagnóstico" data-en="Book a diagnosis">Agendar diagnóstico</span>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
             <a href="#servicios" class="btn-secondary"><span data-es="Ver servicios" data-en="Explore services">Ver servicios</span></a>
           </div>
@@ -442,7 +525,7 @@
           <div class="hero-glow"></div>
           <div class="hero-ring r1"></div>
           <div class="hero-ring r2"></div>
-          <img src="assets/isotipo.svg" alt="Higerotech" class="hero-isotipo" />
+          <img src="assets/isotipo.svg" alt="" role="presentation" class="hero-isotipo" />
         </div>
       </div>
     </div>
@@ -471,22 +554,22 @@
       </div>
       <div class="grid-4 reveal">
         <div class="pain-card">
-          <svg class="pain-ic" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          <svg aria-hidden="true" class="pain-ic" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
           <h3 data-es="Cortes eléctricos y conectividad" data-en="Power & connectivity outages">Cortes eléctricos y conectividad</h3>
           <p data-es="La intermitencia paraliza operaciones sincrónicas y hace perder transacciones. La continuidad no puede depender del enlace." data-en="Intermittency halts synchronous operations and loses transactions. Continuity can't depend on the link.">La intermitencia paraliza operaciones sincrónicas y hace perder transacciones. La continuidad no puede depender del enlace.</p>
         </div>
         <div class="pain-card">
-          <svg class="pain-ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v10M9.5 9.5c0-1.1 1.1-2 2.5-2s2.5.9 2.5 2-1.1 2-2.5 2-2.5.9-2.5 2 1.1 2 2.5 2 2.5-.9 2.5-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg aria-hidden="true" class="pain-ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v10M9.5 9.5c0-1.1 1.1-2 2.5-2s2.5.9 2.5 2-1.1 2-2.5 2-2.5.9-2.5 2 1.1 2 2.5 2 2.5-.9 2.5-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <h3 data-es="Fricción multimoneda e IGTF" data-en="Multi-currency & IGTF friction">Fricción multimoneda e IGTF</h3>
           <p data-es="Pagos mixtos en bolívares y divisas exigen segregar bases imponibles y aplicar el 3% de IGTF solo donde corresponde." data-en="Mixed payments in bolívares and foreign currency require segregating tax bases and applying the 3% IGTF only where due.">Pagos mixtos en bolívares y divisas exigen segregar bases imponibles y aplicar el 3% de IGTF solo donde corresponde.</p>
         </div>
         <div class="pain-card">
-          <svg class="pain-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg aria-hidden="true" class="pain-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <h3 data-es="Cumplimiento SUDEBAN" data-en="SUDEBAN compliance">Cumplimiento SUDEBAN</h3>
           <p data-es="La Resolución 001-21 exige auditoría inmutable, prevención AML/CFT y manuales de riesgo. El error sale caro." data-en="Resolution 001-21 demands immutable audit, AML/CFT prevention and risk manuals. Mistakes are costly.">La Resolución 001-21 exige auditoría inmutable, prevención AML/CFT y manuales de riesgo. El error sale caro.</p>
         </div>
         <div class="pain-card">
-          <svg class="pain-ic" viewBox="0 0 24 24" fill="none"><path d="M16 8a4 4 0 10-8 0M3 20c0-3.3 2.7-6 6-6m6 0c3.3 0 6 2.7 6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M18 4l1.5 1.5L23 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg aria-hidden="true" class="pain-ic" viewBox="0 0 24 24" fill="none"><path d="M16 8a4 4 0 10-8 0M3 20c0-3.3 2.7-6 6-6m6 0c3.3 0 6 2.7 6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M18 4l1.5 1.5L23 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <h3 data-es="Talento y eficiencia operativa" data-en="Talent & operational efficiency">Talento y eficiencia operativa</h3>
           <p data-es="La escasez de talento técnico frena la modernización. La IA nativa hace más con equipos más pequeños y precisos." data-en="The technical talent shortage slows modernization. Native AI does more with smaller, sharper teams.">La escasez de talento técnico frena la modernización. La IA nativa hace más con equipos más pequeños y precisos.</p>
         </div>
@@ -506,51 +589,51 @@
       <div class="svc-grid reveal">
         <div class="svc-card">
           <div class="svc-num">01</div>
-          <svg class="svc-ic" viewBox="0 0 24 24" fill="none"><path d="M3 6h18l-1.5 9.5a2 2 0 01-2 1.7H6.5a2 2 0 01-2-1.7L3 6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="20" r="1.4" fill="currentColor"/><path d="M3 6L2 3H1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg aria-hidden="true" class="svc-ic" viewBox="0 0 24 24" fill="none"><path d="M3 6h18l-1.5 9.5a2 2 0 01-2 1.7H6.5a2 2 0 01-2-1.7L3 6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="20" r="1.4" fill="currentColor"/><path d="M3 6L2 3H1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <h3 data-es="E-commerce B2B y omnicanalidad" data-en="B2B e-commerce & omnichannel">E-commerce B2B y omnicanalidad</h3>
           <p data-es="Tiendas y plataformas B2B con catálogos de precios dinámicos por volumen, aprobación de crédito comercial e integración profunda con tu ERP." data-en="B2B stores and platforms with volume-based dynamic pricing, commercial credit approval and deep ERP integration.">Tiendas y plataformas B2B con catálogos de precios dinámicos por volumen, aprobación de crédito comercial e integración profunda con tu ERP.</p>
           <ul class="svc-list">
-            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Carga de inventario asistida por agentes IA" data-en="AI-agent-assisted inventory loading">Carga de inventario asistida por agentes IA</span></li>
-            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Headless commerce, Shopify o a medida" data-en="Headless, Shopify or custom commerce">Headless commerce, Shopify o a medida</span></li>
-            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Flujos de adquisición corporativa" data-en="Corporate procurement workflows">Flujos de adquisición corporativa</span></li>
+            <li><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Carga de inventario asistida por agentes IA" data-en="AI-agent-assisted inventory loading">Carga de inventario asistida por agentes IA</span></li>
+            <li><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Headless commerce, Shopify o a medida" data-en="Headless, Shopify or custom commerce">Headless commerce, Shopify o a medida</span></li>
+            <li><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Flujos de adquisición corporativa" data-en="Corporate procurement workflows">Flujos de adquisición corporativa</span></li>
           </ul>
         </div>
 
         <div class="svc-card">
           <div class="svc-num">02</div>
-          <svg class="svc-ic" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 9.5h19" stroke="currentColor" stroke-width="1.6"/><path d="M6 14.5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg aria-hidden="true" class="svc-ic" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 9.5h19" stroke="currentColor" stroke-width="1.6"/><path d="M6 14.5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <h3 data-es="Pasarelas de pago multimoneda" data-en="Multi-currency payment gateways">Pasarelas de pago multimoneda</h3>
           <p data-es="Checkout híbrido que acepta divisas y pago móvil interbancario en bolívares, con conciliación en tiempo real y gestión del riesgo cambiario." data-en="Hybrid checkout accepting foreign currency and interbank mobile payment in bolívares, with real-time reconciliation and FX risk management.">Checkout híbrido que acepta divisas y pago móvil interbancario en bolívares, con conciliación en tiempo real y gestión del riesgo cambiario.</p>
           <ul class="svc-list">
-            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Motor de cálculo de IGTF para pagos mixtos" data-en="IGTF tax engine for mixed payments">Motor de cálculo de IGTF para pagos mixtos</span></li>
-            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Enrutamiento al canal de menor costo" data-en="Least-cost transaction routing">Enrutamiento al canal de menor costo</span></li>
-            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Detección de anomalías AML/CFT con IA" data-en="AI-driven AML/CFT anomaly detection">Detección de anomalías AML/CFT con IA</span></li>
+            <li><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Motor de cálculo de IGTF para pagos mixtos" data-en="IGTF tax engine for mixed payments">Motor de cálculo de IGTF para pagos mixtos</span></li>
+            <li><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Enrutamiento al canal de menor costo" data-en="Least-cost transaction routing">Enrutamiento al canal de menor costo</span></li>
+            <li><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Detección de anomalías AML/CFT con IA" data-en="AI-driven AML/CFT anomaly detection">Detección de anomalías AML/CFT con IA</span></li>
           </ul>
         </div>
 
         <div class="svc-card">
           <div class="svc-num">03</div>
-          <svg class="svc-ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="5" cy="18" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="19" cy="18" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.5 6.8L6.5 15.8M13.5 6.8l4 9M7.4 18h9.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg aria-hidden="true" class="svc-ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="5" cy="18" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="19" cy="18" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.5 6.8L6.5 15.8M13.5 6.8l4 9M7.4 18h9.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <h3 data-es="Sistemas distribuidos complejos" data-en="Complex distributed systems">Sistemas distribuidos complejos</h3>
           <p data-es="Microservicios, motores de enrutamiento de alta frecuencia y libros mayores distribuidos para consorcios, franquicias y redes logísticas." data-en="Microservices, high-frequency routing engines and distributed ledgers for consortiums, franchises and logistics networks.">Microservicios, motores de enrutamiento de alta frecuencia y libros mayores distribuidos para consorcios, franquicias y redes logísticas.</p>
           <ul class="svc-list">
-            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Kubernetes multizona y bases activo-activo" data-en="Multi-zone Kubernetes & active-active DBs">Kubernetes multizona y bases activo-activo</span></li>
-            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Consistencia eventual con CRDTs" data-en="Eventual consistency with CRDTs">Consistencia eventual con CRDTs</span></li>
-            <li><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Sin punto único de fallo (SPOF)" data-en="No single point of failure (SPOF)">Sin punto único de fallo (SPOF)</span></li>
+            <li><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Kubernetes multizona y bases activo-activo" data-en="Multi-zone Kubernetes & active-active DBs">Kubernetes multizona y bases activo-activo</span></li>
+            <li><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Consistencia eventual con CRDTs" data-en="Eventual consistency with CRDTs">Consistencia eventual con CRDTs</span></li>
+            <li><svg aria-hidden="true" width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-es="Sin punto único de fallo (SPOF)" data-en="No single point of failure (SPOF)">Sin punto único de fallo (SPOF)</span></li>
           </ul>
         </div>
       </div>
 
       <div class="extra-svc reveal">
         <div class="extra-card">
-          <svg class="svc-ic" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.7"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M11 8v6M8 11h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg aria-hidden="true" class="svc-ic" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.7"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M11 8v6M8 11h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <div>
             <h3 data-es="Descubrimiento de clientes con agentes autónomos" data-en="Customer discovery with autonomous agents">Descubrimiento de clientes con agentes autónomos</h3>
             <p data-es="Agentes IA que monitorean señales de demanda en tiempo real y redactan contacto hiperpersonalizado, sin listas frías ni spam." data-en="AI agents that monitor real-time demand signals and write hyper-personalized outreach — no cold lists, no spam.">Agentes IA que monitorean señales de demanda en tiempo real y redactan contacto hiperpersonalizado, sin listas frías ni spam.</p>
           </div>
         </div>
         <div class="extra-card">
-          <svg class="svc-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+          <svg aria-hidden="true" class="svc-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.6"/></svg>
           <div>
             <h3 data-es="Automatización inteligente de procesos" data-en="Intelligent process automation">Automatización inteligente de procesos</h3>
             <p data-es="Eliminamos tareas manuales con flujos automatizados, integraciones entre sistemas y agentes que ejecutan reglas de negocio críticas." data-en="We remove manual work with automated flows, system integrations and agents that execute critical business rules.">Eliminamos tareas manuales con flujos automatizados, integraciones entre sistemas y agentes que ejecutan reglas de negocio críticas.</p>
@@ -592,7 +675,7 @@
 
       <div class="bolts reveal">
         <div class="bolts-head">
-          <svg width="26" height="26" class="lightning" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          <svg aria-hidden="true" width="26" height="26" class="lightning" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
           <h3 data-es="El proyecto en Bolts" data-en="The project in Bolts">El proyecto en Bolts</h3>
         </div>
         <div class="steps">
@@ -633,23 +716,23 @@
       <div class="arch-inner reveal">
         <div class="arch-feats">
           <div class="arch-feat">
-            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+            <div class="ic"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
             <div>
-              <h4 data-es="Cómputo en el borde" data-en="Compute at the edge">Cómputo en el borde</h4>
+              <h3 data-es="Cómputo en el borde" data-en="Compute at the edge">Cómputo en el borde</h3>
               <p data-es="Las mutaciones críticas —validar un pago, registrar una orden— se resuelven en local al instante, sin importar el estado del enlace." data-en="Critical mutations —validating a payment, logging an order— resolve locally and instantly, regardless of link status.">Las mutaciones críticas —validar un pago, registrar una orden— se resuelven en local al instante, sin importar el estado del enlace.</p>
             </div>
           </div>
           <div class="arch-feat">
-            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0114-5M20 12a8 8 0 01-14 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M18 3v4h-4M6 21v-4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="ic"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0114-5M20 12a8 8 0 01-14 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M18 3v4h-4M6 21v-4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
             <div>
-              <h4 data-es="Consistencia eventual sin corrupción" data-en="Eventual consistency, no corruption">Consistencia eventual sin corrupción</h4>
+              <h3 data-es="Consistencia eventual sin corrupción" data-en="Eventual consistency, no corruption">Consistencia eventual sin corrupción</h3>
               <p data-es="CRDTs, relojes lógicos y vectores de reloj fusionan los historiales de forma determinista. El libro mayor final es matemáticamente preciso." data-en="CRDTs, logical clocks and vector clocks merge histories deterministically. The final ledger is mathematically exact.">CRDTs, relojes lógicos y vectores de reloj fusionan los historiales de forma determinista. El libro mayor final es matemáticamente preciso.</p>
             </div>
           </div>
           <div class="arch-feat">
-            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 18a4 4 0 01-1-7.9A5 5 0 0116 8a3.5 3.5 0 011 6.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 21V12M9 15l3-3 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="ic"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 18a4 4 0 01-1-7.9A5 5 0 0116 8a3.5 3.5 0 011 6.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 21V12M9 15l3-3 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
             <div>
-              <h4 data-es="Nube híbrida y soberanía de datos" data-en="Hybrid cloud & data sovereignty">Nube híbrida y soberanía de datos</h4>
+              <h3 data-es="Nube híbrida y soberanía de datos" data-en="Hybrid cloud & data sovereignty">Nube híbrida y soberanía de datos</h3>
               <p data-es="Cargas críticas y ultrabaja latencia en datacenters locales Tier III; entrenamiento de modelos y respaldos inmutables en la nube global." data-en="Critical, ultra-low-latency workloads in local Tier III datacenters; model training and immutable backups in the global cloud.">Cargas críticas y ultrabaja latencia en datacenters locales Tier III; entrenamiento de modelos y respaldos inmutables en la nube global.</p>
             </div>
           </div>
@@ -685,19 +768,19 @@
 
       <div class="grid-3 reveal">
         <div class="comp-card">
-          <svg class="comp-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg aria-hidden="true" class="comp-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <div class="kicker" data-es="Resolución 001-21" data-en="Resolution 001-21">Resolución 001-21</div>
           <h3 data-es="SUDEBAN" data-en="SUDEBAN">SUDEBAN</h3>
           <p data-es="Auditoría inmutable por defecto: origen, destino, fecha, hora, IP y usuario en cada esquema. Modelos AML/CFT que perfilan transacciones en tiempo real." data-en="Immutable audit by default: source, destination, date, time, IP and user in every schema. AML/CFT models profiling transactions in real time.">Auditoría inmutable por defecto: origen, destino, fecha, hora, IP y usuario en cada esquema. Modelos AML/CFT que perfilan transacciones en tiempo real.</p>
         </div>
         <div class="comp-card">
-          <svg class="comp-ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M9 9h6M9 12h6M10 15h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg aria-hidden="true" class="comp-ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M9 9h6M9 12h6M10 15h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <div class="kicker" data-es="Impuesto multimoneda" data-en="Multi-currency tax">Impuesto multimoneda</div>
           <h3 data-es="IGTF inteligente" data-en="Smart IGTF">IGTF inteligente</h3>
           <p data-es="Motores de cálculo que segregan bases imponibles en pagos mixtos: 0% en bolívares, 3% solo sobre divisas. Reglas modificables ante cada cambio." data-en="Calc engines that segregate tax bases in mixed payments: 0% on bolívares, 3% only on foreign currency. Rules editable on every change.">Motores de cálculo que segregan bases imponibles en pagos mixtos: 0% en bolívares, 3% solo sobre divisas. Reglas modificables ante cada cambio.</p>
         </div>
         <div class="comp-card">
-          <svg class="comp-ic" viewBox="0 0 24 24" fill="none"><path d="M5 4h14v16H5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <svg aria-hidden="true" class="comp-ic" viewBox="0 0 24 24" fill="none"><path d="M5 4h14v16H5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <div class="kicker" data-es="NIC 29 · NIIF 13" data-en="IAS 29 · IFRS 13">NIC 29 · NIIF 13</div>
           <h3 data-es="Contabilidad hiperinflacionaria" data-en="Hyperinflation accounting">Contabilidad hiperinflacionaria</h3>
           <p data-es="Almacenamos valores históricos y generamos reportes ajustados por índices de precios. Estimación de pérdidas crediticias y riesgo cambiario con IA." data-en="We store historical values and generate price-index-adjusted reports. Expected credit loss and FX risk estimation with AI.">Almacenamos valores históricos y generamos reportes ajustados por índices de precios. Estimación de pérdidas crediticias y riesgo cambiario con IA.</p>
@@ -715,28 +798,28 @@
       </div>
       <div class="val-grid reveal">
         <div class="val-card">
-          <svg class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
-          <h4 data-es="Transparencia y confianza" data-en="Transparency & trust">Transparencia y confianza</h4>
+          <svg aria-hidden="true" class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
+          <h3 data-es="Transparencia y confianza" data-en="Transparency & trust">Transparencia y confianza</h3>
           <p data-es="Claridad sobre cómo decide la IA y cómo se protegen los datos." data-en="Clarity on how AI decides and how data is protected.">Claridad sobre cómo decide la IA y cómo se protegen los datos.</p>
         </div>
         <div class="val-card">
-          <svg class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.5-7 10-7 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-          <h4 data-es="Empatía aplicada" data-en="Applied empathy">Empatía aplicada</h4>
+          <svg aria-hidden="true" class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.5-7 10-7 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <h3 data-es="Empatía aplicada" data-en="Applied empathy">Empatía aplicada</h3>
           <p data-es="Comprendemos el estrés operativo real de las empresas venezolanas." data-en="We understand the real operational stress of Venezuelan firms.">Comprendemos el estrés operativo real de las empresas venezolanas.</p>
         </div>
         <div class="val-card">
-          <svg class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-          <h4 data-es="Resiliencia operativa" data-en="Operational resilience">Resiliencia operativa</h4>
+          <svg aria-hidden="true" class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <h3 data-es="Resiliencia operativa" data-en="Operational resilience">Resiliencia operativa</h3>
           <p data-es="Soluciones distribuidas diseñadas para no detenerse jamás." data-en="Distributed solutions designed to never stop.">Soluciones distribuidas diseñadas para no detenerse jamás.</p>
         </div>
         <div class="val-card">
-          <svg class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/></svg>
-          <h4 data-es="Adaptabilidad continua" data-en="Continuous adaptability">Adaptabilidad continua</h4>
+          <svg aria-hidden="true" class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/></svg>
+          <h3 data-es="Adaptabilidad continua" data-en="Continuous adaptability">Adaptabilidad continua</h3>
           <p data-es="Agilidad para reaccionar a cambios regulatorios, fiscales y tecnológicos." data-en="Agility to react to regulatory, tax and tech changes.">Agilidad para reaccionar a cambios regulatorios, fiscales y tecnológicos.</p>
         </div>
         <div class="val-card">
-          <svg class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-          <h4 data-es="Innovación con propósito" data-en="Innovation with purpose">Innovación con propósito</h4>
+          <svg aria-hidden="true" class="val-ic" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <h3 data-es="Innovación con propósito" data-en="Innovation with purpose">Innovación con propósito</h3>
           <p data-es="La tecnología existe para generar resultados medibles, no por moda." data-en="Technology exists to drive measurable results, not for hype.">La tecnología existe para generar resultados medibles, no por moda.</p>
         </div>
       </div>
@@ -751,10 +834,13 @@
       <p class="cta-sub" data-es="Agenda una sesión gratuita de diagnóstico. En horas, no semanas, tendrás un mapa claro de cómo la tecnología resiliente puede impulsar tus resultados." data-en="Book a free diagnostic session. In hours, not weeks, you'll have a clear map of how resilient technology can boost your results.">Agenda una sesión gratuita de diagnóstico. En horas, no semanas, tendrás un mapa claro de cómo la tecnología resiliente puede impulsar tus resultados.</p>
       <div class="cta-actions">
         <a href="mailto:contacto@higerotech.com" class="btn-primary">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 6.5l7 4.5 7-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 6.5l7 4.5 7-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <span data-es="Escribirnos ahora" data-en="Email us now">Escribirnos ahora</span>
         </a>
-        <a href="https://wa.me/" class="btn-secondary"><span data-es="Hablar por WhatsApp" data-en="Chat on WhatsApp">Hablar por WhatsApp</span></a>
+        <!-- El href lo compone CONTACT.whatsapp al final del documento. Mientras
+             el número no esté configurado el botón permanece oculto: antes era
+             `https://wa.me/` sin número, un CTA que no llevaba a ninguna parte. -->
+        <a href="#contacto" class="btn-secondary" id="wa-cta" hidden><span data-es="Hablar por WhatsApp" data-en="Chat on WhatsApp">Hablar por WhatsApp</span></a>
       </div>
     </div>
   </section>
@@ -768,27 +854,27 @@
           <p data-es="Consultoría tecnológica AI-First para el B2B venezolano. Resiliencia operativa, pagos multimoneda y sistemas distribuidos." data-en="AI-First technology consultancy for Venezuelan B2B. Operational resilience, multi-currency payments and distributed systems.">Consultoría tecnológica AI-First para el B2B venezolano. Resiliencia operativa, pagos multimoneda y sistemas distribuidos.</p>
         </div>
         <div class="footer-col">
-          <h5 data-es="Servicios" data-en="Services">Servicios</h5>
+          <h2 data-es="Servicios" data-en="Services">Servicios</h2>
           <a href="#servicios" data-es="E-commerce B2B" data-en="B2B e-commerce">E-commerce B2B</a>
           <a href="#servicios" data-es="Pasarelas de pago" data-en="Payment gateways">Pasarelas de pago</a>
           <a href="#servicios" data-es="Sistemas distribuidos" data-en="Distributed systems">Sistemas distribuidos</a>
           <a href="#servicios" data-es="Automatización IA" data-en="AI automation">Automatización IA</a>
         </div>
         <div class="footer-col">
-          <h5 data-es="Empresa" data-en="Company">Empresa</h5>
+          <h2 data-es="Empresa" data-en="Company">Empresa</h2>
           <a href="#metodologia" data-es="Metodología AI-DLC" data-en="AI-DLC methodology">Metodología AI-DLC</a>
           <a href="#arquitectura" data-es="Arquitectura Edge-First" data-en="Edge-First architecture">Arquitectura Edge-First</a>
           <a href="#cumplimiento" data-es="Cumplimiento" data-en="Compliance">Cumplimiento</a>
           <a href="#valores" data-es="Valores" data-en="Values">Valores</a>
         </div>
         <div class="footer-col">
-          <h5 data-es="Contacto" data-en="Contact">Contacto</h5>
+          <h2 data-es="Contacto" data-en="Contact">Contacto</h2>
           <a href="mailto:contacto@higerotech.com">contacto@higerotech.com</a>
           <a href="#contacto" data-es="Agendar diagnóstico" data-en="Book a diagnosis">Agendar diagnóstico</a>
         </div>
       </div>
       <div class="footer-bottom">
-        <p>© 2026 Higerotech. <span data-es="Todos los derechos reservados." data-en="All rights reserved.">Todos los derechos reservados.</span></p>
+        <p>© <span id="year">2026</span> Higerotech. <span data-es="Todos los derechos reservados." data-en="All rights reserved.">Todos los derechos reservados.</span></p>
         <span class="madein" data-es="Hecho con <b>♥</b> en Venezuela" data-en="Made with <b>♥</b> in Venezuela">Hecho con <b>♥</b> en Venezuela</span>
       </div>
     </div>
@@ -796,24 +882,135 @@
 
   <!-- ── Scripts ───────────────────────────────────── -->
   <script>
-    let currentLang = 'es';
-    function setLang(lang) {
-      currentLang = lang;
-      document.getElementById('btn-es').classList.toggle('active', lang === 'es');
-      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-      document.documentElement.lang = lang;
-      document.querySelectorAll('[data-es][data-en]').forEach(el => {
-        el.innerHTML = el.getAttribute('data-' + lang);
-      });
+    /* ── Contacto ─────────────────────────────────────────────────────
+       TODO(Higerotech): número de WhatsApp en formato internacional, solo
+       dígitos (ej. '584121234567'). Mientras esté vacío el botón no se
+       muestra — preferible a publicar un enlace muerto. */
+    const CONTACT = { whatsapp: '' };
+
+    (function initWhatsApp() {
+      const cta = document.getElementById('wa-cta');
+      if (!cta || !CONTACT.whatsapp) return;
+      cta.href = 'https://wa.me/' + CONTACT.whatsapp;
+      cta.target = '_blank';
+      cta.rel = 'noopener noreferrer';
+      cta.hidden = false;
+    })();
+
+    /* ── Menú móvil ───────────────────────────────────────────────────
+       Antes .nav-links se ocultaba en ≤980px sin reemplazo y las cuatro
+       secciones quedaban inalcanzables desde el móvil. */
+    const navToggle = document.getElementById('nav-toggle');
+    const navLinks  = document.getElementById('nav-links');
+
+    function syncToggleLabel() {
+      const abierto = navToggle.getAttribute('aria-expanded') === 'true';
+      const attr = (abierto ? 'data-label-close' : 'data-label-open') +
+                   (currentLang === 'en' ? '-en' : '');
+      navToggle.setAttribute('aria-label', navToggle.getAttribute(attr));
     }
 
-    // Scroll reveal
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    function setMenu(abierto) {
+      navLinks.classList.toggle('open', abierto);
+      navToggle.setAttribute('aria-expanded', String(abierto));
+      syncToggleLabel();
+    }
 
-    setLang('es');
+    navToggle.addEventListener('click', () => setMenu(!navLinks.classList.contains('open')));
+    navLinks.addEventListener('click', e => { if (e.target.closest('a')) setMenu(false); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && navLinks.classList.contains('open')) {
+        setMenu(false);
+        navToggle.focus();
+      }
+    });
+    // Al volver a escritorio el panel no debe quedar en estado abierto
+    const mqEscritorio = matchMedia('(min-width: 981px)');
+    const alCambiarAncho = e => { if (e.matches) setMenu(false); };
+    if (mqEscritorio.addEventListener) mqEscritorio.addEventListener('change', alCambiarAncho);
+    else if (mqEscritorio.addListener) mqEscritorio.addListener(alCambiarAncho);
+
+    /* ── Idioma ───────────────────────────────────────────────────── */
+    const IDIOMAS = ['es', 'en'];
+    let currentLang = 'es';
+
+    function setLang(lang) {
+      if (IDIOMAS.indexOf(lang) === -1) lang = 'es';
+      currentLang = lang;
+      document.documentElement.lang = lang;
+
+      const btnEs = document.getElementById('btn-es');
+      const btnEn = document.getElementById('btn-en');
+      btnEs.classList.toggle('active', lang === 'es');
+      btnEn.classList.toggle('active', lang === 'en');
+      btnEs.setAttribute('aria-pressed', String(lang === 'es'));
+      btnEn.setAttribute('aria-pressed', String(lang === 'en'));
+
+      /* La NodeList es estática. Si algún día un [data-es] quedara anidado
+         dentro de otro, reescribir el externo desconectaría al interno y su
+         asignación se perdería en silencio; isConnected lo evita. */
+      document.querySelectorAll('[data-es][data-en]').forEach(el => {
+        if (!el.isConnected) return;
+        el.innerHTML = el.getAttribute('data-' + lang);
+      });
+
+      syncToggleLabel();
+      try { localStorage.setItem('lang', lang); } catch (e) { /* modo privado */ }
+    }
+
+    // Prioridad: ?lang= (compartible e indexable) > preferencia guardada > es
+    function idiomaInicial() {
+      const q = new URLSearchParams(location.search).get('lang');
+      if (IDIOMAS.indexOf(q) !== -1) return q;
+      try {
+        const guardado = localStorage.getItem('lang');
+        if (IDIOMAS.indexOf(guardado) !== -1) return guardado;
+      } catch (e) { /* localStorage bloqueado */ }
+      return 'es';
+    }
+
+    document.getElementById('btn-es').addEventListener('click', () => setLang('es'));
+    document.getElementById('btn-en').addEventListener('click', () => setLang('en'));
+
+    /* ── Scroll reveal ────────────────────────────────────────────────
+       Con .reveal en opacity:0, si el observer no existe el contenido nunca
+       aparecería. El <noscript> del head cubre el caso de JS deshabilitado. */
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12 });
+      document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    } else {
+      document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+    }
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    setLang(idiomaInicial());
+  </script>
+
+  <!-- Datos estructurados para buscadores -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "Higerotech",
+    "url": "https://higerotech.com/",
+    "logo": "https://higerotech.com/assets/logo_white_trans.png",
+    "image": "https://higerotech.com/assets/og-card.png",
+    "email": "contacto@higerotech.com",
+    "description": "Consultoría tecnológica AI-First para el B2B venezolano: sistemas distribuidos, pasarelas de pago multimoneda y plataformas Edge-First.",
+    "areaServed": { "@type": "Country", "name": "Venezuela" },
+    "knowsLanguage": ["es", "en"],
+    "serviceType": [
+      "E-commerce B2B y omnicanalidad",
+      "Pasarelas de pago multimoneda",
+      "Sistemas distribuidos",
+      "Automatización inteligente de procesos"
+    ]
+  }
   </script>
 
 </body>
