@@ -17,12 +17,26 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 - Corregida en `gate-3-testing.md` la fila «Unit — No aplica: no hay lógica de dominio», que era
   falsa. No hay lógica *de negocio*, que es distinto: hay cinco funciones con ramas, dos
   decisiones con tabla de prioridad y tres degradaciones defensivas sin ninguna prueba.
-- Registrado el riesgo **R4**: una excepción temprana en el script inline deja **la página en
-  blanco**. `.reveal` está en `opacity: 0` esperando que el JS le añada `.in`, y cinco líneas
-  desreferencian nodos del DOM sin guarda, así que una errata en un `id` blanquea el sitio. Dos
-  agravantes que lo hacen difícil de diagnosticar desde un reporte: el `<noscript>` **no** lo
-  cubre —solo actúa con el JS deshabilitado, no cuando lanza— y quien tenga
-  `prefers-reduced-motion` no lo ve. Detectado al diseñar las unitarias, no por un incidente.
+- Registrada la amenaza **T17** y el riesgo **R4**: una excepción temprana en el script inline
+  deja **la página en blanco**. `.reveal` está en `opacity: 0` esperando que el JS le añada
+  `.in`, y cinco líneas desreferencian nodos del DOM sin guarda, así que una errata en un `id`
+  blanquea el sitio. Quien tenga `prefers-reduced-motion` no lo ve, así que llegaría como un
+  reporte contradictorio. Detectado al diseñar las unitarias, no por un incidente.
+- **Corregido el estado de T7 en el threat model.** Estaba `✅ Cerrado` con las tres capas de
+  ADR-0005, y bajo su lectura literal —«el JS **no se ejecuta**»— el ✅ es correcto. Lo que
+  ninguna de las tres capas cubre es la variante «el JS **se ejecuta y lanza** a mitad», de
+  idéntico impacto: el `<noscript>` solo actúa con el JS deshabilitado, `prefers-reduced-motion`
+  solo alcanza a quien tenga esa preferencia, y **la rama de respaldo sin `IntersectionObserver`
+  vive dentro del propio script**, en la línea 978, así que una excepción anterior la deja
+  inalcanzable. Es una salvaguarda que comparte destino con el fallo del que protege, y eso no se
+  ve leyendo la lista de capas: hay que mirar el orden de ejecución. T7 se queda cerrado con su
+  alcance explicitado y la variante pasa a ser T17 (DREAD 5,8), abierta. Anotado en ADR-0005 sin
+  modificar la decisión: su análisis **ya nombraba** «error de ejecución» como caso no cubierto
+  por `<noscript>` en solitario, y su 4.ª alternativa descartada —`in` por defecto, que el JS
+  retire— es robusta por construcción contra T17; se descartó solo por el parpadeo. Lo único
+  demasiado fuerte era su conclusión de que un fallo de script dejaba de denegar el contenido.
+- Hueco equivalente anotado en el **A10** del mapeo OWASP: su lista cubre condiciones
+  excepcionales *externas* al script y no la del script mismo.
 - Anotado que **`?lang=EN` sirve español en silencio**: `IDIOMAS.indexOf(q)` distingue
   mayúsculas, así que un enlace compartido en mayúsculas pierde el idioma sin síntoma. Pendiente
   de decisión: aceptarlo y documentarlo, o normalizar con `.toLowerCase()`.

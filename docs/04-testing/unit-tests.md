@@ -83,8 +83,10 @@ Tres cosas que hacen esto peor de lo que parece:
 3. **El disparador es una errata de un carácter** en un `id`. Coste de detección con un test
    unitario: milisegundos. Coste de detección hoy: que alguien abra el sitio y avise.
 
-Esta clase de fallo **no está registrada** ni en `threat-model.md` ni en la tabla de riesgos de
-los requisitos. Es un hallazgo de este diseño; ver §Lo que este diseño destapó.
+Esta clase de fallo está ahora registrada como amenaza **T17** (DREAD 5,8) en
+`threat-model.md` y como riesgo **R4** en los requisitos. Lo interesante es que **no era del
+todo nueva**: ADR-0005 ya nombra «error de ejecución» en su tabla de alternativas, pero las tres
+capas que eligió no lo alcanzan, y T7 quedó marcado ✅ Cerrado. Ver §Lo que este diseño destapó.
 
 ## Arnés
 
@@ -352,12 +354,35 @@ real de ocho unidades. Es un intercambio razonable, pero es un intercambio.
 
 Dos hallazgos que no existían antes de leer el script con intención de probarlo:
 
-1. **La página en blanco por excepción no está en ningún registro de riesgo.** Ni en
-   `threat-model.md` ni en la tabla de riesgos de los requisitos. Severidad alta —el sitio
-   queda inutilizable—, probabilidad baja pero no nula —una errata en un `id`—, y con un
-   agravante: el `<noscript>` no la cubre y los usuarios con `prefers-reduced-motion` no la ven,
-   así que llega en forma de reporte contradictorio. Propuesta: registrarla como **R4** y dejar
-   que U1/U2 sean su mitigación.
+1. **T7 estaba marcado `✅ Cerrado` y no lo estaba** — con matices que conviene contar bien,
+   porque la primera versión de este hallazgo era menos precisa que la realidad.
+
+   El threat model tiene T7 («la página queda invisible si el JS no se ejecuta», DREAD 7,4)
+   cerrado con las tres capas de ADR-0005. Bajo esa lectura literal el ✅ es correcto. Lo que no
+   cubre ninguna de las tres es la variante **«el JS se ejecuta y lanza a mitad»**, que tiene
+   idéntico impacto:
+
+   | Capa de ADR-0005 | JS no se ejecuta | JS lanza a mitad |
+   |---|---|---|
+   | `<noscript>` | ✅ | ❌ Solo con el JS deshabilitado |
+   | Rama sin `IntersectionObserver` | ✅ | ❌ **Vive dentro del script**, línea 978 |
+   | `prefers-reduced-motion` | ✅ | ⚠️ Solo quien tenga esa preferencia |
+
+   La fila del medio es el hallazgo real: **la mitigación comparte destino con el fallo.** Está
+   en el mismo flujo, después del punto donde se lanza, así que una excepción en 919, 920, 972 o
+   973 la deja inalcanzable. No se detecta leyendo la lista de tres capas; hay que mirar el orden
+   de ejecución, que es justo lo que obliga a hacer el diseñar tests.
+
+   Y hay que dar crédito donde toca: ADR-0005 **ya nombra** «error de ejecución» en su tabla de
+   alternativas, y su 4.ª opción descartada —`in` por defecto, que el JS retire— es robusta por
+   construcción contra esto. Se descartó por el parpadeo. Lo que quedó demasiado fuerte fue su
+   conclusión de que «un único fallo de script» dejaba de ser una denegación de contenido.
+
+   Registrado como amenaza **T17** (DREAD 5,8, `Reproducibility` 2 porque es latente y no un
+   defecto presente) y como riesgo **R4**. Distinción que no conviene perder: U1/U2 **detectan**
+   T17 antes de publicar; la 4.ª alternativa lo haría **imposible**. No son el mismo grado de
+   garantía, y este documento no debería dejar creer que unas pruebas cierran un problema de
+   diseño.
 2. **`?lang=EN` sirve español en silencio.** `indexOf` distingue mayúsculas. Un enlace
    compartido en mayúsculas —o generado por una herramienta que normalice al alza— pierde el
    idioma sin ningún síntoma. Decisión pendiente: aceptar y documentar, o normalizar con
