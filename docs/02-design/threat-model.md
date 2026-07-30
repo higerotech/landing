@@ -45,7 +45,7 @@ flowchart TB
 
     subgraph TB3 [Trust boundary 3: Host Docker]
       subgraph TB4 [Trust boundary 4: Contenedor - rootfs solo lectura]
-        NG[nginx 1.27-alpine]
+        NG[nginx 1.30-alpine]
         HDR{{security-headers.conf}}
         FS[(Archivos estaticos)]
       end

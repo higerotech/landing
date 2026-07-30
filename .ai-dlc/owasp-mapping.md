@@ -52,7 +52,7 @@ Para un sitio estático, la configuración **es** la superficie de ataque.
 - CSP restrictiva: `default-src 'self'`, `frame-ancestors 'none'`, `object-src 'none'`,
   `base-uri 'self'`, `form-action 'self'`.
 - `server_tokens off` — sin versión de nginx en la cabecera `Server` ni en páginas de error.
-- Imagen base mínima (`nginx:1.27-alpine`), rootfs de solo lectura, `cap_drop: ALL`,
+- Imagen base mínima (`nginx:1.30-alpine`), rootfs de solo lectura, `cap_drop: ALL`,
   `no-new-privileges`, límites de CPU y memoria.
 - `RUN nginx -t` en el build: una configuración inválida rompe el build, no el arranque.
 
@@ -66,12 +66,12 @@ sobre la imagen.
 
 - Sin gestor de paquetes: cero dependencias de npm/pip, por tanto cero riesgo de dependencia
   alucinada o typosquatting. Es una propiedad deliberada de la arquitectura (ADR-0003).
-- Imagen base anclada a `nginx:1.27-alpine`.
+- Imagen base anclada a `nginx:1.30-alpine`.
 - **Fuentes autoalojadas** (ADR-0004): antes el render dependía de `fonts.googleapis.com`;
   un compromiso o caída de ese CDN afectaba a la página. Ahora todo es same-origin.
 
 **Brechas abiertas**
-- La imagen base se ancla por *tag*, no por *digest*: `nginx:1.27-alpine` puede cambiar bajo
+- La imagen base se ancla por *tag*, no por *digest*: `nginx:1.30-alpine` puede cambiar bajo
   el mismo nombre. Pinear por `sha256` cuando se establezca cadencia de actualización.
 - No se genera SBOM todavía. `<TODO: Gate 4>`
 

@@ -254,7 +254,7 @@ flowchart LR
     end
 
     subgraph HOST [Trust boundary: host Docker]
-      NG[nginx 1.27-alpine<br/>read-only rootfs]
+      NG[nginx 1.30-alpine<br/>read-only rootfs]
       FS[(Archivos estaticos<br/>index.html, assets)]
       LOG[/Logs de acceso<br/>IP + user-agent/]
     end
@@ -318,7 +318,7 @@ Definidas en `docs/00-project/charter.md` §Métricas de éxito.
 |---|---|---|
 | D1 | Dominio `higerotech.com` confirmado | `<TODO>` — condiciona canonical, `hreflang`, sitemap y URLs de Open Graph |
 | D2 | Número de WhatsApp corporativo | `<TODO>` — RF05 no se puede verificar hasta tenerlo |
-| D3 | Imagen base `nginx:1.27-alpine` | Vigente; pendiente anclar por digest |
+| D3 | Imagen base `nginx:1.30-alpine` | Vigente; pendiente anclar por digest |
 | D4 | Terminación TLS en el borde | Fuera del repositorio; pendiente documentar quién y dónde |
 | R1 | Sin observabilidad: una caída pasa inadvertida | **Abierto** — Gate 5 |
 | R2 | Deriva del texto bilingüe entre HTML visible y `data-es` | Mitigado por proceso; pendiente prueba automatizada |
