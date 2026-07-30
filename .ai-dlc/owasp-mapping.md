@@ -94,8 +94,14 @@ rompe. Debe configurarse en el borde.
 
 No hay datos en reposo: el contenedor no escribe nada (`read_only: true`).
 
-**Acción pendiente:** documentar quién termina TLS y confirmar HSTS en ese punto.
-`<TODO: confirmar con Jeremi>`
+**Quién termina TLS: Cloudflare**, confirmado el 2026-07-30 (`docker inspect landing-tunnel` +
+sus logs de configuración; detalle en `docs/05-deployment/deployment.md` §El borde). El tramo
+entre el contenedor del túnel y nginx va en HTTP plano dentro del host, que es la amenaza T9
+aceptada del threat model.
+
+**Acción pendiente:** activar HSTS en Cloudflare. Sigue siendo correcto no emitirla desde
+nginx por la razón del párrafo anterior; ahora al menos se sabe exactamente dónde hay que
+ponerla y quién puede hacerlo.
 
 ## A05 — Injection
 

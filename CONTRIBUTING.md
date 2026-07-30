@@ -34,10 +34,10 @@ docker compose build
 
 # El sitio debe levantar y responder con las cabeceras completas
 docker compose up -d
-curl -sI http://localhost:8080/ | grep -i -E 'frame|nosniff|referrer|permissions|content-security'
+curl -sI http://localhost/ | grep -i -E 'frame|nosniff|referrer|permissions|content-security'
 
 # Una ruta inexistente debe devolver 404, no 200
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/no-existe   # => 404
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost/no-existe   # => 404
 
 # Los diagramas de la documentación deben renderizar
 python "<ruta-del-skill>/scripts/validate_mermaid.py" docs/

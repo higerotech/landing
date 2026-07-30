@@ -41,12 +41,13 @@
 | 2 | Archivar el SBOM | Se genera en cada run pero caduca con el artefacto: publicarlo por release para poder auditar una imagen desplegada |
 | 3 | Imagen por digest | Cambiar `nginx:1.30-alpine` por `nginx:1.30-alpine@sha256:…` |
 | 4 | Firma de imagen | `cosign sign` + verificación antes de desplegar |
-| 5 | Terminación TLS y HSTS documentadas | `<TODO: confirmar quién termina TLS>` |
+| 5 | HSTS | TLS lo termina **Cloudflare** (confirmado 2026-07-30, ver `docs/05-deployment/deployment.md` §El borde). Documentado; falta activar HSTS, que solo se puede hacer en el borde y no desde nginx |
+| 9 | El apex `higerotech.com` no está enrutado | Sin registro DNS ni regla de ingress: responde **HTTP 530**. Todo el SEO del sitio (`canonical`, `hreflang`, `og:url`, `sitemap.xml`, `robots.txt`) apunta ahí. Decidir entre enrutarlo o mover el canonical a `www` |
 | 6 | Escaneo de licencias | El gate canónico `license` no tiene herramienta asignada |
 | 7 | DAST | Sin ZAP baseline ni equivalente; propuesto en `gate-3-testing.md` |
 | 8 | Obligatoriedad del pipeline | Los gates pasan pero **no bloquean**: sin branch protection (org Free + repo privado), un rojo no impide mergear |
 
-## Hallazgo operativo — diagnosticado, redespliegue pendiente
+## Hallazgo operativo — cerrado el 2026-07-30
 
 Durante la revisión del 2026-07-29 se observó el contenedor `higerotech-landing` en el host
 **Up 24 hours (unhealthy)**, publicando en el puerto 80 junto a un `landing-tunnel`. El
@@ -73,8 +74,21 @@ publica en el puerto 80 y no en 8080, y `docker inspect` devuelve `ReadonlyRootf
 está en el compose y **no** en lo que corre hoy. La evidencia de esa fila es el archivo, no
 producción.
 
-Queda pendiente: redesplegar con `docker compose` —lo que aplica a la vez el arreglo, el
-endurecimiento y las correcciones de `7c7bc78`— comprobando antes a qué origen apunta el
-`landing-tunnel`, porque el túnel es de tipo token y su ingress se administra en el panel de
-Cloudflare, no en este repositorio. Cambiar de red o de puerto sin saberlo tumba el sitio
-público.
+**Alcance real de la deriva, medido antes del cutover.** No era solo el endurecimiento:
+producción servía **sin ninguna de las cinco cabeceras de seguridad**, exponía
+`Server: nginx/1.27.5` y corría la imagen base con los 36 CVEs corregibles (2 CRITICAL, 34
+HIGH) que se cerraron el 2026-07-30. Los gates G5 y G7 del pipeline —cabeceras y versión de
+nginx— pasaban en verde en cada PR contra la imagen mientras el sitio real los fallaba los dos.
+Distinción que este gate no hacía y ahora sí: **avalar un artefacto no es avalar lo publicado.**
+
+**Cutover ejecutado el 2026-07-30.** `docker compose up -d --build`, con el contenedor viejo
+apartado y no borrado (`--restart=no`, renombrado a `higerotech-landing-pre-cutover`, detenido)
+porque su imagen había desaparecido del almacén de contenido y era la última copia de lo
+publicado. Verificado: `healthy` por primera vez, `read_only=true` y `cap_drop=[ALL]` activos en
+el contenedor que corre, las cinco cabeceras y `404` real en local, y las cuatro que Cloudflare
+propaga más `404` real en `www`, `web` y `demo`. La fila «Contenedor endurecido» de la tabla
+anterior ya describe producción y no solo el archivo.
+
+El ingress del túnel apunta a `http://<IP del host>:80`, no a la IP del contenedor, así que la
+red de Docker resultó indiferente; lo que sí es contrato es el **puerto 80**, ya fijado en
+`docker-compose.yml` con su porqué escrito al lado.
