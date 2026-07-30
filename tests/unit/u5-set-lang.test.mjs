@@ -57,6 +57,19 @@ describe('U5 · efectos de setLang()', () => {
     assert.equal(doc.documentElement.lang, 'en', 'el idioma debe haberse aplicado igual')
   })
 
+  test('U5.6 · los botones de idioma están cableados', () => {
+    /* Hueco que encontró el medidor de cobertura: el resto de U5 llama a
+       setLang() directamente, así que los handlers de las líneas 972-973 no
+       los ejecutaba nadie. Un botón desconectado habría pasado el suite. */
+    const { doc } = cargarDOM()
+
+    doc.getElementById('btn-en').click()
+    assert.equal(doc.documentElement.lang, 'en')
+
+    doc.getElementById('btn-es').click()
+    assert.equal(doc.documentElement.lang, 'es')
+  })
+
   test('U5.5 · currentLang y la etiqueta del toggle siguen al idioma', () => {
     const { win, doc, lexico } = cargarDOM()
     const toggle = doc.getElementById('nav-toggle')

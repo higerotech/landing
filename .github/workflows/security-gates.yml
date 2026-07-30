@@ -175,6 +175,14 @@ jobs:
       - name: node --test sobre el index.html real
         run: npm test
 
+      # `--experimental-test-coverage` de Node no vale aquí: su reporter solo
+      # incluye rutas de archivo y el JS del sitio vive en un <script> inline,
+      # así que informaba «100 %» midiendo únicamente el arnés. Este medidor lee
+      # los datos crudos de V8, que sí registran el script. Gatea sobre
+      # funciones; el porcentaje de líneas es informativo y una cota inferior.
+      - name: Cobertura del script inline
+        run: npm run coverage
+
   # ── Gate 2 · Dependencias (SCA) ──────────────────────────────────────
   # Este gate era «N/A por ausencia» hasta que las pruebas introdujeron jsdom.
   # Matiz que conviene tener presente al leer un rojo aquí: todas las

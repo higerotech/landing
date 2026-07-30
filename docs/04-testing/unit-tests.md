@@ -1,13 +1,14 @@
 # Pruebas unitarias — Landing corporativa Higerotech
 
-* **Estado:** **implementado** — 46 pruebas en verde
+* **Estado:** **implementado** — 48 pruebas en verde, cobertura de funciones 100 %
 * **Fecha:** 2026-07-30
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.5.0
+* **Versión:** 0.6.0
 * **Gate:** 3 — **sigue no superado**: el nivel unitario existe, faltan E2E, accesibilidad,
   rendimiento, DAST y mutation testing
-* **Ejecución:** `npm test` — `node --test` sobre el `index.html` real, ~4 s
+* **Ejecución:** `npm test` — `node --test` sobre el `index.html` real, ~4 s.
+  `npm run coverage` mide y gatea la cobertura del script inline
 * **Arnés elegido:** `node:test` (stdlib) + `jsdom`
 * **Alcance:** la lógica de `index.html:884-992` y los invariantes del HTML que esa lógica asume
 
@@ -108,11 +109,15 @@ export function cargarDOM ({ url = 'https://higerotech.com/', conIO = false,
                              sustituir = null, alPreparar = () => {} } = {}) {
   let html = HTML
   if (sustituir) {
-    const antes = html
+    // Guarda contra el test vacuo: si el fuente se reescribe y el reemplazo
+    // deja de casar, el test debe fallar, no pasar por defecto.
+    // Se comprueba que el patrón CASE, no que el resultado cambie: sustituir
+    // un texto por sí mismo es legítimo —sirve para afirmar que sigue ahí—.
+    const casa = sustituir.de instanceof RegExp
+      ? new RegExp(sustituir.de.source, sustituir.de.flags).test(html)
+      : html.includes(sustituir.de)
+    if (!casa) throw new Error(`La sustitución no casó con nada: ${sustituir.de}`)
     html = html.replace(sustituir.de, sustituir.a)
-    // Guarda contra el test vacuo: si el fuente se reescribe y el
-    // reemplazo deja de casar, el test debe fallar, no pasar por defecto.
-    if (html === antes) throw new Error(`la sustitucion no caso: ${sustituir.de}`)
   }
 
   const errores = []
@@ -392,7 +397,7 @@ Dos hallazgos que no existían antes de leer el script con intención de probarl
 
 ## Resultado de la implementación *(2026-07-30)*
 
-**46 pruebas, 10 suites, 0 fallos, ~4,4 s.** Estructura:
+**48 pruebas, 10 suites, 0 fallos, ~4,5 s.** Estructura:
 
 ```
 package.json                      node --test "tests/unit/**/*.test.mjs"
@@ -430,6 +435,81 @@ U4.7 confirma el hallazgo: con `?lang=EN` el sitio sirve español. El test **fij
 comportamiento actual**, no lo aprueba. Si se decide normalizar con `.toLowerCase()`, ese test
 debe cambiar de expectativa a `'en'` — y ese cambio es precisamente la señal de que la decisión
 se tomó a propósito.
+
+## Cobertura *(2026-07-30)*
+
+```
+npm run coverage
+```
+
+| Métrica | Valor | ¿Gatea? |
+|---|---|---|
+| **Funciones** | **100,0 %** (17/17) | ✅ Sí, umbral 100 |
+| Líneas | 94,7 % (72/76 ejecutables) | No — informativa, y es una **cota inferior** |
+
+### La herramienta obvia no sirve, y falla en verde
+
+`node --test --experimental-test-coverage` **no mide nada de este sitio**. Su reporter solo
+incluye rutas de archivo, y el JS vive dentro de un `<script>` que jsdom compila bajo la URL
+del documento. El informe que produce es este:
+
+```
+file             | line % | branch % | funcs % | uncovered lines
+ cargar-dom.mjs  | 100.00 |  100.00  |   75.00 |
+all files        | 100.00 |  100.00  |   75.00 |
+```
+
+**100 % de líneas, midiendo exclusivamente el arnés.** Ni una línea de `index.html`. Es el peor
+modo de fallar que tiene una métrica: no da error, da un número excelente sobre el conjunto
+vacío. Si el Gate 2 se hubiera cerrado con esa cifra, habría quedado documentado un 100 % de
+cobertura sobre código que nadie mide.
+
+### Cómo se mide de verdad
+
+Los datos crudos **sí existen**: V8 registra el script inline bajo la URL del documento con
+contadores por rango, y sus offsets coinciden **byte a byte** con el texto del `<script>`
+(4713 bytes, verificado). `tests/cobertura.mjs` ejecuta el suite con `NODE_V8_COVERAGE`, recoge
+esas entradas y las traduce a números de línea de `index.html`. Tres detalles que costaron un
+intento cada uno:
+
+1. **Fundir por máximo, no sumando.** V8 emite un sub-rango *solo cuando un bloque no se
+   ejecutó*, así que su ausencia en una instancia significa «cubierto ahí». Sumando por clave de
+   rango, un bloque ejecutado en la instancia A y no en la B se quedaba en 0 —la A no aporta
+   ninguna entrada que sumar— y aparecía como no cubierto. Cada instancia calcula su propio
+   mapa de bytes y luego se combinan al máximo.
+2. **Las funciones se cuentan por `ranges[0]`**, que es el rango propio de la función; el resto
+   son bloques internos. Contarlos todos duplicaba funciones en el informe.
+3. **Las ejecuciones con el fuente mutado se descartan.** U8.2 sustituye el literal de `CONTACT`
+   y el script resultante es más largo, así que sus offsets no casan: fundirlas corrompía el
+   mapa. Se detectan comparando la longitud del rango de nivel superior con la del fuente real.
+
+Consecuencia honesta del punto 3: **las cuatro líneas del enlace de WhatsApp (894-897) figuran
+como no cubiertas aunque U8.2 las ejercita.** El número de líneas es por eso una cota inferior,
+y por eso no se gatea sobre él.
+
+### Por qué el umbral es 100 % de funciones y no el 80 % que pide el Gate 2
+
+Porque hoy estamos en 100, y bajar el listón hasta el mínimo exigido sería reservar sitio para
+dejar de probar. Con 17 funciones, tolerar «una sin cubrir» equivale a un 94 % — y esa función
+sin probar sería precisamente la que nadie mira. Añadir una función obliga a añadir su prueba,
+que es el trabajo que se le pide a un gate.
+
+Se gatea sobre funciones y no sobre líneas también porque «función nunca ejecutada» es un hecho
+binario y accionable, mientras que un porcentaje de líneas invita a discutir el decimal.
+
+### Dos huecos reales que encontró la medición
+
+No eran teóricos: eran pruebas que faltaban y que el suite en verde no delataba.
+
+- **U5.6** — los botones `#btn-es` y `#btn-en` no los pulsaba nadie. Todos los tests de idioma
+  llamaban a `setLang()` directamente, así que los handlers de las líneas 972-973 nunca se
+  ejecutaban: **un botón desconectado habría pasado el suite entero.**
+- **U7.7** — el respaldo `else if (mqEscritorio.addListener)` de la línea 931, para navegadores
+  sin la API moderna de eventos de media query, no lo ejercitaba nada porque el stub del arnés
+  ofrece siempre `addEventListener`.
+
+Ambos cerrados. Es el argumento a favor de medir cobertura en su forma más concreta: 46 pruebas
+en verde y dos caminos que ninguna tocaba.
 
 ### Lo que sigue faltando para el Gate 3
 

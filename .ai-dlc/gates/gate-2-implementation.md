@@ -29,16 +29,28 @@ constaban como bloqueo están hechos:
 3. ~~Añadir gitleaks al pipeline~~ → en verde, tras resolver la licencia de organización y los
    permisos de la API de PRs.
 
-**Lo que queda abierto es un único ítem: cobertura ≥ 80 %.** Su motivo cambió el 2026-07-30:
-ya no es que falte la suite —hay 46 unitarias, ver `docs/04-testing/unit-tests.md`— sino que
-**no se mide la cobertura**. Node trae `--experimental-test-coverage`, así que medirla es
-barato; lo que no es automático es decidir si el 80 % tiene sentido sobre un archivo que es
-90 % marcado y 10 % lógica. Medir primero, fijar el umbral después.
+**El último ítem —cobertura ≥ 80 %— ya está medido y superado.** El 2026-07-30, con 48 pruebas:
 
-Dicho de otro modo: este gate esperaba infraestructura, luego esperaba pruebas, y ahora espera
-una medición y un umbral defendible. Que eso baste o no para cerrarlo es **decisión del owner**;
-el `Estado` de la cabecera se deja como estaba porque cambiarlo sería tomar esa decisión desde
-la herramienta.
+| Métrica | Valor | Umbral que gatea |
+|---|---|---|
+| Funciones del script inline | **100,0 %** (17/17) | 100 %, en el CI |
+| Líneas | 94,7 % (72/76) | — informativa, cota inferior |
+
+**Ojo con cómo se llegó a ese número, porque la herramienta obvia falla en verde.**
+`node --test --experimental-test-coverage` informaba **100 % de líneas midiendo solo el arnés**:
+su reporter únicamente incluye rutas de archivo, y el JS del sitio vive en un `<script>` que
+jsdom compila bajo la URL del documento. Cerrar este gate con esa cifra habría dejado
+documentado un 100 % de cobertura sobre el conjunto vacío. Se mide con `tests/cobertura.mjs`,
+que lee los datos crudos de V8 —que sí registran el script inline— y los traduce a líneas de
+`index.html`. Detalle en `docs/04-testing/unit-tests.md` §Cobertura.
+
+La medición encontró además **dos huecos reales**: nadie pulsaba los botones de idioma —todos
+los tests llamaban a `setLang()` directamente, así que un botón desconectado habría pasado el
+suite— y nadie ejercitaba el respaldo `addListener` para navegadores antiguos. Ambos cerrados.
+
+Dicho de otro modo: este gate esperaba infraestructura, luego pruebas, luego una medición
+defendible, y ya no espera nada. **Cerrarlo es decisión del owner**; el `Estado` de la cabecera
+se deja como estaba porque cambiarlo sería tomarla desde la herramienta.
 
 **Salvedad sobre el valor real de estos gates:** pasan, pero no son obligatorios. No hay branch
 protection —org en plan Free con repo privado—, así que un pipeline en rojo no impide mergear.

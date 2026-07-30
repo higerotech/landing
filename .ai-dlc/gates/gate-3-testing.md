@@ -8,7 +8,7 @@
 * **Versión:** 0.2.0
 
 - [ ] Pirámide completa pasando (unit → integration → contract → e2e → security) —
-      **unit ✅ (46 pruebas), contract ✅ parcial** (invariantes del HTML dentro del mismo
+      **unit ✅ (48 pruebas, 100 % de funciones), contract ✅ parcial** (invariantes del HTML dentro del mismo
       suite y `nginx -t` en el build). Faltan e2e y security.
 - [ ] Matriz OWASP Top 10 ejecutada — solo A05 tiene prueba automatizada (U3.5)
 - [ ] DAST limpio — sin herramienta asignada
@@ -18,7 +18,7 @@
 
 ## Estado real
 
-**Desde el 2026-07-30 hay 46 pruebas unitarias** (`npm test`, ~4 s), diseñadas en
+**Desde el 2026-07-30 hay 48 pruebas unitarias** (`npm test`, ~4 s), diseñadas en
 `docs/04-testing/unit-tests.md` y ejecutadas en el CI por el job «Pruebas unitarias». Cargan el
 `index.html` real en jsdom, así que no pueden desviarse del artefacto que se despliega.
 
@@ -26,7 +26,7 @@ Qué cubren y qué no:
 
 | Nivel | Estado |
 |---|---|
-| Unit + contrato del HTML | ✅ 46 pruebas: paridad bilingüe (R2), contrato JS↔DOM, i18n, menú, RF05, reveal |
+| Unit + contrato del HTML | ✅ 48 pruebas, cobertura de funciones 100 %: paridad bilingüe (R2), contrato JS↔DOM, i18n, menú, RF05, reveal |
 | E2E en navegador real | ❌ |
 | Accesibilidad (`axe-core`) | ❌ |
 | Rendimiento (Lighthouse) | ❌ |
