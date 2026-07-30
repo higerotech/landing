@@ -1,11 +1,13 @@
 # Pruebas unitarias — Landing corporativa Higerotech
 
-* **Estado:** draft — **diseño, sin implementar**
+* **Estado:** **implementado** — 46 pruebas en verde
 * **Fecha:** 2026-07-30
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.4.0
-* **Gate:** 3 — no superado (este documento es el primer paso, no el cierre)
+* **Versión:** 0.5.0
+* **Gate:** 3 — **sigue no superado**: el nivel unitario existe, faltan E2E, accesibilidad,
+  rendimiento, DAST y mutation testing
+* **Ejecución:** `npm test` — `node --test` sobre el `index.html` real, ~4 s
 * **Arnés elegido:** `node:test` (stdlib) + `jsdom`
 * **Alcance:** la lógica de `index.html:884-992` y los invariantes del HTML que esa lógica asume
 
@@ -388,10 +390,60 @@ Dos hallazgos que no existían antes de leer el script con intención de probarl
    idioma sin ningún síntoma. Decisión pendiente: aceptar y documentar, o normalizar con
    `.toLowerCase()`.
 
-## Orden de implementación propuesto
+## Resultado de la implementación *(2026-07-30)*
 
-1. `package.json` con `"test": "node --test tests/unit/"`, `jsdom` como única `devDependency`,
-   y `.dockerignore` actualizado.
+**46 pruebas, 10 suites, 0 fallos, ~4,4 s.** Estructura:
+
+```
+package.json                      node --test "tests/unit/**/*.test.mjs"
+tests/helpers/cargar-dom.mjs      el arnés
+tests/unit/u1-carga.test.mjs      … u10-anio.test.mjs
+```
+
+### Tres desviaciones respecto a este diseño
+
+Ninguna cambia el fondo, pero conviene que estén escritas y no descubrirlas leyendo el código.
+
+| # | Diseñado | Implementado | Por qué |
+|---|---|---|---|
+| 1 | El job de CI corre **antes** que los de contenedor | Corre **en paralelo** | Los cinco jobs duran menos de un minuto. Encadenarlos añadiría latencia a cada ejecución para ahorrar unos segundos de runner cuando falle |
+| 2 | `actions/setup-node` anclada **por SHA** | Anclada por tag `@v4` | El repositorio ancla por SHA lo de terceros y por tag mayor las acciones oficiales (`checkout@v4`, `upload-artifact@v4`). Anclar solo esta por SHA introduciría un tercer estilo. **Migrar todo a SHA es una decisión aparte y pendiente** |
+| 3 | Solo el suite unitario | Añadido un job **`deps` de SCA** (`npm audit --audit-level=high`) | La consecuencia nº 1 de este documento decía que el gate SCA pasaba a ser aplicable. Dejarlo escrito sin cablearlo habría sido justo lo que este repositorio evita |
+
+### Dos casos que el diseño no preveía
+
+- **U1.5 — el arnés se prueba a sí mismo.** Rompe `id="nav-toggle"` a propósito y exige que el
+  detector salte. Un suite en verde cuyo mecanismo de detección no funciona es peor que no
+  tener suite. De paso **convierte T17 en un caso ejecutable**: el test confirma que la
+  excepción impide que los 15 `.reveal` reciban `.in`. La amenaza deja de ser un razonamiento
+  sobre el orden de ejecución y pasa a estar demostrada.
+- **U8.4 encontró un fallo real en el propio arnés.** La guarda contra el test vacuo comparaba
+  si el HTML *había cambiado* en lugar de si el patrón *casaba*, así que sustituir un literal
+  por sí mismo —que es la forma natural de afirmar «esto sigue existiendo en el fuente»— daba
+  falso negativo. Corregido a comprobar la coincidencia. Es una anécdota pequeña con una moraleja
+  que no lo es: el primer test que escribió el suite en rojo fue uno que apuntaba al andamio, no
+  al sitio.
+
+### Nota sobre `?lang=EN`
+
+U4.7 confirma el hallazgo: con `?lang=EN` el sitio sirve español. El test **fija el
+comportamiento actual**, no lo aprueba. Si se decide normalizar con `.toLowerCase()`, ese test
+debe cambiar de expectativa a `'en'` — y ese cambio es precisamente la señal de que la decisión
+se tomó a propósito.
+
+### Lo que sigue faltando para el Gate 3
+
+Sin cambios respecto a lo que ya decía este documento: E2E con Playwright, `axe-core`,
+Lighthouse CI, ZAP baseline y mutation testing. El nivel unitario cubre su parte; el gate mide
+la pirámide entera.
+
+## Orden de implementación *(seguido tal cual, 2026-07-30)*
+
+1. ✅ `package.json` con `jsdom` como única `devDependency`, y `.dockerignore` actualizado.
+   El patrón del script acabó siendo `node --test "tests/unit/**/*.test.mjs"`: pasar el
+   directorio a secas falla en Node 24, que interpreta los argumentos de `--test` como globs
+   y trata `tests/unit` como un archivo. De ahí también `engines: >=22`, que es donde ese
+   soporte de globs existe. `.gitignore` **no** excluía `node_modules/`: se habría commiteado.
 2. `tests/helpers/cargar-dom.mjs` — el arnés. Es donde está la dificultad real; el resto son
    aserciones.
 3. **U1 y U2 primero.** Cubren la peor clase de fallo y son las más baratas.

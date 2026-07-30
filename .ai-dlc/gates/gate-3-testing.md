@@ -1,23 +1,43 @@
 # Gate 3 — Pruebas (cierre de Fase 04)
 
-* **Estado:** draft — **no superado**
+* **Estado:** review — **no superado**
 * **Fecha:** 2026-07-29
+* **Revisión:** 2026-07-30 — implementado el nivel unitario (46 pruebas)
 * **Decisores:** Jeremi Alcalá (owner)
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.1.0
+* **Versión:** 0.2.0
 
-- [ ] Pirámide completa pasando (unit → integration → contract → e2e → security)
-- [ ] Matriz OWASP Top 10 ejecutada
-- [ ] DAST limpio
-- [ ] Rendimiento dentro de SLOs
-- [ ] Mutation testing ≥ 60%
+- [ ] Pirámide completa pasando (unit → integration → contract → e2e → security) —
+      **unit ✅ (46 pruebas), contract ✅ parcial** (invariantes del HTML dentro del mismo
+      suite y `nginx -t` en el build). Faltan e2e y security.
+- [ ] Matriz OWASP Top 10 ejecutada — solo A05 tiene prueba automatizada (U3.5)
+- [ ] DAST limpio — sin herramienta asignada
+- [ ] Rendimiento dentro de SLOs — sin Lighthouse CI
+- [ ] Mutation testing ≥ 60% — descartado a propósito por ahora: añadiría otra dependencia
+      grande y lo primero era que la suite existiera
 
 ## Estado real
 
-**No hay ninguna prueba automatizada en el repositorio.** La fase 04 no se ha documentado
-porque documentarla hoy sería describir algo que no existe.
+**Desde el 2026-07-30 hay 46 pruebas unitarias** (`npm test`, ~4 s), diseñadas en
+`docs/04-testing/unit-tests.md` y ejecutadas en el CI por el job «Pruebas unitarias». Cargan el
+`index.html` real en jsdom, así que no pueden desviarse del artefacto que se despliega.
 
-Lo que sí se hizo, y consta como evidencia manual en
+Qué cubren y qué no:
+
+| Nivel | Estado |
+|---|---|
+| Unit + contrato del HTML | ✅ 46 pruebas: paridad bilingüe (R2), contrato JS↔DOM, i18n, menú, RF05, reveal |
+| E2E en navegador real | ❌ |
+| Accesibilidad (`axe-core`) | ❌ |
+| Rendimiento (Lighthouse) | ❌ |
+| Seguridad dinámica (ZAP) | ❌ |
+| Mutation testing | ❌ |
+
+**El gate sigue abierto**, y con razón: un nivel de la pirámide no es la pirámide. Lo que ha
+cambiado es el motivo — antes era «no hay ninguna prueba», ahora es «falta todo lo que necesita
+un navegador de verdad».
+
+Lo que se hizo antes de que existiera la suite, y consta como evidencia manual en
 `docs/05-deployment/deployment.md` §Verificación:
 
 - Cabeceras HTTP comprobadas con `curl -sI` en `/`, `/index.html`, `/assets/…`, `/robots.txt`,

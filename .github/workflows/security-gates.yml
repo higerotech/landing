@@ -158,8 +158,44 @@ jobs:
       - if: always()
         run: docker rm -f sitio
 
+  # ── Gate 3 · Pruebas unitarias ───────────────────────────────────────
+  # Corren en paralelo con los jobs de contenedor y no como prerrequisito: los
+  # cinco jobs duran menos de un minuto, así que encadenarlos solo añadiría
+  # latencia a cada ejecución sin ahorrar nada apreciable de runner.
+  unit:
+    name: Pruebas unitarias
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: node --test sobre el index.html real
+        run: npm test
+
+  # ── Gate 2 · Dependencias (SCA) ──────────────────────────────────────
+  # Este gate era «N/A por ausencia» hasta que las pruebas introdujeron jsdom.
+  # Matiz que conviene tener presente al leer un rojo aquí: todas las
+  # dependencias son de desarrollo y ninguna viaja en la imagen —el Dockerfile
+  # copia archivos concretos—, así que un hallazgo es riesgo de la cadena de
+  # herramientas del CI, no del sitio publicado. Sigue mereciendo arreglo.
+  deps:
+    name: Dependencias (SCA)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Auditoría de vulnerabilidades
+        run: npm audit --audit-level=high
+
   # ── Gate 3 · Accesibilidad y rendimiento ─────────────────────────────
-  # TODO: conectar cuando exista la suite (ver .ai-dlc/gates/gate-3-testing.md).
+  # TODO: conectar cuando exista la suite E2E (ver .ai-dlc/gates/gate-3-testing.md).
   #   - Playwright: menú móvil, i18n sin pérdida de contenido, 404
   #   - axe-core: contraste, aria, orden de encabezados
   #   - Lighthouse CI: presupuesto LCP < 2,5 s

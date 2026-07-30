@@ -13,8 +13,14 @@ desktop.ini
 tmp/
 .cache/
 
+# Dependencias de las pruebas. El sitio no las usa: no se construye con npm.
+# `package-lock.json` SI se versiona — hace reproducible el CI y es lo que
+# escanea el gate de dependencias.
+node_modules/
+
 # Artefactos de build / escaneo
 dist/
+coverage/
 sbom.json
 trivy-report.*
 *.tfstate*

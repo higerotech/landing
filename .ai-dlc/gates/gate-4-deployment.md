@@ -8,7 +8,9 @@
 
 - [ ] Pipeline con 7 gates limpio (SAST, SCA, secrets, license, container, IaC, DAST) —
       **5 de 7 resueltos**: SAST ✅ Semgrep, secrets ✅ gitleaks, container ✅ Trivy,
-      SCA ✅ N/A (cero dependencias de paquetes), IaC ✅ N/A parcial (ver ítem siguiente).
+      SCA ✅ **real desde el 2026-07-30** —`npm audit --audit-level=high` en el job `deps`;
+      antes era ✅ por ausencia de dependencias, ahora hay 46 paquetes de desarrollo por
+      jsdom y el gate escanea de verdad—, IaC ✅ N/A parcial (ver ítem siguiente).
       Faltan **license** (sin escaneo de licencias) y **DAST** (sin ZAP ni equivalente).
       No confundir esta lista canónica con las siete comprobaciones G1–G7 de
       `docs/05-deployment/deployment.md`, que son otro conjunto y sí están las siete en verde.

@@ -1,7 +1,7 @@
 # Higerotech — Landing Page
 
 [![Gates de seguridad](https://img.shields.io/badge/gates_de_seguridad-7%2F7-2d7d46)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
-[![Pruebas](https://img.shields.io/badge/pruebas-sin_suite-b30000)](.ai-dlc/gates/gate-3-testing.md)
+[![Pruebas](https://img.shields.io/badge/pruebas-46_unitarias_sin_E2E-e08000)](.ai-dlc/gates/gate-3-testing.md)
 [![Versión](https://img.shields.io/badge/versi%C3%B3n-v0.3.0-333333)](CHANGELOG.md)
 
 <!--
@@ -18,9 +18,12 @@
     [![CI](https://github.com/higerotech/landing/actions/workflows/security-gates.yml/badge.svg)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
     [![Versión](https://img.shields.io/github/v/tag/higerotech/landing?label=versi%C3%B3n)](CHANGELOG.md)
 
-  El badge de pruebas dice "sin suite" porque es la verdad: no hay ninguna prueba
-  automatizada (Gate 3 abierto). Cambiarlo a "passing" exigiría antes que exista la
-  suite, no reetiquetarlo.
+  El badge de pruebas decía "sin suite" y dejó de ser verdad el 2026-07-30: hay 46
+  pruebas unitarias. Sigue en ámbar y no en verde, y dice "sin E2E" en vez de
+  "passing", porque la pirámide está incompleta: faltan E2E, accesibilidad,
+  rendimiento y DAST, y el Gate 3 continúa abierto. El número se actualiza a mano
+  igual que el resto; si crece la suite y nadie lo toca, el badge miente a la baja,
+  que es el sentido menos dañino en que puede mentir.
 -->
 
 Landing page corporativa de **Higerotech**, consultora tecnológica AI-First para el B2B
@@ -88,16 +91,31 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 |---|---|---|---|
 | 0 | Requisitos | ✅ Superado | [gate-0](.ai-dlc/gates/gate-0-requirements.md) |
 | 1 | Diseño | ✅ Superado | [gate-1](.ai-dlc/gates/gate-1-design.md) |
-| 2 | Implementación | ❌ Abierto — falta cobertura (no hay suite) | [gate-2](.ai-dlc/gates/gate-2-implementation.md) |
-| 3 | Pruebas | ❌ Abierto — no hay suite | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
+| 2 | Implementación | ❌ Abierto — hay unitarias, falta medir cobertura | [gate-2](.ai-dlc/gates/gate-2-implementation.md) |
+| 3 | Pruebas | ❌ Abierto — 46 unitarias; faltan E2E, a11y, rendimiento y DAST | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
 | 4 | Despliegue | 🟡 Parcial — falta firma, digest y archivar el SBOM | [gate-4](.ai-dlc/gates/gate-4-deployment.md) |
 | 5 | Monitoreo | ❌ Abierto — sin observabilidad | [gate-5](.ai-dlc/gates/gate-5-monitoring.md) |
 
 Los gates abiertos lo están con su razón documentada. Ninguno se marca por conveniencia.
 
-El CI ya está conectado y las siete comprobaciones pasan, así que el motivo por el que Gate 2
-sigue abierto **cambió**: ya no es la falta de pipeline, es la falta de suite de pruebas, que
-es el mismo bloqueo que Gate 3. Cerrarlo o no es decisión del owner, no de la herramienta.
+El CI ya está conectado y las siete comprobaciones pasan. El motivo por el que Gate 2 sigue
+abierto ha cambiado dos veces: primero dejó de ser la falta de pipeline, y desde el 2026-07-30
+tampoco es la ausencia total de pruebas —hay 46 unitarias—, sino que **no se mide cobertura**.
+Cerrarlo o no es decisión del owner, no de la herramienta.
+
+## Pruebas
+
+```bash
+npm ci
+npm test          # node --test sobre el index.html real, ~4 s
+```
+
+Las unitarias cargan el `index.html` **real** en jsdom y ejecutan su script inline, así que no
+pueden desviarse del archivo que se despliega. Diseño, catálogo de casos y límites del nivel en
+[`docs/04-testing/unit-tests.md`](docs/04-testing/unit-tests.md).
+
+`node_modules/` es solo para las pruebas: **el sitio no se construye con npm** y nada de esto
+viaja en la imagen.
 
 ## Desarrollo local (sin Docker)
 
