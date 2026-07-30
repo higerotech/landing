@@ -34,6 +34,13 @@ jobs:
   secrets:
     name: Detección de secretos
     runs-on: ubuntu-latest
+    # `contents: read` del bloque global no basta: el action lee los commits y
+    # los comentarios de la PR y publica los hallazgos como review comments.
+    # Sin esto falla con «Resource not accessible by integration». Se declara
+    # por job para que los otros cuatro sigan sin tocar la API de PRs.
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
