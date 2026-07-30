@@ -1,0 +1,31 @@
+#!/bin/sh
+# Rechaza pushes directos a main.
+#
+# Sustituto local de la branch protection del servidor: la org está en plan Free
+# y el repo es privado, y en esa combinación GitHub no permite ni branch
+# protection ni rulesets (403 "Upgrade to GitHub Pro or make this repository
+# public"). Quien impone esta regla es tu clon, no GitHub: un `--no-verify`,
+# otra máquina o un merge desde la web se la saltan sin avisar. Si algún día el
+# repo pasa a Team o a público, esto sobra — configúralo en el servidor.
+#
+# Se activa una vez por clon:  git config core.hooksPath .githooks
+
+rama_protegida='refs/heads/main'
+
+while read -r ref_local sha_local ref_remoto sha_remoto; do
+  [ "$ref_remoto" = "$rama_protegida" ] || continue
+
+  echo "pre-push: rechazado el push directo a main." >&2
+  echo "" >&2
+  echo "  main se actualiza solo por PR: toda PR requiere revisión humana + IA" >&2
+  echo "  y el autor no aprueba la suya (CONTRIBUTING.md)." >&2
+  echo "" >&2
+  echo "  Lleva el trabajo a una rama:" >&2
+  echo "    git switch -c fix/lo-que-toque" >&2
+  echo "    git push -u origin fix/lo-que-toque" >&2
+  echo "" >&2
+  echo "  Para saltarlo a conciencia:  git push --no-verify" >&2
+  exit 1
+done
+
+exit 0

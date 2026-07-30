@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.title="Higerotech Landing" \
       org.opencontainers.image.description="Landing page AI-First de Higerotech" \
       org.opencontainers.image.vendor="Higerotech" \
       org.opencontainers.image.licenses="UNLICENSED" \
-      org.opencontainers.image.source="https://github.com/higerotech/website"
+      org.opencontainers.image.source="https://github.com/higerotech/landing"
 
 # Config de nginx. El snippet de cabeceras va aparte porque cada `location`
 # tiene que incluirlo: `add_header` no se hereda si el nivel define el suyo.
