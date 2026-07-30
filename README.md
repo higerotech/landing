@@ -1,5 +1,28 @@
 # Higerotech — Landing Page
 
+[![Gates de seguridad](https://img.shields.io/badge/gates_de_seguridad-7%2F7-2d7d46)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
+[![Pruebas](https://img.shields.io/badge/pruebas-sin_suite-b30000)](.ai-dlc/gates/gate-3-testing.md)
+[![Versión](https://img.shields.io/badge/versi%C3%B3n-v0.3.0-333333)](CHANGELOG.md)
+
+<!--
+  Los tres badges son ESTÁTICOS a propósito, y hay que actualizarlos a mano.
+  El repositorio es privado, y el proxy de imágenes de GitHub pide los badges sin
+  autenticar: cualquier badge dinámico devuelve 404 y se renderiza roto. Comprobado
+  contra los tres endpoints:
+    - github.com/.../badge.svg            -> HTTP 404
+    - shields.io/github/actions/workflow  -> "repo or workflow not found"
+    - shields.io/github/v/tag             -> "repo not found"
+
+  Cuando el repositorio pase a público, sustituir por los equivalentes dinámicos y
+  borrar esta nota:
+    [![CI](https://github.com/higerotech/landing/actions/workflows/security-gates.yml/badge.svg)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
+    [![Versión](https://img.shields.io/github/v/tag/higerotech/landing?label=versi%C3%B3n)](CHANGELOG.md)
+
+  El badge de pruebas dice "sin suite" porque es la verdad: no hay ninguna prueba
+  automatizada (Gate 3 abierto). Cambiarlo a "passing" exigiría antes que exista la
+  suite, no reetiquetarlo.
+-->
+
 Landing page corporativa de **Higerotech**, consultora tecnológica AI-First para el B2B
 venezolano. Sitio estático en modo oscuro, bilingüe (ES/EN), empaquetado para desplegar con
 Docker sobre nginx.
@@ -49,8 +72,15 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 │   └── 05-deployment/          # Topología, pipeline, verificación y rollback
 │
 ├── CHANGELOG.md  SECURITY.md  CONTRIBUTING.md
-└── .github/workflows/          # Pipeline con los 7 gates de seguridad
+└── .github/workflows/          # Pipeline: 5 jobs, 7 comprobaciones G1–G7 (ver deployment.md)
 ```
+
+> **Ojo con «los 7 gates»:** el pipeline implementa las siete comprobaciones **G1–G7** de
+> [`deployment.md`](docs/05-deployment/deployment.md) §Pipeline (secretos, SAST, CVEs de
+> imagen, SBOM, cabeceras, 404 y fuga de versión), y las siete están en verde. Eso **no** es
+> lo mismo que los siete gates canónicos de AI-DLC que enumera
+> [gate-4](.ai-dlc/gates/gate-4-deployment.md) —SAST, SCA, secrets, license, container, IaC,
+> DAST—, de los cuales **license y DAST no existen**. Dos listas de siete, distintas.
 
 ## Estado de los gates
 
@@ -58,12 +88,16 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 |---|---|---|---|
 | 0 | Requisitos | ✅ Superado | [gate-0](.ai-dlc/gates/gate-0-requirements.md) |
 | 1 | Diseño | ✅ Superado | [gate-1](.ai-dlc/gates/gate-1-design.md) |
-| 2 | Implementación | ❌ Abierto — falta CI conectado | [gate-2](.ai-dlc/gates/gate-2-implementation.md) |
+| 2 | Implementación | ❌ Abierto — falta cobertura (no hay suite) | [gate-2](.ai-dlc/gates/gate-2-implementation.md) |
 | 3 | Pruebas | ❌ Abierto — no hay suite | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
-| 4 | Despliegue | 🟡 Parcial — falta SBOM y firma | [gate-4](.ai-dlc/gates/gate-4-deployment.md) |
+| 4 | Despliegue | 🟡 Parcial — falta firma, digest y archivar el SBOM | [gate-4](.ai-dlc/gates/gate-4-deployment.md) |
 | 5 | Monitoreo | ❌ Abierto — sin observabilidad | [gate-5](.ai-dlc/gates/gate-5-monitoring.md) |
 
 Los gates abiertos lo están con su razón documentada. Ninguno se marca por conveniencia.
+
+El CI ya está conectado y las siete comprobaciones pasan, así que el motivo por el que Gate 2
+sigue abierto **cambió**: ya no es la falta de pipeline, es la falta de suite de pruebas, que
+es el mismo bloqueo que Gate 3. Cerrarlo o no es decisión del owner, no de la herramienta.
 
 ## Desarrollo local (sin Docker)
 
@@ -135,5 +169,11 @@ cargar la página — `setLang()` corre al arrancar. Ver
 ## Pendiente
 
 Ver [`CHANGELOG.md`](CHANGELOG.md) §Unreleased. En resumen: confirmar dominio, configurar el
-número de WhatsApp, conectar el pipeline, montar un monitor externo de disponibilidad y
-diagnosticar el contenedor de producción en estado `unhealthy`.
+número de WhatsApp, montar la suite de pruebas (Gate 3), montar un monitor externo de
+disponibilidad y diagnosticar el contenedor de producción en estado `unhealthy`.
+
+El pipeline **ya está conectado** y sus siete comprobaciones pasan. Lo que no existe es una
+barrera que lo haga obligatorio: la org está en plan Free y el repo es privado, combinación en
+la que GitHub no ofrece branch protection ni rulesets, así que un pipeline en rojo **no impide
+mergear**. La única barrera es `.githooks/pre-push`, que es local y no consulta el CI. Ver
+[CONTRIBUTING.md](CONTRIBUTING.md) §Al clonar.

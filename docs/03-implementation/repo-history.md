@@ -32,9 +32,28 @@ gitGraph
     commit id: "a0b767b" tag: "v0.3.0"
 ```
 
-Historia lineal: sin ramas ni merges todavía. El repositorio se inicializó el 2026-07-29 y
-todo el trabajo se hizo sobre `main`. En cuanto entre una segunda persona, el flujo pasa a
-rama por cambio + PR, como exige `CONTRIBUTING.md`, y el grafo dejará de ser una línea recta.
+El repositorio se inicializó el 2026-07-29 y hasta `a0b767b` todo el trabajo se hizo sobre
+`main`, de ahí la línea recta.
+
+> **Este grafo está desactualizado y su regeneración está pendiente.** Refleja el historial
+> hasta `a0b767b`. Después, el repositorio se publicó como `higerotech/landing`, el flujo pasó
+> a rama por cambio + PR, y aterrizaron cuatro PR con sus cuatro commits de merge (`b13a9b9`,
+> `a6c376e`, `bbaaea8`, `1e7153b`). La previsión de arriba —que haría falta «una segunda
+> persona» para dejar la línea recta— no se cumplió: el cambio lo forzó `.githooks/pre-push`,
+> que rechaza los pushes directos a `main` incluso con un solo mantenedor.
+>
+> **Se intentó regenerar y la salida no es publicable todavía.** `gitgraph_from_log.py` produce
+> hoy tres defectos que harían este documento menos fiable que esta nota:
+>
+> 1. El `gitGraph` incluye solo la rama de la primera PR y se detiene en su merge; las ramas y
+>    merges de las tres siguientes no aparecen, aunque sí figuran en la bitácora.
+> 2. La bitácora lista commits **no mergeados y duplicados**, porque recorre refs remotas además
+>    de `main`: el mismo cambio aparece dos veces si se ha rebasado.
+> 3. Los autores de los commits de merge salen con mojibake (`AlcalÃ¡`), por decodificación
+>    incorrecta de UTF-8.
+>
+> Regenerar cuando esos tres puntos estén resueltos, y revisar la salida antes de pegarla en
+> lugar de confiar en ella.
 
 ### Bitácora de cambios (fiel al repo)
 

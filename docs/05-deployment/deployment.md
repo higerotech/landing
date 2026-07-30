@@ -84,9 +84,16 @@ flowchart TB
 
 *Eje comportamiento · Fase 05 · Pipeline y ruta de rollback.*
 
-Los pasos `MERGE` en adelante son **manuales hoy**. Solo los siete gates están automatizados
-en `.github/workflows/security-gates.yml`, y de esos, Semgrep y Trivy dependen de que se
-conecte el repositorio a GitHub Actions.
+Los pasos `MERGE` en adelante son **manuales hoy**. Las siete comprobaciones G1–G7 están
+automatizadas en `.github/workflows/security-gates.yml` y las siete pasan: el repositorio ya
+está conectado a GitHub Actions, así que Semgrep y Trivy ejecutan de verdad.
+
+> **`Merge bloqueado` es la intención, no lo que ocurre.** Hoy nada impide mergear con el
+> pipeline en rojo. La org está en plan Free y el repositorio es privado, combinación en la que
+> GitHub no ofrece branch protection ni rulesets, así que el estado del CI no es una condición
+> para el merge. La única barrera existente es `.githooks/pre-push`, que es local y **no
+> consulta el CI**: impide empujar a `main`, no mergear una PR roja. Cerrar la brecha exige
+> subir a GitHub Team o hacer el repositorio público (ver `CHANGELOG.md` §Unreleased).
 
 Los gates G5, G6 y G7 son específicos de este proyecto y merecen justificación: existen para
 que los tres defectos corregidos en `7c7bc78` no puedan volver. G5 comprueba las cabeceras en
@@ -211,7 +218,7 @@ gantt
     section Preparacion
     Confirmar dominio y numero de WhatsApp  :crit, a1, 2026-07-30, 1d
     Etiquetar imagen actual como respaldo   :a2, after a1, 1d
-    Conectar el pipeline a GitHub Actions   :a3, after a1, 2d
+    Conectar el pipeline a GitHub Actions   :done, a3, 2026-07-30, 1d
     section Corte
     Diagnosticar el contenedor unhealthy    :crit, b1, after a2, 1d
     Desplegar la version corregida          :crit, b2, after b1, 1d

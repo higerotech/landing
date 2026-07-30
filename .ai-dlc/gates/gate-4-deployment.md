@@ -6,13 +6,21 @@
 * **Fase AI-DLC:** 05-deployment
 * **Versión:** 0.3.0
 
-- [ ] Pipeline con 7 gates limpio (SAST, SCA, secrets, license, container, IaC, DAST)
+- [ ] Pipeline con 7 gates limpio (SAST, SCA, secrets, license, container, IaC, DAST) —
+      **5 de 7 resueltos**: SAST ✅ Semgrep, secrets ✅ gitleaks, container ✅ Trivy,
+      SCA ✅ N/A (cero dependencias de paquetes), IaC ✅ N/A parcial (ver ítem siguiente).
+      Faltan **license** (sin escaneo de licencias) y **DAST** (sin ZAP ni equivalente).
+      No confundir esta lista canónica con las siete comprobaciones G1–G7 de
+      `docs/05-deployment/deployment.md`, que son otro conjunto y sí están las siete en verde.
 - [x] IaC escaneada sin findings críticos — **N/A parcial**: no hay Terraform ni Kubernetes.
       La "infraestructura como código" se reduce a `Dockerfile`, `docker-compose.yml`,
       `nginx.conf` y `security-headers.conf`, que sí están versionados y revisados.
       `RUN nginx -t` valida la configuración en tiempo de build.
 - [x] Runbook de rollback documentado con disparadores (`docs/05-deployment/deployment.md`)
-- [ ] SBOM generado — **pendiente**
+- [x] SBOM generado — **sí, en cada run**: Trivy emite `sbom.cdx.json` (CycloneDX) y se sube
+      como artefacto. **Pero no se archiva por release:** el artefacto caduca con el run, así
+      que hoy no se puede reconstruir qué contenía una imagen ya desplegada. Generado ≠
+      conservado; ver la fila 2 de «Lo que falta».
 
 ## Lo que sí está cerrado
 
@@ -29,11 +37,14 @@
 
 | # | Falta | Acción |
 |---|---|---|
-| 1 | Pipeline real | Sustituir los `TODO` de `.github/workflows/security-gates.yml` |
-| 2 | SBOM | `trivy image --format cyclonedx` archivado por release |
+| 1 | ~~Pipeline real~~ | **Hecho.** Solo queda en `TODO` el bloque de Gate 3 (Playwright, axe-core, Lighthouse), que depende de que exista la suite |
+| 2 | Archivar el SBOM | Se genera en cada run pero caduca con el artefacto: publicarlo por release para poder auditar una imagen desplegada |
 | 3 | Imagen por digest | Cambiar `nginx:1.30-alpine` por `nginx:1.30-alpine@sha256:…` |
 | 4 | Firma de imagen | `cosign sign` + verificación antes de desplegar |
 | 5 | Terminación TLS y HSTS documentadas | `<TODO: confirmar quién termina TLS>` |
+| 6 | Escaneo de licencias | El gate canónico `license` no tiene herramienta asignada |
+| 7 | DAST | Sin ZAP baseline ni equivalente; propuesto en `gate-3-testing.md` |
+| 8 | Obligatoriedad del pipeline | Los gates pasan pero **no bloquean**: sin branch protection (org Free + repo privado), un rojo no impide mergear |
 
 ## Hallazgo operativo abierto
 

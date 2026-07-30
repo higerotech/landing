@@ -8,6 +8,12 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- Badges de gates de seguridad, pruebas y versión en `README.md`. Son **estáticos** por
+  necesidad: con el repositorio privado, el proxy de imágenes de GitHub pide los badges sin
+  autenticar y todo endpoint dinámico responde 404 o «repo not found» (comprobado contra el
+  badge propio de GitHub y dos de shields.io). Las URLs dinámicas equivalentes quedan
+  comentadas en el propio README para cuando el repositorio deje de ser privado. El badge de
+  pruebas dice **«sin suite»**, que es la verdad: no hay ninguna prueba automatizada.
 - `.githooks/pre-push` rechaza los pushes directos a `main`, con su activación por
   `core.hooksPath` documentada en `CONTRIBUTING.md`. Es un sustituto local y parcial: no
   exige los security gates ni alcanza los merges desde la web.
@@ -26,6 +32,28 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   `1.30.x` sin saltar de línea sola.
 
 ### Corregido
+- **Revisión de coherencia de la documentación.** Casi toda se escribió el 2026-07-29, antes de
+  que el repositorio existiera en GitHub, y describía un mundo sin CI. Sincronizado con la
+  realidad:
+  - `gate-2`: el SAST constaba como «no ejecutado, no hay pipeline conectado» y los tres
+    bloqueos declarados (Semgrep, Trivy, gitleaks) están hechos. El gate sigue abierto, pero
+    **por otro motivo**: falta cobertura, que depende de que exista suite. El `Estado` de la
+    cabecera no se toca: cerrarlo es decisión del owner.
+  - `gate-4`: «SBOM generado — pendiente» era falso (se genera en cada run), y el ítem de los
+    siete gates canónicos ahora detalla que van 5 de 7, con `license` y DAST ausentes.
+  - `deployment.md`: decía que Semgrep y Trivy «dependen de que se conecte el repositorio a
+    GitHub Actions», ya conectado. Y su diagrama promete `Merge bloqueado`, que **no ocurre**:
+    ahora está marcado como intención y no como hecho.
+  - `SECURITY.md`: «no contiene ni necesita secretos» dejó de ser cierto al añadir
+    `GITLEAKS_LICENSE` como secreto de Actions. Distinguido código de CI, y registrada como
+    brecha **alta** que los gates no bloqueen el merge.
+  - `README.md`: «falta CI conectado» y «conectar el pipeline» eran obsoletos; «los 7 gates»
+    era ambiguo porque hay **dos listas distintas de siete** —las G1–G7 del pipeline, todas en
+    verde, y las siete canónicas de AI-DLC, con dos ausentes—. Desambiguado.
+  - `repo-history.md`: su grafo describe un repo sin ramas ni merges, que ya no es este.
+    Marcado como pendiente de regenerar cuando aterrice la pila de PR.
+  - `CONTRIBUTING.md`: escribía `scripts/gitgraph_from_log.py` como si el script estuviera en
+    el repositorio; vive en el skill de AI-DLC, como `validate_mermaid.py`.
 - El gate de secretos no escaneaba nada, por dos causas encadenadas: `gitleaks-action` exige
   licencia en repos de organización y abortaba con «missing gitleaks license», y una vez
   resuelta moría con «Resource not accessible by integration» porque el bloque global
@@ -48,9 +76,12 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 - Proteger `main` en el servidor: la org está en plan Free y el repo es privado, y GitHub no
   ofrece branch protection ni rulesets en esa combinación. Salidas: subir a GitHub Team
   (mantiene el repo privado) o hacerlo público. Hasta entonces la única barrera es el hook.
-- Corregir la ruta de `gitgraph_from_log.py`: `CONTRIBUTING.md` y el registro de 0.3.0 la
-  escriben como `scripts/…`, relativa al repo, pero el script vive en el skill de AI-DLC
-  junto a `validate_mermaid.py`. No falta nada; la referencia está mal escrita.
+- Arreglar `gitgraph_from_log.py` (vive en el skill de AI-DLC) y regenerar después
+  `docs/03-implementation/repo-history.md`, cuyo grafo se quedó en `a0b767b`. Se intentó
+  regenerarlo y la salida no es publicable: el `gitGraph` incluye solo la rama de la primera PR
+  y omite las tres siguientes, la bitácora duplica commits no mergeados porque recorre refs
+  remotas además de `main`, y los autores de los merges salen con mojibake. Publicar eso sería
+  cambiar un documento desactualizado por uno incorrecto.
 
 ## [0.3.0] - 2026-07-29
 

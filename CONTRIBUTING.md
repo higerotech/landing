@@ -64,8 +64,14 @@ Los diagramas van **inline** como bloques ```mermaid dentro del documento de su 
 una carpeta aparte. Si tocas la arquitectura, actualiza el C4 correspondiente en el mismo
 commit.
 
-`docs/03-implementation/repo-history.md` **no se edita a mano**: se regenera con
-`scripts/gitgraph_from_log.py` tras cada merge o tag.
+`docs/03-implementation/repo-history.md` **no se edita a mano**: se regenera tras cada merge o
+tag con `gitgraph_from_log.py`, que vive **en el skill de AI-DLC**, no en este repositorio —
+igual que `validate_mermaid.py`:
+
+```bash
+python "<ruta-skill-ai-dlc>/scripts/gitgraph_from_log.py" . --branch main \
+  --out docs/03-implementation/_derivado.md
+```
 
 ## Commits
 
