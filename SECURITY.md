@@ -28,19 +28,31 @@ y el análisis STRIDE en [`docs/02-design/threat-model.md`](docs/02-design/threa
 
 ## Gestión de secretos
 
-Este repositorio **no contiene ni necesita secretos**. No hay claves de API, credenciales
-ni tokens. `.gitignore` excluye `.env*` de forma preventiva.
+**El código no contiene secretos.** No hay claves de API, credenciales ni tokens en el árbol
+de archivos; `.gitignore` excluye `.env*` de forma preventiva. Verificado por herramienta, no
+solo por lectura: gitleaks corre en cada PR y el historial completo se escaneó aparte con el
+binario (9 commits, sin hallazgos).
 
-Si en el futuro se añade algo que los requiera (formulario de contacto, analítica), deben
-gestionarse fuera del repositorio y el pipeline debe incluir un gate de detección de secretos.
+**El CI sí requiere un secreto.** `GITLEAKS_LICENSE` vive como *Actions secret* del
+repositorio, porque `gitleaks-action` exige licencia en repos de organización. No está en el
+árbol ni debe estarlo; se gestiona con `gh secret set` y GitHub no devuelve su valor. Al
+rotarlo, basta reescribirlo: no hay copia en el repositorio que actualizar.
+
+Si en el futuro se añade algo que requiera más secretos (formulario de contacto, analítica),
+deben gestionarse igual: fuera del árbol, como secretos de Actions o del entorno de despliegue.
+El gate de detección de secretos **ya existe** y cubre lo que entra por PR.
 
 ## Supply chain (A03)
 
 - Cero dependencias de gestores de paquetes: sin `npm`, sin `pip`, sin lockfiles.
   Es una propiedad deliberada de la arquitectura (ver ADR-0003).
 - Fuentes tipográficas **autoalojadas** (ADR-0004): no se carga nada desde CDNs de terceros.
-- Imagen base anclada a `nginx:1.30-alpine`.
-  Pendiente: anclar por digest `sha256` y generar SBOM. Ver
+- Imagen base anclada a `nginx:1.30-alpine`, escaneada con Trivy en cada PR (0 CVEs
+  corregibles de severidad HIGH o CRITICAL).
+- SBOM CycloneDX generado en cada run del pipeline.
+- `aquasecurity/trivy-action` anclado por SHA de commit, no por tag ni por rama.
+  Pendiente: anclar la imagen por digest `sha256`, archivar el SBOM por release, firmar la
+  imagen, y anclar por SHA también `gitleaks-action` y `semgrep-action`. Ver
   [`.ai-dlc/gates/gate-4-deployment.md`](.ai-dlc/gates/gate-4-deployment.md).
 
 ## Cabeceras de seguridad
@@ -61,5 +73,6 @@ curl -sI https://higerotech.com/ | grep -i -E 'frame|nosniff|referrer|permission
 |---|---|---|
 | CSP con `'unsafe-inline'` | Medio | Aceptado — CSS/JS inline por diseño (ADR-0003) |
 | Sin alertas de disponibilidad | Medio | **Abierto** — Gate 5 no superado |
-| Sin SBOM ni firma de imagen | Bajo | **Abierto** — Gate 4 |
+| SBOM sin archivar por release y sin firma de imagen | Bajo | **Abierto** — Gate 4. El SBOM se genera, pero caduca con el artefacto del run |
 | Sin pruebas automatizadas | Medio | **Abierto** — Gate 3 |
+| Los gates de seguridad no bloquean el merge | **Alto** | **Abierto** — sin branch protection (org Free + repo privado). El pipeline pasa, pero un rojo no impide mergear; la única barrera es un hook local que no consulta el CI |
