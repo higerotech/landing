@@ -35,7 +35,7 @@ lo que ya se arregló. Propuesta mínima y proporcionada:
 
 | Nivel | Herramienta sugerida | Qué protege |
 |---|---|---|
-| Unit | — | No aplica: no hay lógica de dominio |
+| Unit | `node:test` + `jsdom` | Ocho unidades con ramas reales en `index.html:884-992`. **Diseñado** en `docs/04-testing/unit-tests.md` |
 | Contract | `htmlhint` + `nginx -t` | HTML válido; configuración que arranca |
 | E2E | Playwright | Menú móvil abre/cierra, i18n no pierde contenido, 404 responde 404 |
 | Accesibilidad | `axe-core` vía Playwright | Contraste, `aria-*`, orden de encabezados |
@@ -44,3 +44,10 @@ lo que ya se arregló. Propuesta mínima y proporcionada:
 
 Las tres pruebas E2E de la fila "E2E" corresponden exactamente a los tres bugs corregidos en
 `7c7bc78`. Son las que evitan una regresión de lo ya pagado.
+
+**Corrección del 2026-07-30.** La fila «Unit» decía «No aplica: no hay lógica de dominio», y era
+falso. No hay lógica *de negocio*, que es otra cosa: el bloque `<script>` tiene cinco funciones
+con ramas, dos decisiones con tabla de prioridad, tres degradaciones defensivas y una clase de
+fallo que deja la página en blanco sin que el `<noscript>` la cubra. Todo eso es unitariamente
+probable. El diseño completo —arnés, catálogo de ~30 casos, trazabilidad y coste— está en
+`docs/04-testing/unit-tests.md`; el gate sigue **no superado** porque diseñar no es implementar.
