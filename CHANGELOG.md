@@ -13,6 +13,11 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   exige los security gates ni alcanza los merges desde la web.
 
 ### Seguridad
+- `aquasecurity/trivy-action` anclado por SHA de commit (`ed142fd`, v0.36.0) en sus dos usos,
+  antes en `@master`. El job que avala las imágenes que se despliegan ejecutaba lo último de
+  una rama móvil, por delante incluso de la última release publicada: quien controlase esa
+  rama ejecutaba código en el CI. Se ancla por SHA y no por tag porque un tag también lo
+  puede repuntar el dueño del repositorio.
 - Imagen base actualizada de `nginx:1.27-alpine` (Alpine 3.21.3) a `nginx:1.30-alpine`
   (Alpine 3.24.1). Cierra los 36 CVEs corregibles —34 HIGH y 2 CRITICAL— que el escaneo de
   contenedor reportaba en `openssl`, `libxml2`, `musl` (`CVE-2026-40200`, ejecución arbitraria

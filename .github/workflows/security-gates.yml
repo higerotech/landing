@@ -78,8 +78,12 @@ jobs:
           path: /tmp
       - run: docker load -i /tmp/landing.tar
 
+      # Anclado por SHA de commit y no por tag: un tag lo puede repuntar el
+      # dueño del repo, y `@master` movía con cada commit. Este job es el que
+      # avala las imágenes que se despliegan, así que quien controlase esa rama
+      # ejecutaba código aquí. Al subir versión, cambiar SHA y comentario juntos.
       - name: Trivy — vulnerabilidades
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: higerotech/landing:ci
           format: table
@@ -88,7 +92,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Trivy — SBOM (CycloneDX)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: higerotech/landing:ci
           format: cyclonedx
