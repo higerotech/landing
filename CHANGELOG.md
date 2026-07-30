@@ -7,12 +7,26 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Añadido
+- `.githooks/pre-push` rechaza los pushes directos a `main`, con su activación por
+  `core.hooksPath` documentada en `CONTRIBUTING.md`. Es un sustituto local y parcial: no
+  exige los security gates ni alcanza los merges desde la web.
+
+### Corregido
+- Los enlaces de comparación del changelog y `org.opencontainers.image.source` apuntaban a
+  `higerotech/website`; el repositorio se publicó como `higerotech/landing`.
+
 ### Pendiente de decisión humana
 - Confirmar el dominio definitivo. `https://higerotech.com/` está asumido en `canonical`,
   `hreflang`, Open Graph, JSON-LD, `robots.txt` y `sitemap.xml`.
 - Configurar `CONTACT.whatsapp` en `index.html`. Mientras esté vacío el botón de WhatsApp
   no se publica.
 - Diagnosticar el contenedor de producción en estado `unhealthy` y decidir el redespliegue.
+- Proteger `main` en el servidor: la org está en plan Free y el repo es privado, y GitHub no
+  ofrece branch protection ni rulesets en esa combinación. Salidas: subir a GitHub Team
+  (mantiene el repo privado) o hacerlo público. Hasta entonces la única barrera es el hook.
+- Recuperar `scripts/gitgraph_from_log.py`, que `CONTRIBUTING.md` y el registro de 0.3.0 dan
+  por existente pero no está versionado, o corregir ambas referencias.
 
 ## [0.3.0] - 2026-07-29
 
@@ -127,9 +141,9 @@ editorial: el copy y el diseño son los mismos.
   `docker-compose.yml`. Registrada intacta en el commit `f09c213` antes de cualquier
   corrección, para que diagnóstico y arreglo sean auditables por separado.
 
-[Unreleased]: https://github.com/higerotech/website/compare/v0.3.0...HEAD
-[0.3.0]: https://github.com/higerotech/website/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/higerotech/website/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/higerotech/website/releases/tag/v0.1.0
-[0.0.2]: https://github.com/higerotech/website/compare/v0.0.1...v0.0.2
-[0.0.1]: https://github.com/higerotech/website/releases/tag/v0.0.1
+[Unreleased]: https://github.com/higerotech/landing/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/higerotech/landing/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/higerotech/landing/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/higerotech/landing/releases/tag/v0.1.0
+[0.0.2]: https://github.com/higerotech/landing/compare/v0.0.1...v0.0.2
+[0.0.1]: https://github.com/higerotech/landing/releases/tag/v0.0.1

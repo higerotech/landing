@@ -13,6 +13,19 @@ En un sitio estático el ciclo se adapta, pero el orden se mantiene:
    [`.ai-dlc/owasp-mapping.md`](.ai-dlc/owasp-mapping.md). Si añades un recurso externo,
    la CSP tiene que cambiar y eso es una ADR.
 
+## Al clonar
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Activa `.githooks/pre-push`, que rechaza los pushes directos a `main`. Hace falta porque
+la org está en plan Free y el repo es privado: en esa combinación GitHub no ofrece branch
+protection ni rulesets, así que la regla la impone el clon y no el servidor. Es una red de
+seguridad contra el despiste, no un control: `--no-verify`, otra máquina o un merge desde
+la web se la saltan. `core.hooksPath` es configuración local, así que cada clon nuevo
+necesita el comando otra vez.
+
 ## Antes de abrir una PR
 
 ```bash
