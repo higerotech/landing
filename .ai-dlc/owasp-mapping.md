@@ -16,7 +16,7 @@ el threat model.
 |---|---|---|---|---|
 | A01 | Broken Access Control | No aplica | — | Todo el contenido es público por diseño |
 | A02 | Security Misconfiguration | **Aplica — principal** | 05 / Gate 4 | Cabeceras + container scan + `nginx -t` |
-| A03 | Software Supply Chain Failures | **Aplica** | 03 / Gate 2 | Imagen base pineada + SBOM + fuentes autoalojadas |
+| A03 | Software Supply Chain Failures | **Aplica** | 03 / Gate 2 | Imagen base pineada + SBOM + fuentes autoalojadas + Trivy anclado por SHA |
 | A04 | Cryptographic Failures | Parcial | 05 / Gate 4 | TLS en el borde (fuera de esta imagen) |
 | A05 | Injection | Parcial | 02 / Gate 1 | Sin entradas externas; sí hay sinks `innerHTML` |
 | A06 | Insecure Design | **Aplica** | 02 / Gate 1 | Threat model STRIDE/DREAD |
@@ -69,11 +69,18 @@ sobre la imagen.
 - Imagen base anclada a `nginx:1.30-alpine`.
 - **Fuentes autoalojadas** (ADR-0004): antes el render dependía de `fonts.googleapis.com`;
   un compromiso o caída de ese CDN afectaba a la página. Ahora todo es same-origin.
+- `aquasecurity/trivy-action` anclado por SHA de commit (`ed142fd`, v0.36.0). Antes usaba
+  `@master`: el job que avala las imágenes desplegadas ejecutaba lo último de una rama móvil.
+- SBOM CycloneDX generado en cada run y publicado como artefacto (`sbom.cdx.json`).
 
 **Brechas abiertas**
 - La imagen base se ancla por *tag*, no por *digest*: `nginx:1.30-alpine` puede cambiar bajo
   el mismo nombre. Pinear por `sha256` cuando se establezca cadencia de actualización.
-- No se genera SBOM todavía. `<TODO: Gate 4>`
+- `gitleaks/gitleaks-action@v2` y `semgrep/semgrep-action@v1` siguen anclados por tag mayor,
+  que el dueño del repo puede repuntar. Menos agudo que `@master`, pero es la misma clase de
+  riesgo: anclarlos por SHA.
+- El SBOM se genera pero **no se archiva por release**: el artefacto caduca con el run, así
+  que no hay forma de reconstruir qué contenía una imagen ya desplegada (ver Gate 4).
 
 **Verificación:** SCA/Trivy sobre la imagen en CI.
 
