@@ -1,10 +1,13 @@
 # Threat Model — Landing corporativa Higerotech
 
-* **Estado:** approved
+* **Estado:** approved — **con enmienda posterior sin aprobar**
 * **Fecha:** 2026-07-29
+* **Revisión:** 2026-07-30 — añadida **T17** y explicitado el alcance del cierre de T7
+  (ver §T17). La aprobación del 2026-07-29 no cubre esa amenaza: quedó abierta y pendiente de
+  revisión del owner.
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 02-design
-* **Versión:** 0.2.0
+* **Versión:** 0.3.0
 * **Gate:** 1
 * **Alcance:** Sistema completo — sitio estático, configuración de nginx e imagen de contenedor
 * **Metodología:** STRIDE + DREAD
