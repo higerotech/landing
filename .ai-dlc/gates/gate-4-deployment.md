@@ -46,7 +46,7 @@
 | 7 | DAST | Sin ZAP baseline ni equivalente; propuesto en `gate-3-testing.md` |
 | 8 | Obligatoriedad del pipeline | Los gates pasan pero **no bloquean**: sin branch protection (org Free + repo privado), un rojo no impide mergear |
 
-## Hallazgo operativo abierto
+## Hallazgo operativo — diagnosticado, redespliegue pendiente
 
 Durante la revisión del 2026-07-29 se observó el contenedor `higerotech-landing` en el host
 **Up 24 hours (unhealthy)**, publicando en el puerto 80 junto a un `landing-tunnel`. El
@@ -54,4 +54,27 @@ healthcheck llevaba fallando sin que nadie se enterara: no hay alerta conectada 
 `.ai-dlc/owasp-mapping.md`). Ese contenedor sirve la versión **anterior** a las correcciones
 de `7c7bc78`.
 
-Queda pendiente de decisión humana: diagnosticar el `unhealthy` y decidir el redespliegue.
+**Causa, diagnosticada el 2026-07-30:** un defecto del propio repositorio, no una avería del
+host. El healthcheck apuntaba a `http://localhost/`; el `/etc/hosts` de la imagen resuelve
+ese nombre también a `::1`, el `wget` de busybox intenta IPv6 antes que IPv4 y `nginx.conf`
+solo declara `listen 80`. Resultado: `connection refused` en todos los chequeos —611
+consecutivos en el contenedor observado— mientras el sitio respondía 200 con normalidad.
+Estaba duplicado en `Dockerfile` y `docker-compose.yml`, así que **cualquier** despliegue de
+esta imagen nacía `unhealthy`. Corregido a `127.0.0.1` en ambos; verificado `healthy` en un
+contenedor construido con el arreglo.
+
+No se añadió `listen [::]:80;` a `nginx.conf` a propósito: en un contenedor sin IPv6 esa
+directiva impide arrancar nginx, que es peor que un healthcheck mal apuntado.
+
+**Deriva de configuración detectada de paso:** el contenedor en producción se creó el
+2026-07-14 con `docker run`, no con este `docker-compose.yml` (no tiene etiquetas de compose,
+publica en el puerto 80 y no en 8080, y `docker inspect` devuelve `ReadonlyRootfs: false` y
+`CapDrop: []`). El endurecimiento de la fila «Contenedor endurecido» de la tabla anterior
+está en el compose y **no** en lo que corre hoy. La evidencia de esa fila es el archivo, no
+producción.
+
+Queda pendiente: redesplegar con `docker compose` —lo que aplica a la vez el arreglo, el
+endurecimiento y las correcciones de `7c7bc78`— comprobando antes a qué origen apunta el
+`landing-tunnel`, porque el túnel es de tipo token y su ingress se administra en el panel de
+Cloudflare, no en este repositorio. Cambiar de red o de puerto sin saberlo tumba el sitio
+público.

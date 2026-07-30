@@ -31,7 +31,8 @@ services:
           memory: 128M
 
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      # 127.0.0.1 explícito, no `localhost`: ver el porqué en el Dockerfile.
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
       interval: 30s
       timeout: 3s
       retries: 3

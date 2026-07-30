@@ -32,6 +32,31 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   `1.30.x` sin saltar de línea sola.
 
 ### Corregido
+- **El healthcheck nunca ha dado verde.** `Dockerfile` y `docker-compose.yml` apuntaban a
+  `http://localhost/`: el `/etc/hosts` de la imagen resuelve ese nombre también a `::1`, el
+  `wget` de busybox intenta IPv6 antes que IPv4 y `nginx.conf` solo declara `listen 80`. Todos
+  los chequeos devolvían `connection refused` —611 seguidos en el contenedor de producción—
+  mientras el sitio respondía 200 con normalidad. Es decir: **cualquier** despliegue de esta
+  imagen nacía `unhealthy`, y el `unhealthy` que se registró como hallazgo operativo el
+  2026-07-29 no era una avería del host sino un defecto de este repositorio. Corregido a
+  `127.0.0.1` en los dos sitios y verificado `healthy` en un contenedor construido con el
+  arreglo. No se añade `listen [::]:80;` a `nginx.conf`: en un contenedor sin IPv6 esa
+  directiva impide que nginx arranque, y cambiar un chequeo mal apuntado por un servicio que
+  no levanta es un mal negocio.
+- Corregida en consecuencia la afirmación de `gate-5-monitoring.md` y del A09 de
+  `owasp-mapping.md` de que «el healthcheck existe y funciona, pero nadie está escuchando».
+  Funcionaba no: la única señal automatizada del sistema llevaba en rojo permanente desde que
+  el contenedor se creó, el 2026-07-14, y era además un falso positivo. Un monitor externo
+  conectado entonces habría alertado de algo que no estaba pasando.
+- `deployment.md`: el túnel del borde era un `<TODO>`; es **cloudflared en modo token**, y su
+  *ingress* se administra en el panel de Cloudflare, no en el repositorio ni en el host. Queda
+  anotado porque condiciona el redespliegue: recrear la landing con `docker compose` la mueve
+  de red y de puerto, y si el origen del túnel está fijado a la IP del contenedor en la
+  `bridge` por defecto, el sitio público cae con el contenedor sano.
+- Registrada en `gate-4-deployment.md` la **deriva entre el compose y producción**: el
+  contenedor que corre se creó el 2026-07-14 con `docker run` (sin etiquetas de compose,
+  puerto 80 en vez de 8080, `ReadonlyRootfs: false`, `CapDrop: []`). El endurecimiento que la
+  tabla de evidencias da por bueno está en el archivo y no en lo que sirve el sitio hoy.
 - **Revisión de coherencia de la documentación.** Casi toda se escribió el 2026-07-29, antes de
   que el repositorio existiera en GitHub, y describía un mundo sin CI. Sincronizado con la
   realidad:
@@ -67,12 +92,19 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 - Los enlaces de comparación del changelog y `org.opencontainers.image.source` apuntaban a
   `higerotech/website`; el repositorio se publicó como `higerotech/landing`.
 
+### Decidido
+- **Dominio confirmado: `higerotech.com`.** El owner lo cerró el 2026-07-30. Coincide con lo
+  que ya estaba escrito en `canonical`, `hreflang`, Open Graph, JSON-LD, `robots.txt` y
+  `sitemap.xml`, así que no hay contenido que cambiar; deja de figurar como supuesto en
+  `charter.md` y como dependencia D1 abierta en los requisitos.
+
 ### Pendiente de decisión humana
-- Confirmar el dominio definitivo. `https://higerotech.com/` está asumido en `canonical`,
-  `hreflang`, Open Graph, JSON-LD, `robots.txt` y `sitemap.xml`.
 - Configurar `CONTACT.whatsapp` en `index.html`. Mientras esté vacío el botón de WhatsApp
   no se publica.
-- Diagnosticar el contenedor de producción en estado `unhealthy` y decidir el redespliegue.
+- Redesplegar producción con `docker compose`. El `unhealthy` ya está diagnosticado y
+  corregido, pero el contenedor que corre sigue siendo el del 2026-07-14: sin el arreglo, sin
+  el endurecimiento del compose y sin las correcciones de `7c7bc78`. El paso previo obligado
+  es comprobar en el panel de Cloudflare a qué origen apunta el `landing-tunnel`.
 - Proteger `main` en el servidor: la org está en plan Free y el repo es privado, y GitHub no
   ofrece branch protection ni rulesets en esa combinación. Salidas: subir a GitHub Team
   (mantiene el repo privado) o hacerlo público. Hasta entonces la única barrera es el hook.

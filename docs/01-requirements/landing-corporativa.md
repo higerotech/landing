@@ -316,7 +316,7 @@ Definidas en `docs/00-project/charter.md` §Métricas de éxito.
 
 | # | Dependencia / riesgo | Estado |
 |---|---|---|
-| D1 | Dominio `higerotech.com` confirmado | `<TODO>` — condiciona canonical, `hreflang`, sitemap y URLs de Open Graph |
+| D1 | Dominio `higerotech.com` confirmado | ✅ **Cerrada** el 2026-07-30 por el owner. Coincide con lo ya escrito en canonical, `hreflang`, sitemap y Open Graph |
 | D2 | Número de WhatsApp corporativo | `<TODO>` — RF05 no se puede verificar hasta tenerlo |
 | D3 | Imagen base `nginx:1.30-alpine` | Vigente; pendiente anclar por digest |
 | D4 | Terminación TLS en el borde | Fuera del repositorio; pendiente documentar quién y dónde |

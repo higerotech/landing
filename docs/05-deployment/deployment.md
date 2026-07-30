@@ -46,7 +46,16 @@ Detalle relevante para la seguridad: el túnel es **saliente**, así que el host
 puertos entrantes al exterior. Eso reduce mucho la superficie de red y es parte de por qué
 T10 (saturación) se acepta sin rate limiting.
 
-`<TODO: confirmar el software concreto del túnel y quién administra su configuración>`
+El software del túnel es **cloudflared**, en modo token (`cloudflared tunnel run --token …`),
+confirmado por `docker inspect landing-tunnel` el 2026-07-30. Consecuencia operativa
+importante: en ese modo el *ingress* —a qué origen reenvía— **no está en este repositorio ni
+en el host**, se administra en el panel de Cloudflare. Antes de recrear el contenedor de la
+landing hay que comprobar allí a qué apunta: si el origen está fijado a la IP del contenedor
+en la red `bridge` por defecto, recrearlo con `docker compose` lo mueve a otra red y a otro
+puerto, y el sitio público deja de responder aunque el contenedor esté sano.
+
+`<TODO: confirmar quién administra la cuenta de Cloudflare y anotar aquí el origen
+configurado, para que deje de ser conocimiento tácito>`
 
 ## Pipeline
 
@@ -245,7 +254,7 @@ etiquetado de versiones que haga ejecutable el rollback, y documentación del bo
 
 Detalle en [`.ai-dlc/gates/gate-4-deployment.md`](../../.ai-dlc/gates/gate-4-deployment.md).
 
-## Hallazgo operativo abierto
+## Hallazgo operativo — causa encontrada, redespliegue pendiente
 
 El 2026-07-29, al listar los contenedores del host, se observó:
 
@@ -257,8 +266,25 @@ Un `landing-tunnel` corriendo en paralelo sugiere que ese contenedor es el que p
 sitio. Lleva 24 horas con el healthcheck fallando y **nadie se enteró**: es la amenaza T16
 del threat model materializada.
 
-Ese contenedor sirve la versión **anterior** a las correcciones. No se tocó durante este
-trabajo: reiniciarlo o reemplazarlo afecta a un sitio público y es una decisión que
-corresponde tomar a su responsable, no al proceso de documentación.
+**Diagnóstico (2026-07-30).** El `unhealthy` no era una avería: era un defecto del propio
+repositorio. El healthcheck apuntaba a `http://localhost/`, nombre que el `/etc/hosts` de la
+imagen resuelve también a `::1`; el `wget` de busybox intenta IPv6 primero y `nginx.conf` solo
+declara `listen 80`. Todos los chequeos daban `connection refused` —611 seguidos— mientras
+`nginx` respondía 200 con normalidad. Estaba en `Dockerfile` y en `docker-compose.yml`, así
+que ninguna instancia de esta imagen ha estado `healthy` nunca. Ya corregido a `127.0.0.1`.
 
-Pendiente: diagnosticar la causa del `unhealthy` y decidir el redespliegue.
+Dos consecuencias que conviene no perder de vista:
+
+1. El disparador de rollback «healthcheck en `unhealthy` más de 2 minutos» de la sección
+   anterior era **inejecutable** hasta este arreglo: aplicado al pie de la letra habría
+   revertido cada despliegue, incluidos los buenos.
+2. El contenedor en producción no salió de este `docker-compose.yml`. Se creó el 2026-07-14
+   con `docker run`: publica en el puerto 80 y no en 8080, y `docker inspect` devuelve
+   `ReadonlyRootfs: false` y `CapDrop: []`. El endurecimiento descrito en este documento está
+   en el archivo, no en lo que sirve el sitio ahora mismo.
+
+Ese contenedor sirve la versión **anterior** a las correcciones. Sigue sin tocarse: sustituirlo
+afecta a un sitio público y el orden correcto es comprobar primero el origen configurado en el
+túnel (ver §Topología), porque `docker compose up` lo movería a otra red y a otro puerto.
+
+Pendiente: confirmar el origen del túnel y redesplegar con `docker compose`.

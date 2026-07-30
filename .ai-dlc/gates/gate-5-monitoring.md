@@ -26,8 +26,21 @@ El 2026-07-29, durante la revisión de este repositorio, el contenedor de produc
 **24 horas en estado `unhealthy`** sin que se hubiera disparado ningún aviso. El fallo solo
 se descubrió al listar los contenedores del host por otro motivo.
 
-Ese es exactamente el riesgo A09 (*Security Logging & Monitoring Failures*) materializado:
-el healthcheck existe y funciona, pero nadie está escuchando.
+Al diagnosticarlo el 2026-07-30 apareció una segunda capa: el healthcheck estaba **roto por
+construcción**. Apuntaba a `http://localhost/`, que en la imagen resuelve también a `::1`, el
+`wget` de busybox intenta IPv6 primero y nginx solo escucha en IPv4. Nunca dio verde en
+ningún despliegue de esta imagen. El sitio, entretanto, servía correctamente: el rojo era
+del chequeo, no del servicio.
+
+Eso agrava el A09 (*Security Logging & Monitoring Failures*) en lugar de suavizarlo. La
+versión corta —«el healthcheck funciona pero nadie escucha»— era optimista: el contenedor
+venía diciendo «rojo» desde que se creó, el 2026-07-14, y nadie lo leyó en dos semanas. Un
+chequeo que nadie mira no se distingue de uno que no funciona, y aquí coincidieron los dos
+fallos sin que el sistema pareciera anormal.
+
+Corolario para el mínimo viable de abajo: un monitor externo habría avisado del rojo, pero
+habría avisado de un falso positivo. Vigilar sin verificar de vez en cuando **qué** se
+vigila produce ruido, no señal.
 
 ## Mínimo viable para cerrar el gate
 
