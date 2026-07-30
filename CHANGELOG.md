@@ -13,10 +13,16 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   exige los security gates ni alcanza los merges desde la web.
 
 ### Corregido
-- El gate de secretos no escaneaba nada: `gitleaks-action` exige licencia en repos de
-  organización y abortaba con «missing gitleaks license» antes de leer un solo commit. El
-  workflow ya le pasa `GITLEAKS_LICENSE`. Gate 2 daba por cubierto un control inexistente
-  desde que se documentó.
+- El gate de secretos no escaneaba nada, por dos causas encadenadas: `gitleaks-action` exige
+  licencia en repos de organización y abortaba con «missing gitleaks license», y una vez
+  resuelta moría con «Resource not accessible by integration» porque el bloque global
+  `permissions: contents: read` no cubre la API de PRs que el action necesita. El workflow ya
+  le pasa `GITLEAKS_LICENSE` y le concede `pull-requests: write` **por job**, dejando los
+  otros cuatro sin ese acceso. Gate 2 daba por cubierto un control inexistente desde que se
+  documentó; el primer escaneo real no encontró filtraciones.
+- Registrado el alcance verdadero del gate: escanea el rango de commits del evento
+  (`--log-opts=--no-merges --first-parent`), no el historial. La revisión del pasado se hizo
+  aparte con el binario de gitleaks sobre los 9 commits del repo, sin hallazgos.
 - Los enlaces de comparación del changelog y `org.opencontainers.image.source` apuntaban a
   `higerotech/website`; el repositorio se publicó como `higerotech/landing`.
 
