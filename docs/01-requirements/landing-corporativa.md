@@ -324,3 +324,4 @@ Definidas en `docs/00-project/charter.md` §Métricas de éxito.
 | R1 | Sin observabilidad: una caída pasa inadvertida | **Abierto** — Gate 5 |
 | R2 | Deriva del texto bilingüe entre HTML visible y `data-es` | Mitigado por proceso; pendiente prueba automatizada |
 | R3 | Tarjeta social generada con tipografía del sistema, no la de marca | Menor — pendiente versión de diseño |
+| R4 | **Una excepción temprana en el script inline deja la página en blanco** | **Abierto**, detectado el 2026-07-30 al diseñar las unitarias. `.reveal` está en `opacity: 0` esperando que el JS le añada `.in`, y las líneas 919, 920, 972, 973 y 989 desreferencian nodos sin guarda: una errata en un `id` blanquea el sitio. El `<noscript>` **no** lo cubre —solo actúa si el JS está deshabilitado, no si lanza— y los usuarios con `prefers-reduced-motion` son inmunes, así que llega como reporte contradictorio. Mitigación diseñada: U1/U2 de `docs/04-testing/unit-tests.md` |

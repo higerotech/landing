@@ -8,6 +8,24 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- `docs/04-testing/unit-tests.md`: **diseño** de las pruebas unitarias, primer documento de la
+  fase 04. Arnés `node:test` + `jsdom` cargando el `index.html` real —no una copia, así el test
+  no puede desviarse del artefacto que se despliega—, catálogo de ~30 casos sobre las ocho
+  unidades con ramas de `index.html:884-992`, trazabilidad a RF05, R2, A05 y los tres bugs de
+  `7c7bc78`, y las consecuencias de segundo orden con su coste. Sigue siendo diseño: no hay
+  código de test todavía y el Gate 3 no se mueve.
+- Corregida en `gate-3-testing.md` la fila «Unit — No aplica: no hay lógica de dominio», que era
+  falsa. No hay lógica *de negocio*, que es distinto: hay cinco funciones con ramas, dos
+  decisiones con tabla de prioridad y tres degradaciones defensivas sin ninguna prueba.
+- Registrado el riesgo **R4**: una excepción temprana en el script inline deja **la página en
+  blanco**. `.reveal` está en `opacity: 0` esperando que el JS le añada `.in`, y cinco líneas
+  desreferencian nodos del DOM sin guarda, así que una errata en un `id` blanquea el sitio. Dos
+  agravantes que lo hacen difícil de diagnosticar desde un reporte: el `<noscript>` **no** lo
+  cubre —solo actúa con el JS deshabilitado, no cuando lanza— y quien tenga
+  `prefers-reduced-motion` no lo ve. Detectado al diseñar las unitarias, no por un incidente.
+- Anotado que **`?lang=EN` sirve español en silencio**: `IDIOMAS.indexOf(q)` distingue
+  mayúsculas, así que un enlace compartido en mayúsculas pierde el idioma sin síntoma. Pendiente
+  de decisión: aceptarlo y documentarlo, o normalizar con `.toLowerCase()`.
 - Badges de gates de seguridad, pruebas y versión en `README.md`. Son **estáticos** por
   necesidad: con el repositorio privado, el proxy de imágenes de GitHub pide los badges sin
   autenticar y todo endpoint dinámico responde 404 o «repo not found» (comprobado contra el
