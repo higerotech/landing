@@ -31,7 +31,7 @@
 |---|---|---|
 | 1 | Pipeline real | Sustituir los `TODO` de `.github/workflows/security-gates.yml` |
 | 2 | SBOM | `trivy image --format cyclonedx` archivado por release |
-| 3 | Imagen por digest | Cambiar `nginx:1.27-alpine` por `nginx:1.27-alpine@sha256:…` |
+| 3 | Imagen por digest | Cambiar `nginx:1.30-alpine` por `nginx:1.30-alpine@sha256:…` |
 | 4 | Firma de imagen | `cosign sign` + verificación antes de desplegar |
 | 5 | Terminación TLS y HSTS documentadas | `<TODO: confirmar quién termina TLS>` |
 

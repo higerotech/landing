@@ -14,7 +14,7 @@ tiene backend, base de datos, autenticación ni formularios. La superficie de at
 se concentra en tres puntos:
 
 1. **Configuración de nginx** — cabeceras, CSP, exposición de rutas.
-2. **Cadena de suministro de la imagen** — la base `nginx:1.27-alpine`.
+2. **Cadena de suministro de la imagen** — la base `nginx:1.30-alpine`.
 3. **Integridad del contenido servido** — que lo publicado sea lo revisado.
 
 El detalle por riesgo OWASP está en [`.ai-dlc/owasp-mapping.md`](.ai-dlc/owasp-mapping.md)
@@ -39,7 +39,7 @@ gestionarse fuera del repositorio y el pipeline debe incluir un gate de detecci�
 - Cero dependencias de gestores de paquetes: sin `npm`, sin `pip`, sin lockfiles.
   Es una propiedad deliberada de la arquitectura (ver ADR-0003).
 - Fuentes tipográficas **autoalojadas** (ADR-0004): no se carga nada desde CDNs de terceros.
-- Imagen base anclada a `nginx:1.27-alpine`.
+- Imagen base anclada a `nginx:1.30-alpine`.
   Pendiente: anclar por digest `sha256` y generar SBOM. Ver
   [`.ai-dlc/gates/gate-4-deployment.md`](.ai-dlc/gates/gate-4-deployment.md).
 

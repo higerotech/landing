@@ -34,6 +34,13 @@ jobs:
   secrets:
     name: Detección de secretos
     runs-on: ubuntu-latest
+    # `contents: read` del bloque global no basta: el action lee los commits y
+    # los comentarios de la PR y publica los hallazgos como review comments.
+    # Sin esto falla con «Resource not accessible by integration». Se declara
+    # por job para que los otros cuatro sigan sin tocar la API de PRs.
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,6 +48,10 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # `gitleaks-action` exige licencia en repos de organización. Sin esta
+          # variable el job aborta antes de escanear un solo commit, y el gate
+          # aparenta cubrir los secretos sin haber mirado nada.
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
   # ── Gate 2 · SAST ────────────────────────────────────────────────────
   sast:
@@ -67,8 +78,12 @@ jobs:
           path: /tmp
       - run: docker load -i /tmp/landing.tar
 
+      # Anclado por SHA de commit y no por tag: un tag lo puede repuntar el
+      # dueño del repo, y `@master` movía con cada commit. Este job es el que
+      # avala las imágenes que se despliegan, así que quien controlase esa rama
+      # ejecutaba código aquí. Al subir versión, cambiar SHA y comentario juntos.
       - name: Trivy — vulnerabilidades
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: higerotech/landing:ci
           format: table
@@ -77,7 +92,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Trivy — SBOM (CycloneDX)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: higerotech/landing:ci
           format: cyclonedx

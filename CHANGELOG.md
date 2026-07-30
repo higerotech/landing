@@ -12,7 +12,30 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   `core.hooksPath` documentada en `CONTRIBUTING.md`. Es un sustituto local y parcial: no
   exige los security gates ni alcanza los merges desde la web.
 
+### Seguridad
+- `aquasecurity/trivy-action` anclado por SHA de commit (`ed142fd`, v0.36.0) en sus dos usos,
+  antes en `@master`. El job que avala las imágenes que se despliegan ejecutaba lo último de
+  una rama móvil, por delante incluso de la última release publicada: quien controlase esa
+  rama ejecutaba código en el CI. Se ancla por SHA y no por tag porque un tag también lo
+  puede repuntar el dueño del repositorio.
+- Imagen base actualizada de `nginx:1.27-alpine` (Alpine 3.21.3) a `nginx:1.30-alpine`
+  (Alpine 3.24.1). Cierra los 36 CVEs corregibles —34 HIGH y 2 CRITICAL— que el escaneo de
+  contenedor reportaba en `openssl`, `libxml2`, `musl` (`CVE-2026-40200`, ejecución arbitraria
+  de código), `nghttp2` y `zlib`. Trivy pasa de 36 a 0 con los mismos flags del gate. El pin
+  se queda en la línea `1.30` (stable) y no en `stable-alpine`, para recibir los parches
+  `1.30.x` sin saltar de línea sola.
+
 ### Corregido
+- El gate de secretos no escaneaba nada, por dos causas encadenadas: `gitleaks-action` exige
+  licencia en repos de organización y abortaba con «missing gitleaks license», y una vez
+  resuelta moría con «Resource not accessible by integration» porque el bloque global
+  `permissions: contents: read` no cubre la API de PRs que el action necesita. El workflow ya
+  le pasa `GITLEAKS_LICENSE` y le concede `pull-requests: write` **por job**, dejando los
+  otros cuatro sin ese acceso. Gate 2 daba por cubierto un control inexistente desde que se
+  documentó; el primer escaneo real no encontró filtraciones.
+- Registrado el alcance verdadero del gate: escanea el rango de commits del evento
+  (`--log-opts=--no-merges --first-parent`), no el historial. La revisión del pasado se hizo
+  aparte con el binario de gitleaks sobre los 9 commits del repo, sin hallazgos.
 - Los enlaces de comparación del changelog y `org.opencontainers.image.source` apuntaban a
   `higerotech/website`; el repositorio se publicó como `higerotech/landing`.
 
@@ -25,8 +48,9 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 - Proteger `main` en el servidor: la org está en plan Free y el repo es privado, y GitHub no
   ofrece branch protection ni rulesets en esa combinación. Salidas: subir a GitHub Team
   (mantiene el repo privado) o hacerlo público. Hasta entonces la única barrera es el hook.
-- Recuperar `scripts/gitgraph_from_log.py`, que `CONTRIBUTING.md` y el registro de 0.3.0 dan
-  por existente pero no está versionado, o corregir ambas referencias.
+- Corregir la ruta de `gitgraph_from_log.py`: `CONTRIBUTING.md` y el registro de 0.3.0 la
+  escriben como `scripts/…`, relativa al repo, pero el script vive en el skill de AI-DLC
+  junto a `validate_mermaid.py`. No falta nada; la referencia está mal escrita.
 
 ## [0.3.0] - 2026-07-29
 

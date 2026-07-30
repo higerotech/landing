@@ -31,7 +31,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 │   ├── og-card.png             # Tarjeta social 1200×630
 │   └── logo_white_trans.png    # Logotipo
 │
-├── Dockerfile                  # nginx:1.27-alpine, valida la config en build
+├── Dockerfile                  # nginx:1.30-alpine, valida la config en build
 ├── nginx.conf                  # Rutas, caché y códigos de estado
 ├── security-headers.conf       # Cabeceras — incluido en CADA location (ver ADR-0002)
 ├── docker-compose.yml          # Contenedor endurecido: read-only, cap_drop, límites
@@ -124,7 +124,7 @@ cargar la página — `setLang()` corre al arrancar. Ver
 
 ## Notas técnicas
 
-- **Imagen base:** `nginx:1.27-alpine`. Pendiente anclar por digest.
+- **Imagen base:** `nginx:1.30-alpine`. Pendiente anclar por digest.
 - **Peso:** ~80 KB de HTML + ~70 KB de fuentes que el visitante ES/EN llega a descargar.
 - **Caché:** assets 30 días con `immutable`; el HTML siempre se revalida.
 - **Contenedor:** rootfs de solo lectura, `cap_drop: ALL`, `no-new-privileges`,
