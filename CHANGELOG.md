@@ -13,6 +13,10 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   exige los security gates ni alcanza los merges desde la web.
 
 ### Corregido
+- El gate de secretos no escaneaba nada: `gitleaks-action` exige licencia en repos de
+  organización y abortaba con «missing gitleaks license» antes de leer un solo commit. El
+  workflow ya le pasa `GITLEAKS_LICENSE`. Gate 2 daba por cubierto un control inexistente
+  desde que se documentó.
 - Los enlaces de comparación del changelog y `org.opencontainers.image.source` apuntaban a
   `higerotech/website`; el repositorio se publicó como `higerotech/landing`.
 
