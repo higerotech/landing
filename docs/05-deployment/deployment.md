@@ -46,7 +46,37 @@ Detalle relevante para la seguridad: el túnel es **saliente**, así que el host
 puertos entrantes al exterior. Eso reduce mucho la superficie de red y es parte de por qué
 T10 (saturación) se acepta sin rate limiting.
 
-`<TODO: confirmar el software concreto del túnel y quién administra su configuración>`
+### El borde, en concreto
+
+Confirmado el 2026-07-30 con `docker inspect landing-tunnel` y sus propios logs:
+
+| Dato | Valor |
+|---|---|
+| Software | **cloudflared** en modo token (`tunnel run --token …`) |
+| Dónde vive el *ingress* | Panel de Cloudflare, **no** en este repositorio ni en el host |
+| Origen configurado | `http://192.168.1.44:80` — la **IP del host**, no la del contenedor |
+| Hostnames enrutados | `www.higerotech.com`, `web.higerotech.com`, `demo.higerotech.com` |
+| Regla final | `http_status:404` |
+| Terminación TLS | Cloudflare, en el borde. Del túnel al host el tramo es HTTP plano (T9) |
+
+Dos consecuencias que conviene tener escritas:
+
+1. **El puerto del host es parte del contrato con el túnel.** El origen está fijado a
+   `:80`, así que `docker-compose.yml` publica en 80 y no en 8080. Cambiarlo deja el sitio
+   público sin servir aunque el contenedor esté perfectamente sano. Que el origen sea la IP
+   del host y no la del contenedor es una suerte: hace que la red de Docker sea indiferente
+   y que recrear el contenedor no rompa el enrutado.
+2. **El apex `higerotech.com` no está enrutado.** No tiene registro en DNS (la consulta
+   devuelve solo SOA) y no figura en el ingress; forzando la IP de Cloudflare responde
+   **HTTP 530**. Ninguno de los otros cuatro túneles del host lo sirve tampoco. Es un
+   problema real de SEO, no cosmético: `canonical`, los tres `hreflang`, `og:url`, las URLs
+   del `sitemap.xml` y la línea `Sitemap:` de `robots.txt` apuntan todos a
+   `https://higerotech.com/`, un host que no resuelve. Y como `www`, `web` y `demo` sirven
+   el mismo contenido, hay contenido duplicado en tres hostnames sin un canonical válido que
+   los consolide.
+
+`<TODO: decidir entre dar registro e ingress al apex o mover el canonical a www; y anotar
+quién administra la cuenta de Cloudflare, hoy conocimiento tácito>`
 
 ## Pipeline
 
@@ -108,7 +138,7 @@ Comprobaciones ejecutadas contra la imagen construida el **2026-07-29**. Reprodu
 ### Cabeceras de seguridad
 
 ```bash
-curl -sI http://localhost:8080/ | grep -i -E 'frame|nosniff|referrer|permissions|content-security'
+curl -sI http://localhost/ | grep -i -E 'frame|nosniff|referrer|permissions|content-security'
 ```
 
 Resultado sobre `/`:
@@ -174,10 +204,17 @@ docker compose build
 docker compose up -d
 
 # 3. Verificar antes de dar por bueno
-curl -sI http://localhost:8080/ | grep -ci -E 'frame|nosniff|referrer|permissions|content-security'   # => 5
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/no-existe                              # => 404
-docker compose ps                                                                                      # => healthy
+curl -sI http://localhost/ | grep -ci -E 'frame|nosniff|referrer|permissions|content-security'   # => 5
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost/no-existe                              # => 404
+docker compose ps                                                                                 # => healthy
+
+# 4. Y por el borde, que es lo que ve el visitante
+curl -sI https://www.higerotech.com/ | grep -ci -E 'frame|nosniff|referrer|content-security'     # => 4
 ```
+
+El puerto es 80, no 8080: ver §El borde. Y la comprobación 4 no es redundante —el paso 3
+valida la imagen, el 4 valida que el túnel apunte a ella. El 2026-07-30 el paso 3 daba verde
+contra la imagen mientras el borde servía otra cosa (ver §Hallazgo operativo).
 
 Si el paso 3 no da esos tres resultados, no se publica: se hace rollback.
 
@@ -198,7 +235,7 @@ docker tag higerotech/landing:<tag-anterior> higerotech/landing:latest
 docker compose up -d
 
 # Verificar que el rollback funciono
-curl -sI http://localhost:8080/ | head -1
+curl -sI http://localhost/ | head -1
 docker compose ps
 ```
 
@@ -206,8 +243,28 @@ docker compose ps
 con `latest`. Hoy `docker-compose.yml` fija `image: higerotech/landing:latest`, así que **no
 hay imagen anterior a la que volver**. Es una carencia real del runbook.
 
-`<TODO: etiquetar las imágenes con el tag SemVer del release y conservar al menos las dos
-últimas. Sin esto, el procedimiento de rollback descrito arriba no es ejecutable.>`
+Dejó de ser hipotética el 2026-07-30. Al preparar el cutover se intentó etiquetar la imagen
+que corría en producción como punto de rollback y **la imagen ya no existía**:
+
+```
+docker image inspect sha256:e916413…  → No such image
+docker commit higerotech-landing …    → NotFound: content digest sha256:78f55d6… not found
+```
+
+El contenedor llevaba semanas sirviendo el sitio desde un montaje vivo cuyas capas ya habían
+desaparecido del almacén de contenido: funcionaba, pero era irreconvertible en imagen. La
+única copia de esa versión era el propio contenedor en marcha. Por eso el cutover **no lo
+borró**: se le puso `--restart=no`, se renombró a `higerotech-landing-pre-cutover` y se detuvo,
+y su contenido se extrajo aparte con `docker cp`. Borrar ese contenedor destruye la última
+copia de lo que estuvo publicado.
+
+La lección es más fuerte que el `<TODO>` original: no basta con etiquetar por versión, hay que
+**empujar las imágenes a un registro**. Una etiqueta local no sobrevive a un `docker system
+prune`, y un rollback que depende de que nadie haya limpiado el host no es un rollback.
+
+`<TODO: etiquetar las imágenes con el tag SemVer del release, empujarlas a un registro y
+conservar al menos las dos últimas. Sin esto, el procedimiento de rollback descrito arriba no
+es ejecutable.>`
 
 ## Plan de cutover
 
@@ -245,7 +302,7 @@ etiquetado de versiones que haga ejecutable el rollback, y documentación del bo
 
 Detalle en [`.ai-dlc/gates/gate-4-deployment.md`](../../.ai-dlc/gates/gate-4-deployment.md).
 
-## Hallazgo operativo abierto
+## Hallazgo operativo — cerrado el 2026-07-30
 
 El 2026-07-29, al listar los contenedores del host, se observó:
 
@@ -257,8 +314,52 @@ Un `landing-tunnel` corriendo en paralelo sugiere que ese contenedor es el que p
 sitio. Lleva 24 horas con el healthcheck fallando y **nadie se enteró**: es la amenaza T16
 del threat model materializada.
 
-Ese contenedor sirve la versión **anterior** a las correcciones. No se tocó durante este
-trabajo: reiniciarlo o reemplazarlo afecta a un sitio público y es una decisión que
-corresponde tomar a su responsable, no al proceso de documentación.
+**Diagnóstico (2026-07-30).** El `unhealthy` no era una avería: era un defecto del propio
+repositorio. El healthcheck apuntaba a `http://localhost/`, nombre que el `/etc/hosts` de la
+imagen resuelve también a `::1`; el `wget` de busybox intenta IPv6 primero y `nginx.conf` solo
+declara `listen 80`. Todos los chequeos daban `connection refused` —611 seguidos— mientras
+`nginx` respondía 200 con normalidad. Estaba en `Dockerfile` y en `docker-compose.yml`, así
+que ninguna instancia de esta imagen ha estado `healthy` nunca. Ya corregido a `127.0.0.1`.
 
-Pendiente: diagnosticar la causa del `unhealthy` y decidir el redespliegue.
+Dos consecuencias que conviene no perder de vista:
+
+1. El disparador de rollback «healthcheck en `unhealthy` más de 2 minutos» de la sección
+   anterior era **inejecutable** hasta este arreglo: aplicado al pie de la letra habría
+   revertido cada despliegue, incluidos los buenos.
+2. El contenedor en producción no salió de este `docker-compose.yml`. Se creó el 2026-07-14
+   con `docker run`: publica en el puerto 80 y no en 8080, y `docker inspect` devuelve
+   `ReadonlyRootfs: false` y `CapDrop: []`. El endurecimiento descrito en este documento está
+   en el archivo, no en lo que sirve el sitio ahora mismo.
+
+**Lo que el diagnóstico destapó de verdad.** El `unhealthy` era el síntoma menor. Al medir el
+sitio público con `curl -sI` resultó que producción no se parecía a nada de lo que este
+documento daba por verificado. Medido en los dos extremos el 2026-07-30, antes del cutover:
+
+| Control | Producción (contenedor del 2026-07-14) | Imagen de este repositorio |
+|---|---|---|
+| CSP | **ausente** | presente y cerrada |
+| X-Frame-Options / X-Content-Type-Options / Referrer-Policy / Permissions-Policy | **las cuatro ausentes** | las cuatro |
+| `Server:` | **`nginx/1.27.5`** — versión expuesta | `nginx` |
+| Imagen base | 1.27.5: los 36 CVEs corregibles (2 CRITICAL, 34 HIGH) | 1.30: cero |
+| Healthcheck | roto (611 fallos seguidos) | `healthy` |
+| `read_only` / `cap_drop` | `false` / `[]` | `true` / `[ALL]` |
+| Contenido | anterior a `7c7bc78`, con los tres bugs | corregido |
+
+Ninguna fila de esa tabla es una diferencia de matiz. Los gates G5 (cabeceras) y G7 (versión
+de nginx expuesta) pasaban en verde en cada PR **contra la imagen**, mientras el sitio real los
+fallaba todos. Un pipeline que avala artefactos no dice nada sobre lo que hay publicado, y
+esta es la evidencia concreta de esa distinción.
+
+**Cutover ejecutado el 2026-07-30.** El contenedor viejo se apartó sin borrarlo
+(`--restart=no`, renombrado a `higerotech-landing-pre-cutover`, detenido) y se levantó el nuevo
+con `docker compose up -d --build`. Verificado después:
+
+- `healthy` — por primera vez en la vida de este servicio.
+- `read_only=true`, `cap_drop=[ALL]`, `no-new-privileges` activos en el contenedor que corre,
+  no solo en el archivo.
+- Las cinco cabeceras y `404` real en `localhost:80`; `robots.txt` y `sitemap.xml` en 200.
+- Las cuatro cabeceras que Cloudflare deja pasar y `404` real en los tres hostnames públicos:
+  `www`, `web` y `demo`.
+
+Queda pendiente **HSTS**, que no puede venir de nginx: TLS lo termina Cloudflare, así que la
+cabecera tiene que activarse en el borde.

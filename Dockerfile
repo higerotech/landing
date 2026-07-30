@@ -24,8 +24,11 @@ RUN nginx -t
 
 EXPOSE 80
 
-# Healthcheck simple contra la raíz
+# Healthcheck contra la raíz. Va a 127.0.0.1 y no a `localhost`: el /etc/hosts de
+# la imagen resuelve ese nombre también a `::1`, el wget de busybox intenta IPv6
+# primero y nginx solo escucha en IPv4 (`listen 80`). Por nombre el chequeo
+# devuelve «connection refused» siempre, aunque el sitio funcione.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -q --spider http://localhost/ || exit 1
+  CMD wget -q --spider http://127.0.0.1/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]

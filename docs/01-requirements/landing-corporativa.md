@@ -316,10 +316,11 @@ Definidas en `docs/00-project/charter.md` §Métricas de éxito.
 
 | # | Dependencia / riesgo | Estado |
 |---|---|---|
-| D1 | Dominio `higerotech.com` confirmado | `<TODO>` — condiciona canonical, `hreflang`, sitemap y URLs de Open Graph |
+| D1 | Dominio `higerotech.com` confirmado | ✅ **Confirmado** el 2026-07-30 por el owner: es el dominio de la marca y coincide con lo escrito en canonical, `hreflang`, `og:url`, sitemap y `robots.txt` |
+| D1b | El apex `higerotech.com` **no resuelve** | ❌ **Abierto y con impacto real.** Sin registro DNS ni regla en el ingress del túnel: responde HTTP 530. El sitio se sirve en `www`, `web` y `demo`. Confirmar el dominio no bastó: hay que enrutar el apex o mover el canonical a `www`. Mientras siga así, el canonical apunta a un host inexistente y los tres hostnames son contenido duplicado sin consolidar |
 | D2 | Número de WhatsApp corporativo | `<TODO>` — RF05 no se puede verificar hasta tenerlo |
 | D3 | Imagen base `nginx:1.30-alpine` | Vigente; pendiente anclar por digest |
-| D4 | Terminación TLS en el borde | Fuera del repositorio; pendiente documentar quién y dónde |
+| D4 | Terminación TLS en el borde | ✅ **Documentada** el 2026-07-30: la termina Cloudflare, y del túnel al host el tramo va en HTTP plano (T9). Falta activar HSTS, que solo puede hacerse en el borde |
 | R1 | Sin observabilidad: una caída pasa inadvertida | **Abierto** — Gate 5 |
 | R2 | Deriva del texto bilingüe entre HTML visible y `data-es` | Mitigado por proceso; pendiente prueba automatizada |
 | R3 | Tarjeta social generada con tipografía del sistema, no la de marca | Menor — pendiente versión de diseño |

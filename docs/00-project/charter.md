@@ -94,8 +94,9 @@ mindmap
 - El entorno de destino es un único host con Docker; no hay orquestador ni réplica.
 
 **Supuestos**
-- El dominio es `higerotech.com`. `<TODO: confirmar — condiciona canonical, hreflang,
-  sitemap y las URLs absolutas de Open Graph>`
+- El dominio es `higerotech.com`. **Confirmado por el owner el 2026-07-30**; deja de ser
+  supuesto. Es el valor que ya usan `canonical`, `hreflang`, Open Graph, JSON-LD,
+  `robots.txt` y `sitemap.xml`, así que no hay nada que cambiar en el contenido.
 - Una parte relevante del público navega desde conexiones intermitentes y dispositivos
   modestos. De ahí el presupuesto de rendimiento y la degradación sin JS.
 - El contenido cambia con poca frecuencia: no se justifica un CMS.

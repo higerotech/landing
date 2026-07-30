@@ -94,8 +94,14 @@ rompe. Debe configurarse en el borde.
 
 No hay datos en reposo: el contenedor no escribe nada (`read_only: true`).
 
-**Acción pendiente:** documentar quién termina TLS y confirmar HSTS en ese punto.
-`<TODO: confirmar con Jeremi>`
+**Quién termina TLS: Cloudflare**, confirmado el 2026-07-30 (`docker inspect landing-tunnel` +
+sus logs de configuración; detalle en `docs/05-deployment/deployment.md` §El borde). El tramo
+entre el contenedor del túnel y nginx va en HTTP plano dentro del host, que es la amenaza T9
+aceptada del threat model.
+
+**Acción pendiente:** activar HSTS en Cloudflare. Sigue siendo correcto no emitirla desde
+nginx por la razón del párrafo anterior; ahora al menos se sabe exactamente dónde hay que
+ponerla y quién puede hacerlo.
 
 ## A05 — Injection
 
@@ -152,6 +158,12 @@ también la postura más limpia frente a GDPR.
 Nadie se entera hoy si el sitio cae salvo que alguien lo visite. De hecho, durante la revisión
 se observó el contenedor en producción marcado `unhealthy` sin que hubiera disparado ningún
 aviso — evidencia concreta de esta brecha.
+
+Al diagnosticarlo (2026-07-30) el healthcheck resultó estar roto por construcción: apuntaba a
+`localhost`, que resuelve a `::1`, y nginx solo escucha en IPv4. Corregido a `127.0.0.1`. La
+lección para esta brecha es más incómoda que la original: la única señal automatizada que
+existía llevaba **dos semanas** en rojo permanente y su valor era cero, porque nadie la leía y
+además era falsa. Ver `.ai-dlc/gates/gate-5-monitoring.md`.
 
 **Verificación:** ninguna automatizada. **Gate 5: no superado.**
 

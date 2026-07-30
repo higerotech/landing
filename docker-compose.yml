@@ -3,8 +3,11 @@ services:
     build: .
     image: higerotech/landing:latest
     container_name: higerotech-landing
+    # Puerto 80 del host, no 8080: el ingress del túnel de Cloudflare
+    # (`landing-tunnel`) apunta a `http://<IP del host>:80`, así que publicar en
+    # otro puerto deja el sitio público sin servir aunque el contenedor esté sano.
     ports:
-      - "8080:80"          # http://localhost:8080
+      - "80:80"          # http://localhost
     restart: unless-stopped
 
     # Endurecimiento: el contenedor sirve archivos estáticos, no necesita
@@ -31,7 +34,8 @@ services:
           memory: 128M
 
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      # 127.0.0.1 explícito, no `localhost`: ver el porqué en el Dockerfile.
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
       interval: 30s
       timeout: 3s
       retries: 3

@@ -18,7 +18,42 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   `core.hooksPath` documentada en `CONTRIBUTING.md`. Es un sustituto local y parcial: no
   exige los security gates ni alcanza los merges desde la web.
 
+### Cambiado
+- `docker-compose.yml` publica en el **puerto 80** del host, antes 8080. No es una preferencia:
+  el ingress del túnel de Cloudflare apunta a `http://<IP del host>:80`, así que cualquier otro
+  puerto deja el sitio público sin servir aunque el contenedor esté sano. Queda escrito al lado
+  de la directiva para que no se «limpie» en el futuro. Que el origen sea la IP del host y no la
+  del contenedor es lo que permitió recrearlo con compose sin tocar el enrutado.
+- **El borde deja de ser un `<TODO>`.** Confirmado con `docker inspect landing-tunnel` y sus
+  logs de configuración: es cloudflared en modo token, el *ingress* vive en el panel de
+  Cloudflare —no en el repositorio ni en el host—, enruta `www`, `web` y `demo` a
+  `http://192.168.1.44:80` con regla final `http_status:404`, y **TLS lo termina Cloudflare**.
+  Con eso se cierran tres huecos que arrastraban `<TODO>`: la dependencia D4 de los requisitos,
+  la amenaza T9 del threat model y el A04 del mapeo OWASP. HSTS sigue pendiente y solo puede
+  activarse en el borde, nunca desde nginx.
+
 ### Seguridad
+- **Producción redesplegada, y hasta hoy no servía ninguna de las correcciones de este
+  repositorio.** El contenedor que publicaba el sitio se creó el 2026-07-14 con `docker run` y
+  medido con `curl -sI` no enviaba **ninguna** de las cinco cabeceras de seguridad, exponía
+  `Server: nginx/1.27.5` (el gate G7 comprueba precisamente que la versión no se filtre) y
+  corría la imagen base con los 36 CVEs corregibles —2 CRITICAL, 34 HIGH— que se cerraron esta
+  misma semana. Tampoco tenía el endurecimiento del compose: `ReadonlyRootfs: false`,
+  `CapDrop: []`. Los gates G5 y G7 pasaban en verde en cada PR **contra la imagen**, mientras
+  el sitio real los fallaba los dos: avalar un artefacto no es avalar lo publicado, y el
+  pipeline no distinguía las dos cosas. Tras el cutover con `docker compose up -d --build`,
+  verificado: `healthy` por primera vez en la vida del servicio, `read_only=true` y
+  `cap_drop=[ALL]` activos en el contenedor que corre, las cinco cabeceras y `404` real en
+  local, y las cuatro que Cloudflare propaga más `404` real en `www`, `web` y `demo`.
+- El contenedor anterior **no se borró**: al intentar etiquetarlo como punto de rollback su
+  imagen ya no existía en el almacén (`docker image inspect` → *No such image*, y
+  `docker commit` → *content digest not found*). Llevaba semanas sirviendo desde un montaje
+  vivo cuyas capas habían desaparecido: irreconvertible en imagen y única copia de lo
+  publicado. Se apartó con `--restart=no`, renombrado a `higerotech-landing-pre-cutover` y
+  detenido, y su contenido se extrajo con `docker cp`. Borrar ese contenedor destruye la última
+  copia. Refuerza el `<TODO>` del runbook de rollback: no basta con etiquetar por versión, hay
+  que empujar las imágenes a un registro, porque una etiqueta local no sobrevive a un
+  `docker system prune`.
 - `aquasecurity/trivy-action` anclado por SHA de commit (`ed142fd`, v0.36.0) en sus dos usos,
   antes en `@master`. El job que avala las imágenes que se despliegan ejecutaba lo último de
   una rama móvil, por delante incluso de la última release publicada: quien controlase esa
@@ -32,6 +67,31 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   `1.30.x` sin saltar de línea sola.
 
 ### Corregido
+- **El healthcheck nunca ha dado verde.** `Dockerfile` y `docker-compose.yml` apuntaban a
+  `http://localhost/`: el `/etc/hosts` de la imagen resuelve ese nombre también a `::1`, el
+  `wget` de busybox intenta IPv6 antes que IPv4 y `nginx.conf` solo declara `listen 80`. Todos
+  los chequeos devolvían `connection refused` —611 seguidos en el contenedor de producción—
+  mientras el sitio respondía 200 con normalidad. Es decir: **cualquier** despliegue de esta
+  imagen nacía `unhealthy`, y el `unhealthy` que se registró como hallazgo operativo el
+  2026-07-29 no era una avería del host sino un defecto de este repositorio. Corregido a
+  `127.0.0.1` en los dos sitios y verificado `healthy` en un contenedor construido con el
+  arreglo. No se añade `listen [::]:80;` a `nginx.conf`: en un contenedor sin IPv6 esa
+  directiva impide que nginx arranque, y cambiar un chequeo mal apuntado por un servicio que
+  no levanta es un mal negocio.
+- Corregida en consecuencia la afirmación de `gate-5-monitoring.md` y del A09 de
+  `owasp-mapping.md` de que «el healthcheck existe y funciona, pero nadie está escuchando».
+  Funcionaba no: la única señal automatizada del sistema llevaba en rojo permanente desde que
+  el contenedor se creó, el 2026-07-14, y era además un falso positivo. Un monitor externo
+  conectado entonces habría alertado de algo que no estaba pasando.
+- `deployment.md`: el túnel del borde era un `<TODO>`; es **cloudflared en modo token**, y su
+  *ingress* se administra en el panel de Cloudflare, no en el repositorio ni en el host. Queda
+  anotado porque condiciona el redespliegue: recrear la landing con `docker compose` la mueve
+  de red y de puerto, y si el origen del túnel está fijado a la IP del contenedor en la
+  `bridge` por defecto, el sitio público cae con el contenedor sano.
+- Registrada en `gate-4-deployment.md` la **deriva entre el compose y producción**: el
+  contenedor que corre se creó el 2026-07-14 con `docker run` (sin etiquetas de compose,
+  puerto 80 en vez de 8080, `ReadonlyRootfs: false`, `CapDrop: []`). El endurecimiento que la
+  tabla de evidencias da por bueno está en el archivo y no en lo que sirve el sitio hoy.
 - **Revisión de coherencia de la documentación.** Casi toda se escribió el 2026-07-29, antes de
   que el repositorio existiera en GitHub, y describía un mundo sin CI. Sincronizado con la
   realidad:
@@ -67,12 +127,28 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 - Los enlaces de comparación del changelog y `org.opencontainers.image.source` apuntaban a
   `higerotech/website`; el repositorio se publicó como `higerotech/landing`.
 
+### Decidido
+- **Dominio confirmado: `higerotech.com`.** El owner lo cerró el 2026-07-30. Coincide con lo
+  que ya estaba escrito en `canonical`, `hreflang`, Open Graph, JSON-LD, `robots.txt` y
+  `sitemap.xml`, así que no hay contenido que cambiar; deja de figurar como supuesto en
+  `charter.md`.
+- **Pero confirmarlo no bastó: el apex no resuelve.** `higerotech.com` no tiene registro en DNS
+  —la consulta devuelve solo SOA, con la zona en los NS de Cloudflare— ni regla en el ingress
+  del túnel; forzando la IP de Cloudflare responde **HTTP 530**, y ninguno de los otros cuatro
+  túneles del host lo sirve. El sitio vive en `www.higerotech.com`, `web.higerotech.com` y
+  `demo.higerotech.com`. Consecuencia: `canonical`, los tres `hreflang`, `og:url`, las URLs del
+  `sitemap.xml` y la línea `Sitemap:` de `robots.txt` apuntan a un host inexistente, y los tres
+  hostnames son contenido duplicado sin un canonical válido que los consolide. Registrado como
+  dependencia D1b en los requisitos y como fila 9 de «Lo que falta» en el gate 4.
+
 ### Pendiente de decisión humana
-- Confirmar el dominio definitivo. `https://higerotech.com/` está asumido en `canonical`,
-  `hreflang`, Open Graph, JSON-LD, `robots.txt` y `sitemap.xml`.
 - Configurar `CONTACT.whatsapp` en `index.html`. Mientras esté vacío el botón de WhatsApp
   no se publica.
-- Diagnosticar el contenedor de producción en estado `unhealthy` y decidir el redespliegue.
+- Enrutar el apex `higerotech.com` (registro DNS + regla de ingress) **o** mover el canonical y
+  las URLs absolutas a `www.higerotech.com`. Lo primero mantiene la marca; lo segundo se
+  resuelve solo en el repositorio. Cualquiera de las dos, pero no dejarlo como está.
+- Activar **HSTS** en Cloudflare. No puede emitirse desde nginx: emitir HSTS desde detrás de un
+  terminador TLS que no se controla puede dejar el dominio inaccesible si la cadena se rompe.
 - Proteger `main` en el servidor: la org está en plan Free y el repo es privado, y GitHub no
   ofrece branch protection ni rulesets en esa combinación. Salidas: subir a GitHub Team
   (mantiene el repo privado) o hacerlo público. Hasta entonces la única barrera es el hook.

@@ -132,7 +132,7 @@ Escala 1–10 por criterio; **Score = media**. Umbral de atención obligatoria: 
 | **T2** | Enmarcado del sitio para clickjacking o suplantación | 6 | 4 | 5 | 6 | 5 | **5,2** | ✅ Cerrado | `X-Frame-Options: DENY` + `frame-ancestors 'none'` |
 | **T15** | Soft 404: cualquier ruta devolvía 200 con la landing | 4 | 10 | 8 | 3 | 2 | **5,4** | ✅ Cerrado | `try_files … =404` + página 404 propia |
 | **T13** | Fuga de la IP del visitante a Google al cargar fuentes | 3 | 10 | 1 | 5 | 8 | **5,4** | ✅ Cerrado | Fuentes autoalojadas · ADR-0004 |
-| **T9** | Tráfico en HTTP plano entre el borde y nginx | 5 | 3 | 6 | 4 | 5 | **4,6** | ⚠️ Aceptado | Tráfico interno del host. `<TODO: documentar el borde>` |
+| **T9** | Tráfico en HTTP plano entre el borde y nginx | 5 | 3 | 6 | 4 | 5 | **4,6** | ⚠️ Aceptado | Tráfico interno del host, entre el contenedor `landing-tunnel` (cloudflared) y nginx. El borde queda documentado en `docs/05-deployment/deployment.md` §El borde: TLS lo termina Cloudflare |
 | **T8** | Enumeración de rutas y archivos ocultos (`/.git`, `/.env`) | 7 | 3 | 6 | 2 | 3 | **4,2** | ✅ Cerrado | `location ~ /\.` deniega + `.dockerignore` |
 | **T6** | Versión de nginx expuesta facilitando búsqueda de CVE | 3 | 6 | 8 | 2 | 2 | **4,2** | ✅ Cerrado | `server_tokens off` |
 | **T12** | Parámetro `?lang` manipulado con payload | 6 | 2 | 4 | 3 | 4 | **3,8** | ✅ Cerrado | Allowlist `['es','en']`; nunca interpolado en el DOM |

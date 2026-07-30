@@ -112,12 +112,16 @@ python3 -m http.server 8080
 ## Despliegue con Docker
 
 ```bash
-docker compose up -d --build     # http://localhost:8080
+docker compose up -d --build     # http://localhost
 docker compose down
 ```
 
 `docker compose build` ejecuta `nginx -t` dentro de la imagen: una configuración inválida
 rompe el build, no el arranque.
+
+El puerto del host es **80** y no 8080 a propósito: el túnel de Cloudflare que publica el sitio
+tiene su origen fijado ahí. Está explicado junto a la directiva en `docker-compose.yml` y en
+`docs/05-deployment/deployment.md` §El borde.
 
 ## Verificar antes de publicar
 
@@ -125,14 +129,25 @@ Los tres comandos que no deben saltarse:
 
 ```bash
 # 1. Las cinco cabeceras de seguridad deben llegar a la home
-curl -sI http://localhost:8080/ | grep -ci -E 'frame|nosniff|referrer|permissions|content-security'   # => 5
+curl -sI http://localhost/ | grep -ci -E 'frame|nosniff|referrer|permissions|content-security'   # => 5
 
 # 2. Y también a los assets (aquí es donde fallaba antes)
-curl -sI http://localhost:8080/assets/fonts/fonts.css | grep -ci -E 'frame|nosniff|content-security'  # => 3
+curl -sI http://localhost/assets/fonts/fonts.css | grep -ci -E 'frame|nosniff|content-security'  # => 3
 
 # 3. Una ruta inexistente debe devolver 404, no 200
-curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/no-existe                              # => 404
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost/no-existe                              # => 404
 ```
+
+Y un cuarto que no es opcional aunque los tres anteriores estén en verde:
+
+```bash
+# 4. Lo mismo, pero por el borde: comprueba que el túnel apunta a esta imagen
+curl -sI https://www.higerotech.com/ | grep -ci -E 'frame|nosniff|referrer|content-security'     # => 4
+```
+
+Los tres primeros validan la **imagen**; el cuarto valida lo **publicado**. El 2026-07-30 los
+tres primeros daban verde mientras el sitio real servía un contenedor de dos semanas antes, sin
+ninguna cabecera. Ver `docs/05-deployment/deployment.md` §Hallazgo operativo.
 
 Y los diagramas de la documentación:
 
