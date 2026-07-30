@@ -9,7 +9,7 @@
 - [ ] SAST sin findings críticos/altos — **no ejecutado**: no hay pipeline conectado todavía
 - [x] Dependencias verificadas (SCA) — **N/A justificado**: cero dependencias de paquetes.
       El sistema no usa npm, pip ni ningún gestor; la única dependencia externa es la imagen
-      base `nginx:1.27-alpine`. Ver A03 en `.ai-dlc/owasp-mapping.md`.
+      base `nginx:1.30-alpine`. Ver A03 en `.ai-dlc/owasp-mapping.md`.
 - [ ] Cobertura ≥ 80% branch — **no aplica hoy**: no existe suite de pruebas (ver Gate 3)
 - [x] Dual review completado (humano + IA)
 - [x] Sin secretos en el código — verificado: el repositorio no contiene credenciales,

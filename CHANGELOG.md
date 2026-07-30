@@ -12,6 +12,14 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   `core.hooksPath` documentada en `CONTRIBUTING.md`. Es un sustituto local y parcial: no
   exige los security gates ni alcanza los merges desde la web.
 
+### Seguridad
+- Imagen base actualizada de `nginx:1.27-alpine` (Alpine 3.21.3) a `nginx:1.30-alpine`
+  (Alpine 3.24.1). Cierra los 36 CVEs corregibles —34 HIGH y 2 CRITICAL— que el escaneo de
+  contenedor reportaba en `openssl`, `libxml2`, `musl` (`CVE-2026-40200`, ejecución arbitraria
+  de código), `nghttp2` y `zlib`. Trivy pasa de 36 a 0 con los mismos flags del gate. El pin
+  se queda en la línea `1.30` (stable) y no en `stable-alpine`, para recibir los parches
+  `1.30.x` sin saltar de línea sola.
+
 ### Corregido
 - El gate de secretos no escaneaba nada, por dos causas encadenadas: `gitleaks-action` exige
   licencia en repos de organización y abortaba con «missing gitleaks license», y una vez
@@ -35,8 +43,9 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 - Proteger `main` en el servidor: la org está en plan Free y el repo es privado, y GitHub no
   ofrece branch protection ni rulesets en esa combinación. Salidas: subir a GitHub Team
   (mantiene el repo privado) o hacerlo público. Hasta entonces la única barrera es el hook.
-- Recuperar `scripts/gitgraph_from_log.py`, que `CONTRIBUTING.md` y el registro de 0.3.0 dan
-  por existente pero no está versionado, o corregir ambas referencias.
+- Corregir la ruta de `gitgraph_from_log.py`: `CONTRIBUTING.md` y el registro de 0.3.0 la
+  escriben como `scripts/…`, relativa al repo, pero el script vive en el skill de AI-DLC
+  junto a `validate_mermaid.py`. No falta nada; la referencia está mal escrita.
 
 ## [0.3.0] - 2026-07-29
 

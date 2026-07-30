@@ -1,5 +1,5 @@
 # ── Higerotech landing — imagen estática con nginx ──────────────
-FROM nginx:1.27-alpine
+FROM nginx:1.30-alpine
 
 LABEL org.opencontainers.image.title="Higerotech Landing" \
       org.opencontainers.image.description="Landing page AI-First de Higerotech" \

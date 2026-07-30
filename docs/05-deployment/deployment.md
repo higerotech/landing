@@ -26,7 +26,7 @@ C4Deployment
             Container(borde, "Terminacion TLS", "Tunel saliente", "Publica el sitio sin abrir puertos entrantes")
         }
         Deployment_Node(cont, "higerotech-landing", "Docker, rootfs solo lectura, cap_drop ALL, 0.5 CPU / 128 MB") {
-            Container(nginx, "nginx", "1.27-alpine", "Sirve estaticos y aplica cabeceras de seguridad")
+            Container(nginx, "nginx", "1.30-alpine", "Sirve estaticos y aplica cabeceras de seguridad")
             Container(archivos, "Contenido", "index.html, 404.html, assets, robots, sitemap", "Horneado en la imagen")
         }
     }

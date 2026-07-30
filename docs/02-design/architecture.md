@@ -43,7 +43,7 @@ C4Container
     System_Ext(borde, "Borde de red", "Termina TLS. Fuera de este repositorio")
 
     System_Boundary(sitio, "Landing corporativa") {
-        Container(nginx, "Servidor web", "nginx 1.27-alpine", "Sirve archivos estaticos, aplica cabeceras de seguridad y politica de cache")
+        Container(nginx, "Servidor web", "nginx 1.30-alpine", "Sirve archivos estaticos, aplica cabeceras de seguridad y politica de cache")
         Container(pagina, "Documento de la pagina", "HTML + CSS + JS inline", "Todo el contenido, estilos y comportamiento en un archivo")
         Container(estaticos, "Recursos estaticos", "woff2, svg, png", "Fuentes autoalojadas, isotipo, logotipo, tarjeta social")
         Container(indexacion, "Archivos de indexacion", "robots.txt, sitemap.xml", "Directivas para rastreadores")
