@@ -1,10 +1,13 @@
 # Threat Model — Landing corporativa Higerotech
 
-* **Estado:** approved
+* **Estado:** approved — **con enmienda posterior sin aprobar**
 * **Fecha:** 2026-07-29
+* **Revisión:** 2026-07-30 — añadida **T17** y explicitado el alcance del cierre de T7
+  (ver §T17). La aprobación del 2026-07-29 no cubre esa amenaza: quedó abierta y pendiente de
+  revisión del owner.
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 02-design
-* **Versión:** 0.2.0
+* **Versión:** 0.3.0
 * **Gate:** 1
 * **Alcance:** Sistema completo — sitio estático, configuración de nginx e imagen de contenedor
 * **Metodología:** STRIDE + DREAD
@@ -85,7 +88,7 @@ no controla (ver A04 y T9).
 |---|---|---|---|---|---|---|
 | **nginx** | N/A — no autentica | T1: cabeceras ausentes por herencia rota | N/A — sin transacciones | T6: versión en cabecera `Server`; T8: rutas ocultas | T10: sin límite de tasa | N/A — rootfs de solo lectura, `cap_drop: ALL` |
 | **Archivos estáticos** | N/A | T11: contenido alterado en la imagen | N/A | N/A — todo es público por diseño | N/A | N/A |
-| **Documento en el navegador** | T2: enmarcado para suplantar la marca | T4: inyección si apareciera un vector de entrada | N/A | N/A | T7: página en blanco si falla el JS | N/A |
+| **Documento en el navegador** | T2: enmarcado para suplantar la marca | T4: inyección si apareciera un vector de entrada | N/A | N/A | T7: página en blanco si el JS no se ejecuta · T17: ídem si lanza a mitad | N/A |
 | **Motor de idioma** | N/A | T12: `?lang` manipulado | N/A | N/A | N/A | N/A |
 | **Recursos de terceros** | T5: CDN comprometido sirve JS/CSS alterado | T5 | N/A | T13: fuga de IP del visitante al CDN | T5: caída del CDN bloquea el render | N/A |
 | **Logs** | N/A | N/A | N/A | T14: contienen IPs | N/A | N/A |
@@ -105,6 +108,7 @@ quadrantChart
     quadrant-4 Planear
     T1 Cabeceras ausentes: [0.95, 0.75]
     T7 Pagina en blanco sin JS: [0.85, 0.80]
+    T17 Blanco por excepcion temprana: [0.30, 0.80]
     T3 CTA de contacto roto: [0.90, 0.70]
     T16 Caida no detectada: [0.70, 0.85]
     T5 CDN de terceros comprometido: [0.18, 0.78]
@@ -124,7 +128,8 @@ Escala 1–10 por criterio; **Score = media**. Umbral de atención obligatoria: 
 | ID | Amenaza | D | R | E | A | D | Score | Estado | Control / ADR |
 |---|---|---|---|---|---|---|---|---|---|
 | **T1** | Cabeceras de seguridad ausentes en la home y los assets por herencia rota de `add_header` | 7 | 10 | 9 | 10 | 3 | **7,8** | ✅ Cerrado | Snippet en cada `location` + job de CI · ADR-0002 |
-| **T7** | La página queda invisible si el JS no se ejecuta | 8 | 10 | 8 | 9 | 2 | **7,4** | ✅ Cerrado | `noscript` + rama sin observer + reduced-motion · ADR-0005 |
+| **T7** | La página queda invisible si el JS **no se ejecuta** (deshabilitado, bloqueado, navegador sin observer) | 8 | 10 | 8 | 9 | 2 | **7,4** | ✅ Cerrado | `noscript` + rama sin observer + reduced-motion · ADR-0005. **El ✅ vale solo con esa lectura**: ver T17 |
+| **T17** | La página queda invisible si el JS **se ejecuta y lanza a mitad** | 8 | 2 | 8 | 9 | 2 | **5,8** | 🔴 **Abierto** | Ninguno alcanza este caso. Detección diseñada: U1/U2 de `docs/04-testing/unit-tests.md`. Prevención: la 4.ª alternativa de ADR-0005 |
 | **T3** | CTA de WhatsApp apuntando a `https://wa.me/` sin número | 7 | 10 | 10 | 8 | 1 | **7,2** | ✅ Cerrado | `CONTACT.whatsapp`; el botón no se publica si está vacío |
 | **T16** | Caída del sitio no detectada por ausencia de alertas | 8 | 8 | 7 | 7 | 4 | **6,8** | 🔴 **Abierto** | Ninguno. Gate 5 no superado · A09 |
 | **T5** | Recurso de terceros (Google Fonts) comprometido o caído | 8 | 3 | 2 | 9 | 6 | **5,6** | ✅ Cerrado | Fuentes autoalojadas · ADR-0004 |
@@ -157,6 +162,37 @@ probabilidad muy baja: no existe un camino por el que entre contenido no confiab
 (fuga de IP) tenía impacto moderado pero ocurría en **el 100 % de las visitas**. Priorizar
 solo por impacto habría dejado T13 sin tocar durante meses.
 
+### T17: la mitigación que comparte destino con el fallo *(añadido el 2026-07-30)*
+
+T17 sale de diseñar las pruebas unitarias, no de un incidente. Merece explicación porque su
+relación con T7 es incómoda: **mismo impacto, otra causa, y las tres capas de ADR-0005 no lo
+alcanzan.**
+
+| Capa de ADR-0005 | Cubre «el JS no se ejecuta» (T7) | Cubre «el JS lanza a mitad» (T17) |
+|---|---|---|
+| `<noscript>` en el `<head>` | ✅ | ❌ Solo actúa si el JS está **deshabilitado** |
+| Rama de respaldo sin `IntersectionObserver` | ✅ | ❌ **Vive dentro del script**, en la línea 978 |
+| `prefers-reduced-motion` | ✅ | ⚠️ Solo para quien tenga esa preferencia |
+
+La segunda fila es el punto: la mitigación está *en el mismo archivo y en el mismo flujo* que
+lo que mitiga. Una excepción en las líneas 919, 920, 972 o 973 la deja inalcanzable, porque el
+intérprete nunca llega a la 978. Es una salvaguarda que comparte destino con el fallo del que
+protege, y eso no se ve leyendo la lista de tres capas: hay que mirar el orden de ejecución.
+
+Justicia con el ADR: su tabla de alternativas **ya nombra** «error de ejecución» como caso que
+`<noscript>` en solitario no cubre, y la 4.ª alternativa que descartó —`in` por defecto, que el
+JS retire— es robusta por construcción contra T17. Se descartó solo por el parpadeo. Lo que
+quedó demasiado fuerte fue la frase «Cierra T7… antes, un único fallo de script equivalía a una
+denegación de servicio del contenido»: un fallo de script **sigue** equivaliendo a eso.
+
+Distinción que conviene no perder: U1/U2 de `docs/04-testing/unit-tests.md` **detectan** T17
+antes de publicar; la 4.ª alternativa lo haría **imposible**. Un test que atrapa la errata y un
+diseño donde la errata no puede blanquear la página no son el mismo grado de garantía.
+
+Por qué *Reproducibility* baja a 2 frente al 10 de T7: T7 era un defecto presente y verificable;
+T17 es latente —los seis `id` son correctos hoy— y necesita que una edición futura lo introduzca.
+El impacto, en cambio, es idéntico, y de ahí que aun así supere el umbral de 5.
+
 ## Controles y trazabilidad
 
 | Amenaza | Control implementado | Dónde vive | OWASP | Verificación |
@@ -168,6 +204,7 @@ solo por impacto habría dejado T13 sin tocar durante meses.
 | T5, T13 | Fuentes autoalojadas; cero terceros | `assets/fonts/` | A03, A08 | Sin peticiones cross-origin en la pestaña de red |
 | T6 | `server_tokens off` | `nginx.conf` | A02 | Job del pipeline verifica la cabecera `Server` |
 | T7 | `<noscript>` + rama sin observer + `prefers-reduced-motion` | `index.html` | A10 | Pendiente prueba E2E · Gate 3 |
+| T17 | **Ninguno.** Las tres capas de T7 no alcanzan una excepción temprana | — | A10 | Pendiente: U1/U2 de `docs/04-testing/unit-tests.md` |
 | T8 | `location ~ /\.` + `.dockerignore` | `nginx.conf`, `.dockerignore` | A01, A02 | `curl /.git/config` → 403 |
 | T11 | `RUN nginx -t` en build | `Dockerfile` | A08 | Build falla si la config es inválida |
 | T12 | Allowlist de idioma | `index.html` `idiomaInicial()` | A05 | `?lang=<script>` → cae a `es` |

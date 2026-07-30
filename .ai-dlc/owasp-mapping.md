@@ -179,7 +179,18 @@ además era falsa. Ver `.ai-dlc/gates/gate-5-monitoring.md`.
 - Webfont no disponible → pila de respaldo a fuentes del sistema, nunca a serif.
 - Número de WhatsApp sin configurar → el botón no se muestra, en lugar de publicar un CTA muerto.
 
-**Verificación:** pruebas manuales documentadas en `docs/05-deployment/deployment.md`.
+**Hueco identificado el 2026-07-30 (amenaza T17).** La lista de arriba cubre condiciones
+excepcionales *externas* al script —JS deshabilitado, observer ausente, `localStorage`
+bloqueado, webfont caída—, pero no la condición excepcional del propio script: **que lance a
+mitad**. Las líneas 919, 920, 972, 973 y 989 de `index.html` desreferencian nodos del DOM sin
+guarda, y como `.reveal` está en `opacity: 0`, una excepción antes de la línea 978 deja la
+página en blanco. La segunda viñeta de la lista —la rama de respaldo— **vive dentro del
+script**, así que no protege contra esto: comparte destino con el fallo. Detalle en
+`docs/02-design/threat-model.md` §T17.
+
+**Verificación:** pruebas manuales documentadas en `docs/05-deployment/deployment.md`. Las
+unitarias U1/U2 diseñadas en `docs/04-testing/unit-tests.md` cubrirían T17 cuando se
+implementen.
 **Evidencia:** salida de `curl` de la ruta inexistente devolviendo `404`.
 
 ---

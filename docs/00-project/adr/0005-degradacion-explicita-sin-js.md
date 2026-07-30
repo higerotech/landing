@@ -83,3 +83,33 @@ inclinaría la balanza hacia hacerlo bien desde el CSS.
 **Impacto en threat model**
 - Cierra T7 (degradación no controlada, A10). Antes, un único fallo de script equivalía a
   una denegación de servicio del contenido para ese visitante.
+
+## Nota de revisión — 2026-07-30
+
+*Añadida sin modificar la decisión ni su historia; el ADR sigue `accepted`.*
+
+La frase de arriba —«un único fallo de script equivalía a una denegación de servicio»— quedó
+**demasiado fuerte en su forma pasada**. Sigue siendo cierta hoy para una clase de fallo: si el
+script se ejecuta y **lanza** antes de la línea 978, ninguna de las tres capas lo alcanza.
+
+| Capa | «El JS no se ejecuta» (T7) | «El JS lanza a mitad» (T17) |
+|---|---|---|
+| `<noscript>` | ✅ | ❌ Solo con el JS deshabilitado |
+| Rama sin `IntersectionObserver` | ✅ | ❌ Vive **dentro** del script, línea 978 |
+| `prefers-reduced-motion` | ✅ | ⚠️ Solo quien tenga esa preferencia |
+
+La segunda fila es el hallazgo: la salvaguarda está en el mismo flujo que lo que protege, así
+que una excepción en las líneas 919, 920, 972 o 973 la deja inalcanzable. No se ve leyendo la
+lista de tres capas; hay que mirar el orden de ejecución.
+
+El análisis de este ADR ya apuntaba en esa dirección: su tabla de alternativas nombra «error de
+ejecución» como caso que `<noscript>` en solitario no cubre, y **la 4.ª alternativa —`in` por
+defecto, que el JS retire— es robusta por construcción contra T17**. Se descartó solo por el
+parpadeo. Registrado como amenaza T17 (DREAD 5,8) en `docs/02-design/threat-model.md` y como
+riesgo R4 en los requisitos.
+
+Consecuencia práctica: el argumento para reconsiderar la 4.ª alternativa es ahora más fuerte que
+cuando se escribió el ADR. Entonces el contrapeso era el parpadeo; hoy al otro lado de la balanza
+hay una amenaza abierta que las tres capas no cubren. Las unitarias U1/U2 de
+`docs/04-testing/unit-tests.md` **detectan** el fallo antes de publicar, que no es lo mismo que
+hacerlo imposible.
