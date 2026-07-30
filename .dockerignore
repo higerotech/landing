@@ -9,6 +9,15 @@ docs/
 .ai-dlc/
 .github/
 
+# Pruebas y sus dependencias. El Dockerfile copia archivos concretos, así que
+# nunca llegarían a la imagen; se excluyen para que no viajen al daemon en el
+# contexto de build — `node_modules` son miles de archivos en cada `docker build`.
+node_modules/
+tests/
+package.json
+package-lock.json
+coverage/
+
 # Sistema
 .DS_Store
 Thumbs.db
