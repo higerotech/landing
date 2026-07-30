@@ -29,12 +29,16 @@ constaban como bloqueo están hechos:
 3. ~~Añadir gitleaks al pipeline~~ → en verde, tras resolver la licencia de organización y los
    permisos de la API de PRs.
 
-**Lo que queda abierto es un único ítem: cobertura ≥ 80 %,** que no puede cumplirse porque no
-existe suite de pruebas. Es el mismo bloqueo que Gate 3, no uno independiente.
+**Lo que queda abierto es un único ítem: cobertura ≥ 80 %.** Su motivo cambió el 2026-07-30:
+ya no es que falte la suite —hay 46 unitarias, ver `docs/04-testing/unit-tests.md`— sino que
+**no se mide la cobertura**. Node trae `--experimental-test-coverage`, así que medirla es
+barato; lo que no es automático es decidir si el 80 % tiene sentido sobre un archivo que es
+90 % marcado y 10 % lógica. Medir primero, fijar el umbral después.
 
-Dicho de otro modo: este gate ya no espera infraestructura, espera pruebas. Que eso baste o no
-para cerrarlo es **decisión del owner**; el `Estado` de la cabecera se deja como estaba porque
-cambiarlo sería tomar esa decisión desde la herramienta.
+Dicho de otro modo: este gate esperaba infraestructura, luego esperaba pruebas, y ahora espera
+una medición y un umbral defendible. Que eso baste o no para cerrarlo es **decisión del owner**;
+el `Estado` de la cabecera se deja como estaba porque cambiarlo sería tomar esa decisión desde
+la herramienta.
 
 **Salvedad sobre el valor real de estos gates:** pasan, pero no son obligatorios. No hay branch
 protection —org en plan Free con repo privado—, así que un pipeline en rojo no impide mergear.

@@ -8,6 +8,23 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **46 pruebas unitarias en verde** (`npm test`, ~4 s), implementando el diseño de
+  `docs/04-testing/unit-tests.md`. Cargan el `index.html` **real** en jsdom y ejecutan su script
+  inline, así que no pueden desviarse del artefacto que se despliega. Cubren los ocho grupos de
+  lógica con ramas: paridad de los 130 pares bilingües —el riesgo **R2**, que era la única
+  prueba que el repositorio ya reconocía que le faltaba—, contrato JS↔DOM, resolución del
+  idioma, efectos de `setLang`, menú móvil con sus cuatro combinaciones de etiqueta accesible,
+  RF05, ambas ramas del scroll reveal y el sello del año. Job «Pruebas unitarias» en el CI.
+- **El gate SCA deja de ser «N/A por ausencia» y pasa a escanear de verdad.** jsdom trae 46
+  paquetes de desarrollo, así que se añade el job `deps` con `npm audit --audit-level=high`
+  (hoy: 0 vulnerabilidades). Matiz para leer un rojo futuro: ninguna dependencia viaja en la
+  imagen —verificado, la imagen solo contiene los archivos del sitio—, así que un hallazgo sería
+  riesgo de la cadena de herramientas del CI, no del sitio publicado.
+- **T17 pasa de razonamiento a caso ejecutable.** La prueba U1.5 rompe `id="nav-toggle"` a
+  propósito y confirma lo que el threat model deducía leyendo el orden de ejecución: la
+  excepción impide que los 15 elementos `.reveal` reciban `.in`, y con `opacity: 0` eso es la
+  página en blanco. De paso verifica el propio detector del arnés: un suite en verde cuyo
+  mecanismo de detección no funciona es peor que no tener suite.
 - `docs/04-testing/unit-tests.md`: **diseño** de las pruebas unitarias, primer documento de la
   fase 04. Arnés `node:test` + `jsdom` cargando el `index.html` real —no una copia, así el test
   no puede desviarse del artefacto que se despliega—, catálogo de ~30 casos sobre las ocho
@@ -51,6 +68,22 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   exige los security gates ni alcanza los merges desde la web.
 
 ### Cambiado
+- **El repositorio deja de tener cero dependencias.** `jsdom` como única `devDependency`
+  directa, 46 paquetes con las transitivas. Era el intercambio aprobado: se gasta esa propiedad
+  a cambio de cobertura real de la lógica del sitio. `node_modules/` **no estaba en
+  `.gitignore`** —se habría commiteado— y ahora sí; `package-lock.json` sí se versiona, porque
+  hace reproducible el CI y es lo que escanea el gate de dependencias. `.dockerignore` excluye
+  `node_modules/`, `tests/` y los `package*.json`: el `Dockerfile` copia archivos concretos y
+  nunca habrían llegado a la imagen, pero sin excluirlos viajarían al daemon en cada
+  `docker build`. Verificado que la imagen resultante solo contiene los archivos del sitio.
+- El badge de pruebas del README pasa de «sin suite» a «46 unitarias sin E2E». Se queda en
+  **ámbar y no en verde** a propósito: la pirámide sigue incompleta y el Gate 3 abierto.
+- Tres desviaciones respecto al diseño aprobado, todas registradas en el propio documento con su
+  motivo: el job de CI corre **en paralelo** con los de contenedor en vez de antes (los cinco
+  duran menos de un minuto; encadenarlos solo añadiría latencia), `actions/setup-node` se ancla
+  por tag `@v4` y no por SHA (el repositorio ancla por SHA lo de terceros y por tag las acciones
+  oficiales; migrar todo a SHA queda como decisión aparte y **pendiente**), y se añadió el job
+  de SCA que el diseño solo mencionaba como consecuencia.
 - `docker-compose.yml` publica en el **puerto 80** del host, antes 8080. No es una preferencia:
   el ingress del túnel de Cloudflare apunta a `http://<IP del host>:80`, así que cualquier otro
   puerto deja el sitio público sin servir aunque el contenedor esté sano. Queda escrito al lado
