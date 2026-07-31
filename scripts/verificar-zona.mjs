@@ -18,7 +18,8 @@
 
    Uso:  node scripts/verificar-zona.mjs [hostname…]                        */
 
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
+import { setTimeout as esperar } from 'node:timers/promises'
 
 /* Lo que el repositorio AFIRMA que debe ser cierto en producción. Los dominios
    propios se crean a mano en Cloudflare —el token de despliegue no toca DNS a
@@ -52,6 +53,8 @@ function contratoDeCabeceras () {
 }
 
 const CONTRATO = contratoDeCabeceras()
+const DIST = new URL('../dist/index.html', import.meta.url)
+let sinDist = false
 
 async function verificar (host) {
   const base = `https://${host}`
@@ -125,6 +128,41 @@ async function verificar (host) {
     .filter(u => u && new URL(u).host !== host)
   anota(ajenos.length === 0, `el navegador descargaría de terceros: ${[...new Set(ajenos)].join(', ')}`)
 
+  /* 7 · lo publicado es EL ARTEFACTO QUE ACABAMOS DE CONSTRUIR.
+     Esta es la que ata las dos puntas. Todo lo anterior comprueba que el sitio
+     está bien; esta comprueba que el sitio es *el nuestro, el de ahora*. Sin
+     ella se puede tener todo en verde sobre una versión de hace dos semanas,
+     que es literalmente lo que pasó el 2026-07-30.
+
+     Se compara byte a byte contra `dist/` en vez de fiarse del `ETag`: el que
+     devuelve Cloudflare no es el hash del contenido —comprobado— así que
+     compararlo no diría nada.
+
+     Y se reintenta, porque el borde puede seguir sirviendo la versión anterior
+     unos segundos tras desplegar. Reintentar una LECTURA no enmascara nada:
+     si nunca converge, falla igual. */
+  if (existsSync(DIST)) {
+    const esperado = readFileSync(DIST, 'utf8')
+    let intentos = 0
+    let vivo = htmlCrudo
+    while (vivo !== esperado && intentos < 6) {
+      intentos++
+      await esperar(10_000)
+      vivo = await (await fetch(base, { headers: { accept: '*/*' }, cache: 'no-store' })).text()
+    }
+    anota(vivo === esperado,
+      `lo publicado no es el artefacto de este build: ${vivo.length} bytes servidos ` +
+      `frente a ${esperado.length} en dist/, tras ${intentos} reintentos`)
+    if (vivo === esperado && intentos > 0) {
+      console.log(`      (el borde tardó ~${intentos * 10}s en servir la versión nueva)`)
+    }
+  } else {
+    /* Decirlo en voz alta. Una comprobación que se salta en silencio es
+       indistinguible de una que pasa, y ese es el patrón que este repositorio
+       lleva semanas desmontando. */
+    sinDist = true
+  }
+
   return fallos
 }
 
@@ -152,4 +190,12 @@ for (const host of hosts) {
 }
 
 console.log(`\n${hosts.length - rotos}/${hosts.length} hostnames correctos`)
+
+if (sinDist) {
+  console.log(
+    '\n⚠  No se comparó lo publicado contra `dist/`, que no existe: esta ejecución\n' +
+    '   dice que el sitio está bien, pero NO que sea la versión de este build.\n' +
+    '   Ejecuta `npm run preparar` antes para que la comprobación sea completa.')
+}
+
 process.exit(rotos === 0 ? 0 : 1)

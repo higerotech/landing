@@ -1,7 +1,7 @@
 # Plan de despliegue — Cloudflare Workers con static assets
 
-* **Estado:** en curso — **pasos 1, 2 y 3 completados el 2026-07-31**; el apex ya sirve desde el
-  Worker. Pendiente el paso 4 (`www`), bloqueado por dos hallazgos que necesitan mano en Cloudflare
+* **Estado:** **completado el 2026-07-31.** El apex y `www` sirven desde el Worker; `demo.` y
+  `web.` siguen en el túnel como contingencia. Los tres hallazgos, cerrados
 * **Fecha:** 2026-07-31
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 05-deployment
@@ -101,10 +101,9 @@ cuenta:
 
 1. ~~**Token de API** con permiso `Workers Scripts: Edit` sobre la cuenta, y **solo eso**.~~
    ✅ hecho. Es una credencial que puede desplegar: alcance mínimo y rotable.
-2. **Dominios propios del Worker.** ✅ `higerotech.com` — ⬜ `www.higerotech.com`.
-   Cloudflare crea los registros DNS necesarios.
-3. **Retirar del ingress del túnel** las entradas de `www` y del apex, dejando `demo.` y `web.`.
-4. **Desactivar la inyección automática de Web Analytics** en la zona (Hallazgo 2).
+2. ~~**Dominios propios del Worker** para `higerotech.com` y `www.higerotech.com`.~~ ✅ hecho.
+3. ~~**Retirar del ingress del túnel** las entradas de `www` y del apex.~~ ✅ `demo.` y `web.` siguen.
+4. ~~**Desactivar la inyección automática de Web Analytics** en la zona.~~ ✅ hecho (Hallazgo 2).
 
 ### Por qué los dominios propios se crean a mano y no en `wrangler.jsonc`
 
@@ -128,8 +127,8 @@ minutos.
 | 1 | ~~Añadir los archivos del Worker y desplegar a un `*.workers.dev`~~ | ✅ **Hecho el 2026-07-31** — ver §Resultado del paso 1 |
 | 2 | ~~Enrutar **solo el apex** al Worker~~ | ✅ **Hecho el 2026-07-31** — 200 en vez de 530 |
 | 3 | ~~Verificar el apex con el suite completo~~ | ✅ **Hecho** — 54/58, y los 4 fallos destaparon algo real; ver §Resultado de los pasos 2 y 3 |
-| 4 | **En curso** — mover `www` al Worker y quitarlo del ingress. Hoy `www` no resuelve | Paso 4 de §Verificar antes de publicar, ahora contra el Worker |
-| 5 | Dejar `demo.` en el túnel como estaba | `curl -sI https://demo.higerotech.com/` sigue sirviendo desde el contenedor |
+| 4 | ~~Mover `www` al Worker y quitarlo del ingress~~ | ✅ **Hecho el 2026-07-31** — pasa las seis comprobaciones de `verificar:zona` |
+| 5 | ~~Dejar `demo.` en el túnel como estaba~~ | ✅ `demo.` y `web.` siguen sirviendo desde el contenedor |
 
 **El paso 2 es deliberadamente el apex y no `www`.** Hoy el apex no sirve a nadie —responde
 530—, así que es el único hostname donde un fallo no tiene consecuencias. Se estrena la
@@ -325,6 +324,68 @@ motivos correctos.
 
 Se engancha al workflow de despliegue **después** del suite contra `workers.dev`: ese paso prueba
 que el despliegue salió bien; este prueba lo que recibe la gente.
+
+## Cierre del cutover *(2026-07-31)*
+
+Los dos hallazgos del paso 3 están resueltos, y apareció un tercero al cerrarlo.
+
+| | Antes | Ahora |
+|---|---|---|
+| `www.higerotech.com` | NXDOMAIN | Sirve desde el Worker |
+| Beacon de Web Analytics | Inyectado en toda la zona | Sin inyección: el HTML servido es byte a byte el desplegado |
+| Suite E2E contra el apex | 54/58 | **58/58** |
+| `verificar:zona` sobre el apex | ❌ 2 fallos | ✅ |
+
+`www` se comprobó forzando la IP de Cloudflare, y pasa las seis: 307 en `/index.html`, las ocho
+cabeceras, HSTS con `preload`, 404 real, HTML idéntico con dos `Accept` distintos y cero terceros.
+
+### Un detalle operativo que cuesta media hora si no se sabe
+
+Tras enganchar `www`, **el resolver local siguió devolviendo NXDOMAIN**, y `Clear-DnsClientCache`
+no lo arregló. No era la configuración: era **caché negativa** — el SOA de la zona declara 1800 s,
+así que cualquier resolver que preguntara por `www` mientras no existía se guarda ese «no existe»
+durante media hora, y limpiar la caché del cliente no toca la del router ni la del ISP.
+
+Confundir eso con un fallo de configuración lleva a deshacer algo que estaba bien. La forma de
+distinguirlo en diez segundos: preguntar a un resolver público por DoH, o forzar la IP con
+`curl --resolve`. Ambos daban verde mientras la máquina local seguía diciendo que no existía.
+
+### Hallazgo 3 — la verificación del despliegue apuntaba a una pantalla de login
+
+El primer despliegue tras enganchar los dominios propios **falló con 48 de 58 pruebas caídas**, y
+el mensaje —`element(s) not found`— no decía nada útil. La causa: `*.workers.dev` había quedado
+**detrás de Cloudflare Access**, así que devuelve un 302 a una pantalla de login. El suite estaba
+midiendo esa pantalla.
+
+Que la URL de preview quede protegida está bien —evita que un hostname no canónico sea
+alcanzable e indexable—, pero deja el workflow verificando contra algo que no es el sitio. Y
+había una razón más de fondo para cambiarlo: **`workers.dev` no pertenece a la zona**, así que
+nunca podría haber visto lo que el borde añade. Era exactamente el hueco del Hallazgo 2.
+
+**La verificación pasa a medir el hostname canónico.** Con eso se pierde la garantía que daba
+derivar la URL de la salida de `wrangler deploy` —que lo verificado fuera lo recién publicado— y
+hay que reponerla, porque es justo la que evita dar verde sobre una versión vieja. Se repone más
+fuerte:
+
+### La comprobación 7: lo publicado es el artefacto de este build
+
+`verificar:zona` compara ahora **byte a byte** el HTML servido contra `dist/index.html`. Es una
+garantía mejor que la de la URL derivada: aquella probaba que *una URL responde*, esta prueba que
+**el contenido es el de este build**. Es la que ata las dos puntas, y la que faltaba el
+2026-07-30, cuando todo estaba en verde sobre una versión de dos semanas antes.
+
+Tres decisiones dentro:
+
+- **Byte a byte y no por `ETag`.** El `ETag` que devuelve Cloudflare **no es el hash del
+  contenido** —comprobado: `d058e423…` frente a `d11f6768…` del archivo—, así que compararlo no
+  diría nada.
+- **Con reintentos**, porque el borde puede servir la versión anterior unos segundos tras
+  desplegar. Reintentar una *lectura* no enmascara nada: si nunca converge, falla igual.
+- **Si `dist/` no existe, lo dice en voz alta** en vez de saltarse la comprobación. Una
+  comprobación que se salta en silencio es indistinguible de una que pasa.
+
+Y mide: alterando `dist/index.html` a propósito, falla con
+`lo publicado no es el artefacto de este build: 81163 bytes servidos frente a 81180 en dist/`.
 
 ## Rollback
 

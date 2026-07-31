@@ -8,6 +8,33 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **Cutover completado**: el apex y `www` sirven desde el Worker, `demo.` y `web.` siguen en el
+  túnel como contingencia. Los dos hallazgos del paso 3 quedan cerrados —`www` resuelve y el
+  beacon ya no se inyecta— y el suite contra el apex pasa de 54/58 a **58/58**. `www` se comprobó
+  forzando la IP de Cloudflare y pasa las seis comprobaciones.
+- **La verificación del despliegue mide el hostname canónico, no `*.workers.dev`.** El primer
+  despliegue tras enganchar los dominios falló con **48 de 58 pruebas caídas** y un
+  `element(s) not found` que no decía nada: `workers.dev` había quedado **detrás de Cloudflare
+  Access** y devolvía un 302 a una pantalla de login, que es lo que el suite estaba midiendo.
+  Que la URL de preview quede protegida está bien; verificar contra ella no. Y había una razón de
+  fondo: `workers.dev` no pertenece a la zona, así que nunca podría haber visto lo que el borde
+  añade — el hueco del hallazgo anterior.
+- **Comprobación 7 de `verificar:zona`: lo publicado es el artefacto de este build.** Compara
+  **byte a byte** el HTML servido contra `dist/index.html`, y repone —más fuerte— la garantía que
+  daba derivar la URL de la salida de `wrangler deploy`: aquella probaba que *una URL responde*,
+  esta prueba que **el contenido es el de este build**. Es la que faltaba el 2026-07-30, cuando
+  todo estaba en verde sobre una versión de dos semanas antes.
+  Byte a byte **y no por `ETag`**, porque el que devuelve Cloudflare no es el hash del contenido;
+  **con reintentos**, porque el borde tarda unos segundos en servir lo nuevo y reintentar una
+  lectura no enmascara nada; y **si `dist/` no existe lo dice en voz alta** en vez de saltarse la
+  comprobación en silencio.
+- **Registrada la caché negativa de DNS** como detalle operativo: tras enganchar `www`, el
+  resolver local siguió devolviendo NXDOMAIN media hora —el SOA declara 1800 s— y limpiar la
+  caché del cliente no toca la del router ni la del ISP. Confundirlo con un fallo de
+  configuración lleva a deshacer algo que estaba bien; se distingue en diez segundos preguntando
+  a un resolver público por DoH o forzando la IP con `curl --resolve`.
+
+### Añadido
 - **`npm run verificar:zona`** — la comprobación que faltaba, y que existe por lo que destapó el
   paso 3: el suite corría contra `localhost`, el contenedor y `workers.dev`, y **el borde de la
   zona no interviene en ninguno de los tres**. Para cada hostname canónico comprueba que lo sirve
