@@ -151,9 +151,15 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 
 Sigue siendo correcto **no** emitirla desde nginx, por la razón del párrafo anterior.
 
-El `max-age` pasó a **12 meses el 2026-07-31**, y ese mismo día se enrutó el apex al Worker, con
-lo que **los cuatro requisitos de la lista de precarga se cumplen**. Ya no hay nada que corregir:
-lo que queda es una decisión, no un arreglo.
+El `max-age` pasó a **12 meses el 2026-07-31**, ese mismo día se enrutó el apex al Worker —con lo
+que **los cuatro requisitos de la lista de precarga quedaron cumplidos**— y **se solicitó la
+precarga**. El chequeo oficial devolvió cero errores y cero avisos; el dominio está **pending**,
+con `force-https` e `include_subdomains`.
+
+Antes de enviarlo se auditaron los subdominios, porque `includeSubDomains` los alcanza a todos.
+Resultado: `media.`, `encuesta.` y `bots.` están rotos, pero **no por HTTPS** —TLS termina
+correctamente con el certificado comodín; lo que falla es su origen— así que la precarga no
+empeora su situación. Detalle en `docs/05-deployment/deployment.md`.
 
 Solicitar la precarga es una decisión aparte de tener la cabecera bien puesta, y conviene
 tomarla despacio: **entrar en la lista es prácticamente irreversible** —salir tarda meses en

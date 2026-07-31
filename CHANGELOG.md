@@ -7,13 +7,26 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Seguridad
+- **Solicitada la precarga de HSTS para `higerotech.com`.** El chequeo oficial de
+  hstspreload.org devolvió **cero errores y cero avisos**, y tras el envío el dominio figura como
+  `pending`, con `force-https` e `include_subdomains`. Entrar no es inmediato: hay que esperar a
+  que Chromium incorpore la lista y a que cada navegador publique una versión con ella.
+- **Auditados los subdominios antes de enviar**, porque `includeSubDomains` los alcanza a todos.
+  `www`, `web` y `demo` responden 200; **`media`, `encuesta` y `bots` están rotos** — pero **no
+  por HTTPS**: el TLS termina correctamente en 0,15 s con el certificado comodín, y lo que se
+  queda colgado es su origen. Hay que arreglarlos o retirarlos, aparte de esto.
+- **Corregida una advertencia propia que la medición no sostuvo.** Este repositorio venía
+  repitiendo que la precarga «rompería los subdominios que no sirven HTTPS». Medido, ese riesgo
+  no existía: Cloudflare termina TLS para todo el comodín, así que cada subdominio tiene HTTPS
+  aunque su origen esté muerto, y el `http://` ya devolvía 301 en toda la zona. Los tres rotos lo
+  están igual antes y después.
+  Lo que la precarga **sí** cierra es otra puerta —volver a servir algún subdominio por HTTP
+  plano—, y la redirección 301 de la zona ya la tenía prácticamente cerrada. El precio real es
+  ese, y es distinto del que se venía anunciando. La irreversibilidad sigue siendo cierta: salir
+  tarda meses en llegar a los navegadores.
+
 ### Pendiente de decisión humana
-- **Solicitar el `preload` de HSTS.** Los cuatro requisitos se cumplen desde el 2026-07-31: ya no
-  falta nada técnico, solo la decisión. Y conviene tomarla despacio, porque **entrar en la lista
-  es prácticamente irreversible** —salir tarda meses en llegar a los navegadores— y con
-  `includeSubDomains` alcanzaría a `media.`, `encuesta.`, `bots.` y a cualquier subdominio futuro
-  que naciera sin HTTPS. Tener la cabecera bien puesta y pedir la precarga son dos cosas
-  distintas; la primera está hecha.
 - **Cerrar el Gate 3.** Los cinco checkboxes están cumplidos y con evidencia ejecutable desde el
   2026-07-31. Se mantiene abierto por decisión del owner, no por falta de trabajo.
 - **Segundo objetivo del DAST.** El escaneo apunta a `/404.html`, que en el contenedor devuelve

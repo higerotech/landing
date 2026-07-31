@@ -91,11 +91,45 @@ en la lista de precarga de los navegadores, hstspreload.org exige:
 | Redirección HTTP→HTTPS | ✅ 301 |
 | Que el **dominio base** sirva la cabecera | ✅ **Corregido el 2026-07-31**: el apex sirve desde el Worker con `max-age=31536000; includeSubDomains; preload` |
 
-**Los cuatro requisitos se cumplen desde el 2026-07-31.** Ya no hay nada que arreglar: lo que
-queda es una decisión, no una corrección — solicitar la precarga en hstspreload.org es un acto
-aparte de tener la cabecera bien puesta, y sigue **sin hacerse a propósito**.
+**Los cuatro requisitos se cumplen desde el 2026-07-31**, y ese mismo día **se solicitó la
+precarga**. El chequeo oficial (`hstspreload.org/api/v2/preloadable`) devolvió **cero errores y
+cero avisos**, y tras el envío el dominio figura como:
 
-Conviene pararse antes de solicitarla: **entrar en la lista es prácticamente irreversible** —salir tarda meses en propagarse a los navegadores— y con
+| Campo | Valor |
+|---|---|
+| `status` | **pending** |
+| `mode` | `force-https` |
+| `include_subdomains` | `true` |
+| `policy` | `bulk-1-year` |
+
+Entrar en la lista **no es inmediato**: hay que esperar a que Chromium la incorpore y a que cada
+navegador publique una versión con ella. Semanas, no minutos.
+
+### La auditoría de subdominios que precedió al envío
+
+`includeSubDomains` alcanza a **todo** lo que cuelgue del dominio, así que antes de enviar se
+enumeraron los subdominios y se probó HTTPS en cada uno. Tres responden y **tres están rotos**:
+
+| Subdominio | HTTPS | Diagnóstico |
+|---|---|---|
+| `www`, `web`, `demo` | ✅ 200 | — |
+| `media`, `encuesta`, `bots` | ❌ | **TLS termina bien** (0,15 s, certificado comodín válido); la petición se queda colgada después. Es el origen, que no contesta |
+
+Y aquí conviene corregir una advertencia que este repositorio venía repitiendo. El riesgo que se
+señalaba era «hay subdominios que no sirven HTTPS y la precarga los rompería». **Medido, ese
+riesgo no existía**: Cloudflare termina TLS para todo el comodín, así que cada subdominio tiene
+HTTPS funcionando aunque su origen esté muerto, y el `http://` ya devolvía 301 hacia `https://`
+en toda la zona. Esos tres están rotos, pero lo están **igual antes y después de la precarga**.
+
+Lo que la precarga sí cierra de verdad es otra puerta: **la de volver a servir algún subdominio
+por HTTP plano**. La redirección 301 de la zona ya la tenía prácticamente cerrada; ahora es
+definitiva. Es el precio real, y es distinto del que se venía anunciando.
+
+`media.`, `encuesta.` y `bots.` siguen rotos y hay que arreglarlos o retirarlos — pero eso es un
+problema aparte, no un bloqueo de la precarga.
+
+Sobre la irreversibilidad, que sigue siendo cierta: **salir de la lista tarda meses en llegar a
+los navegadores** —salir tarda meses en propagarse a los navegadores— y con
 `includeSubDomains` alcanzaría a `media.`, `encuesta.`, `bots.` y a cualquier subdominio futuro
 que naciera sin HTTPS. Solicitarla es una decisión aparte de tener la cabecera bien puesta.
 
