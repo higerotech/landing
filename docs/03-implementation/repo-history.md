@@ -5,7 +5,7 @@
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 03-implementation
 * **Versión:** 0.3.0
-* **Gate:** 2 — **no superado** (ver `.ai-dlc/gates/gate-2-implementation.md`)
+* **Gate:** 2 — ✅ **superado** el 2026-07-30 (ver `.ai-dlc/gates/gate-2-implementation.md`)
 * **Rama principal:** main
 * **Estrategia de branching:** trunk-based
 
@@ -92,12 +92,22 @@ No se duplica aquí: un objeto, un diagrama.
 
 ## Estado del Gate 2
 
-**No superado.** Dos ítems dependen de infraestructura de CI que aún no está conectada
-(SAST y cobertura); un tercero (SCA) es N/A justificado porque el proyecto tiene cero
-dependencias de paquetes.
+**✅ Superado el 2026-07-30.** Esta sección decía «no superado» porque dos ítems dependían de
+una infraestructura de CI que no estaba conectada y un tercero era N/A por ausencia de
+dependencias. Las tres cosas cambiaron:
 
-Lo que sí consta: sin secretos en el repositorio, dual review completado, y verificación
-funcional manual documentada en
+| Ítem | Entonces | Ahora |
+|---|---|---|
+| SAST | Sin pipeline conectado | Semgrep en cada PR, en verde |
+| Cobertura | Sin suite | 100 % de funciones (17/17), gateado en el CI |
+| SCA | N/A — cero dependencias | 46 paquetes de desarrollo por `jsdom`; `npm audit` en cada PR |
+
+El ítem de SCA merece la nota: estaba marcado ✅ **por ausencia**, y esa justificación caducó al
+introducir las pruebas. Cerrarlo sin revisarla habría dejado un ✅ apoyado en un hecho que dejó
+de ser cierto.
+
+Sigue constando lo de antes: sin secretos en el repositorio, dual review completado, y
+verificación funcional manual documentada en
 [`docs/05-deployment/deployment.md`](../05-deployment/deployment.md) §Verificación.
 
 Detalle en [`.ai-dlc/gates/gate-2-implementation.md`](../../.ai-dlc/gates/gate-2-implementation.md).

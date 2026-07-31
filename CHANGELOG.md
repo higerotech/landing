@@ -8,6 +8,18 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **Gate 2 — Implementación: cerrado el 2026-07-30** por decisión del owner, con los cinco
+  ítems cumplidos y evidencia ejecutable de cada uno. Se deja escrito el recorrido en vez de
+  sustituirlo por un ✅: estuvo abierto por **tres motivos distintos y consecutivos** —faltaba
+  pipeline, luego faltaban pruebas, luego faltaba medirlas— y cada uno fue un trabajo aparte.
+  Al cerrarlo hubo que revisar el ítem de **SCA**, que estaba marcado ✅ *por ausencia de
+  dependencias*: esa justificación caducó al introducir `jsdom`, así que se sustituyó por
+  escaneo real. Cerrar el gate sin mirarla habría dejado un ✅ apoyado en un hecho falso.
+  Actualizados en consecuencia `README.md` y la sección de estado de
+  `docs/03-implementation/repo-history.md`, que todavía afirmaba que el CI no estaba conectado.
+  El cierre va acompañado de tres salvedades escritas en el propio gate: los gates **pasan pero
+  no bloquean** —sin branch protection un rojo no impide mergear—, la cobertura es del `<script>`
+  inline y no dice nada del marcado ni del navegador, y **cerrar Gate 2 no adelanta a Gate 3**.
 - **Medición de cobertura del script inline, y el descubrimiento de que la herramienta obvia
   falla en verde.** `node --test --experimental-test-coverage` informaba **100 % de líneas
   midiendo únicamente el arnés**: su reporter solo incluye rutas de archivo, y el JS del sitio
