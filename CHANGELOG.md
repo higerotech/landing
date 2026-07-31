@@ -8,6 +8,25 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **Pasos 2 y 3 del cutover**: el apex ya sirve desde el Worker —**200 donde antes daba 530**— con
+  las cinco cabeceras, COOP/COEP/CORP y HSTS correctos. Que lo sirva el Worker y no el túnel se
+  confirmó con **el discriminador que salió del paso 1** (la redirección de `/index.html`): una
+  diferencia que se documentó como curiosidad y acabó siendo la herramienta de diagnóstico.
+- **El suite contra el apex dio 54 de 58, y los cuatro fallos destaparon algo real**: Cloudflare
+  inyecta el beacon de **Web Analytics** (`static.cloudflareinsights.com`) en el HTML de **todos**
+  los hostnames de la zona —también en los que van por el túnel a nginx— y **la CSP lo bloquea**.
+  La analítica nunca funcionó y, a la vez, ningún dato de visitante llegó a salir. Choca con
+  ADR-0004, que autoaloja las fuentes justo para no filtrar la IP de los visitantes. Solo se
+  inyecta a peticiones **de navegador**: con `curl` normal el HTML es byte a byte idéntico al
+  desplegado (84 034), con `Accept: text/html` son 84 393. Por eso no lo había visto nadie.
+- **Registrado que `www.higerotech.com` dejó de resolver** (NXDOMAIN en dos resolvers
+  independientes) en la ventana en que se engancharon los dominios propios. Respondía 200 esta
+  misma madrugada. El daño es acotado —`canonical`, `hreflang`, `og:url`, `sitemap` y `robots`
+  apuntan al apex, que funciona— pero rompe enlaces externos y las instrucciones de verificación
+  del `README`.
+- **Registrado que el suite nunca se había ejecutado contra un hostname de la zona** —siempre
+  `localhost`, el contenedor o `workers.dev`—. Todo lo que el borde añade era invisible para los
+  diez gates: la misma familia que la deriva de dos semanas.
 - **Paso 1 del cutover completado**: la landing está desplegada en un Worker
   (`higerotech-landing.jeremialcala.workers.dev`) con las **58 E2E en verde contra el sitio real**
   desde el propio workflow, más comprobación aparte de las cinco cabeceras, la tríada
