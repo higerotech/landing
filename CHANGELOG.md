@@ -8,11 +8,30 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **43 pruebas E2E y de accesibilidad** con Playwright y axe-core (`npm run e2e`, ~15 s),
+  **contra el contenedor** y no contra un servidor de ficheros: es lo que permite comprobar lo
+  que jsdom no puede ver. Cubren el breakpoint **real** de 980/981px, la página **sin
+  JavaScript** —la prueba que ADR-0005 se propuso a sí mismo y nunca se escribió—, que la CSP
+  **bloquee** de verdad, el 404 de nginx, las cinco cabeceras en cuatro rutas, cero peticiones a
+  terceros y axe-core en español, inglés, menú móvil abierto y página 404. Job obligatorio en el
+  CI. Diseño en `docs/04-testing/e2e-tests.md`.
 - **El botón de WhatsApp se publica**: `CONTACT.whatsapp = '13235543854'`. Cierra la dependencia
   **D2** y deja **RF05** verificado en sus dos ramas. Requiere **redesplegar**: el contenedor en
   producción sirve la versión sin botón.
 
 ### Corregido
+- **El atributo `hidden` no ocultaba nada, y las E2E lo encontraron en su primera ejecución.**
+  La hoja de estilos no tenía ninguna regla `[hidden]`, y el `display` que el navegador aplica a
+  ese atributo lo pisa cualquier regla de autor que fije `display`: `.btn-secondary` usa
+  `inline-flex`. Medido en Chromium: con `el.hidden = true`, `getComputedStyle(el).display`
+  seguía siendo `flex` y el elemento medía más de 0 px. Consecuencia: **durante todo el tiempo en
+  que `CONTACT.whatsapp` estuvo vacío, el botón «Hablar por WhatsApp» se publicaba** con
+  `href="#contacto"`, un enlace que salta a la sección donde ya está — el «CTA muerto» que el
+  comentario del código dice querer evitar. Lo que lo hacía invisible: la verificación registrada
+  era `wa-cta.hidden === true`, una propiedad del DOM que jsdom confirma sin resolver la cascada,
+  así que la unitaria U8.1 pasaba y seguirá pasando: es correcta y es insuficiente. Arreglado con
+  `[hidden] { display: none !important; }` y vigilado desde dos sitios, E6.4 con cascada real y
+  U2.4 sobre la hoja. Registrado como corrección de **T3** en el threat model.
 - **El número llegó como `+13235543854` y la prueba U8.3 lo rechazó.** `wa.me` exige formato
   internacional **solo con dígitos**: `https://wa.me/+1323…` no es la forma documentada, o sea
   exactamente el «enlace muerto» que el comentario del código dice querer evitar. Es el primer

@@ -16,7 +16,10 @@ node_modules/
 tests/
 package.json
 package-lock.json
+playwright.config.mjs
 coverage/
+test-results/
+playwright-report/
 
 # Sistema
 .DS_Store
