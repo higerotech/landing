@@ -7,6 +7,29 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Añadido
+- **Paso 1 del cutover completado**: la landing está desplegada en un Worker
+  (`higerotech-landing.jeremialcala.workers.dev`) con las **58 E2E en verde contra el sitio real**
+  desde el propio workflow, más comprobación aparte de las cinco cabeceras, la tríada
+  COOP/COEP/CORP, el 404 real y —esto se miró expresamente— que **las propias redirecciones
+  también salen con las cabeceras**: una redirección sin CSP sería un hueco pequeño y fácil de no
+  ver. **Sin tocar un solo registro DNS**: producción siguió sirviéndose por el túnel durante
+  toda la operación.
+- **Documentada la fricción de puesta en marcha**, porque ninguno de los tres fallos era obvio:
+  `DESPLIEGUE_WORKER` creado como *secreto* en vez de *variable* —`vars.` no lee secretos, así
+  que el job **se saltaba en silencio**, el modo de fallo más caro—; y un token que
+  **autenticaba pero no autorizaba**, con `wrangler whoami` funcionando perfectamente sin tener
+  `Workers Scripts: Edit`. Que la autenticación funcione no dice nada sobre si podrá desplegar, y
+  el error que sale —`Authentication error [code: 10000]`— suena a credencial inválida cuando es
+  un permiso ausente. El log además sugiere `User → Memberships → Read`, que no es la causa y
+  solo amplía el token.
+- **Registrada una diferencia de comportamiento entre los dos caminos**: el Worker responde
+  `307 → /` a `/index.html` y `307 → /404` a `/404.html`, mientras nginx da 200 y **404**
+  respectivamente —esta última porque la página está declarada como *interna*, un idiom del
+  servidor—. Ninguna prueba lo detectó, y con razón: Playwright sigue redirecciones y ambas rutas
+  acaban en el mismo contenido. Pero el DAST apunta a `/404.html` como segundo objetivo, así que
+  hay que decidir antes de moverlo al Worker.
+
 ### Corregido
 - **El workflow de despliegue verificaba contra una URL configurada a mano.** Leía
   `vars.URL_PUBLICA`, que ni siquiera existía: con el interruptor activado habría desplegado y

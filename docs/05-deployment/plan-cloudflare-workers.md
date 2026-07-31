@@ -1,6 +1,6 @@
 # Plan de despliegue — Cloudflare Workers con static assets
 
-* **Estado:** draft — **preparado en el repositorio, sin ejecutar en Cloudflare**
+* **Estado:** en curso — **paso 1 completado el 2026-07-31**; el DNS sigue sin tocarse
 * **Fecha:** 2026-07-31
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 05-deployment
@@ -112,7 +112,7 @@ minutos.
 
 | # | Paso | Cómo se comprueba |
 |---|---|---|
-| 1 | Añadir los archivos del Worker al repositorio y desplegar a un `*.workers.dev` | Las 58 E2E y el DAST contra esa URL, con `BASE_URL` apuntando ahí |
+| 1 | ~~Añadir los archivos del Worker y desplegar a un `*.workers.dev`~~ | ✅ **Hecho el 2026-07-31** — ver §Resultado del paso 1 |
 | 2 | Enrutar **solo el apex** al Worker | `curl -sI https://higerotech.com/` deja de dar 530. `www` sigue por el túnel: si algo va mal, el tráfico real no se entera |
 | 3 | Verificar el apex con el suite completo | Cabeceras, 404 real, CSP, sin terceros |
 | 4 | Mover `www` al Worker y quitarlo del ingress | Paso 4 de §Verificar antes de publicar, ahora contra el Worker |
@@ -121,6 +121,46 @@ minutos.
 **El paso 2 es deliberadamente el apex y no `www`.** Hoy el apex no sirve a nadie —responde
 530—, así que es el único hostname donde un fallo no tiene consecuencias. Se estrena la
 infraestructura nueva donde no hay tráfico que perder.
+
+## Resultado del paso 1 *(2026-07-31)*
+
+Desplegado en `https://higerotech-landing.jeremialcala.workers.dev`, con las **58 E2E en verde
+contra el Worker real** (32 s) desde el propio workflow, más comprobación aparte:
+
+| Comprobación | Resultado |
+|---|---|
+| Las cinco cabeceras de seguridad | ✅ |
+| COOP + COEP + CORP | ✅ |
+| Ruta inexistente → **404 real** | ✅ |
+| `robots.txt`, `sitemap.xml`, fuentes | ✅ 200 |
+| Cabeceras **en las propias redirecciones** | ✅ 5 de 5 |
+
+La última se comprobó aparte a propósito: una redirección que saliera sin CSP sería un hueco
+pequeño y fácil de no ver. `_headers` con `/*` sí las aplica.
+
+**Todo esto sin tocar un solo registro DNS.** El sitio en producción siguió sirviéndose por el
+túnel durante toda la operación.
+
+### Fricción de puesta en marcha, para que no se repita
+
+Tres intentos fallidos antes del bueno, y ninguno de los tres motivos era obvio:
+
+1. **`DESPLIEGUE_WORKER` se creó como *secreto* en vez de *variable*.** `vars.` no puede leer
+   secretos, así que el job **se saltó en silencio** — que es el modo de fallo más caro: parece
+   que no pasó nada. Están en pestañas contiguas de la misma pantalla. El interruptor no es
+   sensible —su valor es `activado`— y le corresponde ser variable.
+2. **El token autenticaba pero no autorizaba.** `wrangler whoami` funciona perfectamente con un
+   token sin `Workers Scripts: Edit`: resuelve la cuenta y no se queja. Es decir, **que la
+   autenticación funcione no dice nada sobre si podrá desplegar**. El fallo aparece al llamar a
+   `workers/services`, con `Authentication error [code: 10000]`, que suena a credencial inválida
+   y es un permiso ausente.
+3. **El log despista.** wrangler sugiere `User → Memberships → Read`, que es para la parte
+   cosmética de `whoami` y **no** es la causa. Concederlo amplía el token sin arreglar nada.
+
+Un detalle de diagnóstico que ahorró trabajo: en la tabla de `whoami`, el ID de cuenta que
+devolvió la API salía como `***`. GitHub solo enmascara lo que **coincide con un secreto**, así
+que ver el ID oculto demuestra que el configurado y el del token son el mismo — descarta la
+hipótesis del ID equivocado sin abrir el panel.
 
 ## Rollback
 
@@ -140,6 +180,25 @@ La migración deja **dos pruebas midiendo el vacío** si no se tocan:
 |---|---|---|
 | E3.6 | Que no se filtre `nginx/x.y` en `/` | Trivialmente cierto: no hay nginx |
 | E9.2 | Lo mismo en una página de error | Ídem |
+
+### Los dos caminos no redirigen igual
+
+Medido el 2026-07-31. No es un fallo —ambos comportamientos son correctos— pero conviene tenerlo
+escrito antes de mover el DAST:
+
+| Ruta | Worker | nginx |
+|---|---|---|
+| `/index.html` | **307 → `/`** | 200 |
+| `/404.html` | **307 → `/404`** (200) | **404** |
+
+Vienen de sitios distintos. En el Worker es `html_handling: "auto-trailing-slash"`, que quita la
+extensión y consolida la URL canónica — bueno para SEO. En nginx, `/404.html` devuelve 404 porque
+está declarada como página **interna**, un idiom clásico del servidor.
+
+**Ninguna prueba lo detectó**, y con razón: Playwright sigue redirecciones, así que ambas rutas
+acaban en el mismo contenido y las aserciones se cumplen. Pero el escaneo **DAST apunta a
+`/404.html` explícitamente** como segundo objetivo, y contra el Worker escanearía el destino tras
+la redirección. Hay que decidir si eso basta o si el segundo objetivo pasa a ser `/404`.
 
 Quedarse así sería introducir a propósito el patrón que este repositorio lleva semanas
 desmontando: una comprobación que no puede fallar. **Acción:** marcarlas como específicas del
