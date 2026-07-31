@@ -58,7 +58,7 @@ Confirmado el 2026-07-30 con `docker inspect landing-tunnel` y sus propios logs:
 | Hostnames enrutados | `www.higerotech.com`, `web.higerotech.com`, `demo.higerotech.com` |
 | Regla final | `http_status:404` |
 | Terminación TLS | Cloudflare, en el borde. Del túnel al host el tramo es HTTP plano (T9) |
-| HSTS | Activo desde el 2026-07-31, emitido por Cloudflare: `max-age=2592000; includeSubDomains; preload`. Ver la nota de abajo sobre `preload` |
+| HSTS | Activo desde el 2026-07-31, emitido por Cloudflare: `max-age=31536000; includeSubDomains; preload` (12 meses). Ver la nota de abajo sobre `preload` |
 | Redirección a HTTPS | Activa: `http://` responde 301 |
 
 Dos consecuencias que conviene tener escritas:
@@ -79,24 +79,25 @@ Dos consecuencias que conviene tener escritas:
 
 ### Sobre el `preload` de HSTS
 
-La cabecera declara `preload`, pero **hoy esa directiva no hace nada y contradice al resto de la
-política**. Para entrar en la lista de precarga de los navegadores, hstspreload.org exige:
+La cabecera declara `preload`, y desde el 2026-07-31 la política ya es coherente con esa
+declaración —el `max-age` subió a 12 meses—, **pero la directiva sigue sin efecto**. Para entrar
+en la lista de precarga de los navegadores, hstspreload.org exige:
 
 | Requisito | Estado |
 |---|---|
-| `max-age` ≥ 31 536 000 s (1 año) | ❌ Hay **2 592 000 s** (30 días) |
+| `max-age` ≥ 31 536 000 s (1 año) | ✅ **Corregido el 2026-07-31**: 31 536 000 s |
 | `includeSubDomains` | ✅ |
 | Redirección HTTP→HTTPS | ✅ 301 |
 | Que el **dominio base** sirva la cabecera | ❌ El apex `higerotech.com` **no resuelve** (530) |
 
-Una solicitud de precarga se rechazaría por dos motivos independientes, así que el token está
-declarado sin efecto. No es urgente —30 días de HSTS protegen igual a quien ya visitó el sitio—
-pero conviene decidirlo, porque **entrar en la lista es prácticamente irreversible**: salir tarda
-meses en propagarse a los navegadores, y con `includeSubDomains` alcanzaría a `media.`,
-`encuesta.`, `bots.` y a cualquier subdominio futuro que naciera sin HTTPS.
+Queda **un solo requisito incumplido**, y es el mismo apex que bloquea el SEO. Hasta que se
+enrute, el token `preload` sigue siendo una declaración sin efecto: una solicitud a
+hstspreload.org se rechazaría.
 
-Dos salidas coherentes: **quitar `preload`** hasta que se quiera de verdad, o **subir el
-`max-age` a un año, pero después de enrutar el apex**, nunca antes.
+Cuando el apex esté enrutado, conviene pararse antes de solicitar la precarga: **entrar en la
+lista es prácticamente irreversible** —salir tarda meses en propagarse a los navegadores— y con
+`includeSubDomains` alcanzaría a `media.`, `encuesta.`, `bots.` y a cualquier subdominio futuro
+que naciera sin HTTPS. Solicitarla es una decisión aparte de tener la cabecera bien puesta.
 
 `<TODO: decidir entre dar registro e ingress al apex o mover el canonical a www; y anotar
 quién administra la cuenta de Cloudflare, hoy conocimiento tácito>`
@@ -141,12 +142,13 @@ Los pasos `MERGE` en adelante son **manuales hoy**. Las siete comprobaciones G1�
 automatizadas en `.github/workflows/security-gates.yml` y las siete pasan: el repositorio ya
 está conectado a GitHub Actions, así que Semgrep y Trivy ejecutan de verdad.
 
-> **`Merge bloqueado` es la intención, no lo que ocurre.** Hoy nada impide mergear con el
-> pipeline en rojo. La org está en plan Free y el repositorio es privado, combinación en la que
-> GitHub no ofrece branch protection ni rulesets, así que el estado del CI no es una condición
-> para el merge. La única barrera existente es `.githooks/pre-push`, que es local y **no
-> consulta el CI**: impide empujar a `main`, no mergear una PR roja. Cerrar la brecha exige
-> subir a GitHub Team o hacer el repositorio público (ver `CHANGELOG.md` §Unreleased).
+> **`Merge bloqueado` pasó de intención a hecho el 2026-07-31.** Durante meses ese nodo del
+> diagrama describía algo que no ocurría: con la org en plan Free y el repositorio privado,
+> GitHub no ofrecía branch protection, así que el estado del CI no condicionaba el merge. Al
+> hacerse público el repositorio, `main` quedó protegido: **pull request obligatoria, los siete
+> checks en verde y actualizados respecto a `main`, sin force-push, sin borrado y con los
+> administradores incluidos**. Cero aprobaciones requeridas, para no bloquear a un mantenedor
+> único. `.githooks/pre-push` se conserva como barrera local redundante.
 
 Los gates G5, G6 y G7 son específicos de este proyecto y merecen justificación: existen para
 que los tres defectos corregidos en `7c7bc78` no puedan volver. G5 comprueba las cabeceras en

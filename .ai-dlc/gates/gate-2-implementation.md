@@ -72,10 +72,11 @@ ejecutable de cada uno, no por lectura ni por conveniencia.
 Tres salvedades que van con el cierre. Un gate cerrado sin sus límites escritos es un gate que
 alguien citará mal dentro de seis meses.
 
-1. **Los gates pasan, pero no bloquean.** No hay branch protection —org en plan Free con repo
-   privado—, así que un pipeline en rojo no impide mergear. La única barrera es el hook local
-   `pre-push`, que ni exige los gates ni alcanza los merges desde la web. Ver `CONTRIBUTING.md`
-   §Al clonar. **Es la salvedad más importante de las tres.**
+1. ~~**Los gates pasan, pero no bloquean.**~~ **Dejó de aplicar el 2026-07-31.** Era la salvedad
+   más importante de las tres y ya no lo es: el repositorio se hizo público, con lo que
+   desapareció la limitación del plan Free, y `main` quedó protegido —PR obligatoria, los siete
+   checks en verde y al día, sin force-push ni borrado, administradores incluidos—. Un rojo ya
+   impide mergear. El hook `pre-push` sigue existiendo como barrera local y redundante.
 2. **La cobertura es del script inline, no del sitio.** 100 % de funciones significa que las 17
    funciones del `<script>` se ejecutan en alguna prueba. No dice nada del CSS, del marcado, del
    contraste ni del comportamiento en un navegador real: eso es Gate 3, que sigue abierto.

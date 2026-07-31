@@ -43,11 +43,11 @@
 | 2 | Archivar el SBOM | Se genera en cada run pero caduca con el artefacto: publicarlo por release para poder auditar una imagen desplegada |
 | 3 | Imagen por digest | Cambiar `nginx:1.30-alpine` por `nginx:1.30-alpine@sha256:…` |
 | 4 | Firma de imagen | `cosign sign` + verificación antes de desplegar |
-| 5 | ~~HSTS~~ | **Hecho** el 2026-07-31: `max-age=2592000; includeSubDomains; preload`, emitido por Cloudflare y verificado en los tres hostnames y en varias rutas. Queda un fleco: `preload` es inerte —exige `max-age` de 1 año y que el apex sirva la cabecera, y hay 30 días y un apex que no resuelve— |
+| 5 | ~~HSTS~~ | **Hecho** el 2026-07-31: `max-age=31536000; includeSubDomains; preload` (12 meses), emitido por Cloudflare y verificado en los tres hostnames y en varias rutas. Fleco restante: `preload` sigue inerte porque la lista exige que el **apex** sirva la cabecera, y no resuelve |
 | 9 | El apex `higerotech.com` no está enrutado | Sin registro DNS ni regla de ingress: responde **HTTP 530**. Todo el SEO del sitio (`canonical`, `hreflang`, `og:url`, `sitemap.xml`, `robots.txt`) apunta ahí. Decidir entre enrutarlo o mover el canonical a `www` |
 | 6 | Escaneo de licencias | El gate canónico `license` no tiene herramienta asignada |
 | 7 | DAST | Sin ZAP baseline ni equivalente; propuesto en `gate-3-testing.md` |
-| 8 | Obligatoriedad del pipeline | Los gates pasan pero **no bloquean**: sin branch protection (org Free + repo privado), un rojo no impide mergear |
+| 8 | ~~Obligatoriedad del pipeline~~ | **Hecho** el 2026-07-31: repositorio público y `main` protegido —PR obligatoria, los 7 checks en verde y al día, sin force-push ni borrado, administradores incluidos—. Un rojo ya impide mergear |
 
 ## Hallazgo operativo — cerrado el 2026-07-30
 

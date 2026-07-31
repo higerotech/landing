@@ -1,29 +1,20 @@
 # Higerotech — Landing Page
 
-[![Gates de seguridad](https://img.shields.io/badge/gates_de_seguridad-7%2F7-2d7d46)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
+[![CI](https://github.com/higerotech/landing/actions/workflows/security-gates.yml/badge.svg)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
 [![Pruebas](https://img.shields.io/badge/pruebas-49_unitarias_sin_E2E-e08000)](.ai-dlc/gates/gate-3-testing.md)
-[![Versión](https://img.shields.io/badge/versi%C3%B3n-v0.4.0-333333)](CHANGELOG.md)
+[![Versión](https://img.shields.io/github/v/tag/higerotech/landing?label=versi%C3%B3n)](CHANGELOG.md)
 
 <!--
-  Los tres badges son ESTÁTICOS a propósito, y hay que actualizarlos a mano.
-  El repositorio es privado, y el proxy de imágenes de GitHub pide los badges sin
-  autenticar: cualquier badge dinámico devuelve 404 y se renderiza roto. Comprobado
-  contra los tres endpoints:
-    - github.com/.../badge.svg            -> HTTP 404
-    - shields.io/github/actions/workflow  -> "repo or workflow not found"
-    - shields.io/github/v/tag             -> "repo not found"
+  CI y Versión pasaron a DINÁMICOS el 2026-07-31, al hacerse público el repositorio.
+  Mientras fue privado el proxy de imágenes de GitHub pedía los badges sin autenticar
+  y cualquier endpoint dinámico devolvía 404; ahora ambos responden 200 (comprobado:
+  "AI-DLC Security Gates - passing" y "versión: v0.4.0"). Ya no hay que tocarlos a mano.
 
-  Cuando el repositorio pase a público, sustituir por los equivalentes dinámicos y
-  borrar esta nota:
-    [![CI](https://github.com/higerotech/landing/actions/workflows/security-gates.yml/badge.svg)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
-    [![Versión](https://img.shields.io/github/v/tag/higerotech/landing?label=versi%C3%B3n)](CHANGELOG.md)
-
-  El badge de pruebas decía "sin suite" y dejó de ser verdad el 2026-07-30: hay 46
-  pruebas unitarias. Sigue en ámbar y no en verde, y dice "sin E2E" en vez de
-  "passing", porque la pirámide está incompleta: faltan E2E, accesibilidad,
-  rendimiento y DAST, y el Gate 3 continúa abierto. El número se actualiza a mano
-  igual que el resto; si crece la suite y nadie lo toca, el badge miente a la baja,
-  que es el sentido menos dañino en que puede mentir.
+  El de Pruebas sigue ESTÁTICO porque no existe un endpoint que cuente pruebas: dice
+  "49 unitarias sin E2E" y se actualiza a mano. Está en ámbar y no en verde, y no dice
+  "passing", porque la pirámide está incompleta —faltan E2E, accesibilidad, rendimiento
+  y DAST, y el Gate 3 sigue abierto—. Si crece la suite y nadie lo toca, el badge miente
+  a la baja, que es el sentido menos dañino en que puede mentir.
 -->
 
 Landing page corporativa de **Higerotech**, consultora tecnológica AI-First para el B2B
@@ -104,10 +95,10 @@ Los gates abiertos lo están con su razón documentada. Ninguno se marca por con
 motivos distintos y consecutivos —faltaba pipeline, luego faltaban pruebas, luego faltaba
 medirlas— y cada uno fue un trabajo aparte. Sus cinco ítems tienen hoy evidencia ejecutable.
 
-Tres salvedades que van con ese cierre, escritas también en el propio gate: los gates **pasan
-pero no bloquean** (sin branch protection, un rojo no impide mergear); la cobertura es del
-`<script>` inline y no dice nada del marcado ni del navegador; y cerrar Gate 2 **no adelanta a
-Gate 3**, que sigue con un solo nivel de la pirámide.
+Dos salvedades siguen vigentes: la cobertura es del `<script>` inline y no dice nada del marcado
+ni del navegador, y cerrar Gate 2 **no adelanta a Gate 3**, que sigue con un solo nivel de la
+pirámide. La tercera —«los gates pasan pero no bloquean»— **dejó de aplicar el 2026-07-31**: ver
+abajo.
 
 ## Pruebas
 
@@ -212,8 +203,15 @@ Ver [`CHANGELOG.md`](CHANGELOG.md) §Unreleased. En resumen: confirmar dominio, 
 número de WhatsApp, montar la suite de pruebas (Gate 3), montar un monitor externo de
 disponibilidad y diagnosticar el contenedor de producción en estado `unhealthy`.
 
-El pipeline **ya está conectado** y sus siete comprobaciones pasan. Lo que no existe es una
-barrera que lo haga obligatorio: la org está en plan Free y el repo es privado, combinación en
-la que GitHub no ofrece branch protection ni rulesets, así que un pipeline en rojo **no impide
-mergear**. La única barrera es `.githooks/pre-push`, que es local y no consulta el CI. Ver
+El pipeline **está conectado y es obligatorio** desde el 2026-07-31. Al hacerse público el
+repositorio desapareció la limitación del plan Free y `main` quedó protegido:
+
+| Regla | Valor |
+|---|---|
+| Pull request obligatoria | Sí, con **0 aprobaciones** — un mantenedor único no puede aprobarse a sí mismo |
+| Checks exigidos | Los **7**, y actualizados respecto a `main` |
+| Force-push y borrado de `main` | Prohibidos |
+| Administradores | **Incluidos**: la regla también aplica al owner |
+
+`.githooks/pre-push` se conserva como barrera local redundante. Ver
 [CONTRIBUTING.md](CONTRIBUTING.md) §Al clonar.
