@@ -82,4 +82,37 @@ describe('U7 · menú móvil', () => {
 
     assert.equal(abierto(doc), false, 'al volver a escritorio el panel no debe quedar abierto')
   })
+
+  test('U7.7 · con un matchMedia antiguo usa addListener', () => {
+    /* Hueco que encontró el medidor de cobertura: la línea 931 —el respaldo
+       `else if (mqEscritorio.addListener)` para navegadores sin la API de
+       eventos— no la ejecutaba ningún test, porque el stub del arnés ofrece
+       siempre `addEventListener`. Aquí se le da uno que solo tiene la antigua. */
+    const antiguos = []
+
+    const { doc } = cargarDOM({
+      alPreparar (win) {
+        win.matchMedia = consulta => {
+          const mq = {
+            media: consulta,
+            matches: false,
+            addListener (fn) { this._fn = fn },
+            removeListener () {}
+          }
+          antiguos.push(mq)
+          return mq
+        }
+      }
+    })
+
+    assert.equal(antiguos.length, 1, 'el script debe caer al camino antiguo')
+    assert.equal(typeof antiguos[0]._fn, 'function', 'no registró el handler por addListener')
+
+    const toggle = doc.getElementById('nav-toggle')
+    toggle.click()
+    assert.equal(abierto(doc), true)
+
+    antiguos[0]._fn({ matches: true })
+    assert.equal(abierto(doc), false, 'el camino antiguo también debe cerrar el panel')
+  })
 })

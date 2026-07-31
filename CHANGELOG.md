@@ -8,6 +8,23 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **Medición de cobertura del script inline, y el descubrimiento de que la herramienta obvia
+  falla en verde.** `node --test --experimental-test-coverage` informaba **100 % de líneas
+  midiendo únicamente el arnés**: su reporter solo incluye rutas de archivo, y el JS del sitio
+  vive en un `<script>` que jsdom compila bajo la URL del documento. Ni una línea de
+  `index.html` entraba en el cálculo. Cerrar el Gate 2 con esa cifra habría dejado documentado
+  un 100 % de cobertura sobre el conjunto vacío — el peor modo de fallar que tiene una métrica,
+  porque no da error sino un número excelente. Los datos crudos de V8 **sí** registran el script
+  inline, así que `tests/cobertura.mjs` los recoge y los traduce a líneas de `index.html`
+  (`npm run coverage`). Resultado real: **100 % de funciones (17/17)** y 94,7 % de líneas
+  (72/76), esta última una cota inferior porque las pruebas que mutan el fuente quedan fuera del
+  recuento. El umbral gatea sobre funciones y se fija en 100, no en el 80 % que pedía el gate:
+  estando en 100, bajarlo sería reservar sitio para dejar de probar.
+- **Dos huecos reales que encontró esa medición**, con 46 pruebas ya en verde: nadie **pulsaba**
+  los botones de idioma —todos los tests llamaban a `setLang()` directamente, así que un botón
+  desconectado habría pasado el suite entero— y nadie ejercitaba el respaldo `addListener` para
+  navegadores sin la API moderna de media queries. Cerrados con U5.6 y U7.7; el suite pasa de 46
+  a **48 pruebas**.
 - **46 pruebas unitarias en verde** (`npm test`, ~4 s), implementando el diseño de
   `docs/04-testing/unit-tests.md`. Cargan el `index.html` **real** en jsdom y ejecutan su script
   inline, así que no pueden desviarse del artefacto que se despliega. Cubren los ocho grupos de

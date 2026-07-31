@@ -1,7 +1,7 @@
 # Higerotech — Landing Page
 
 [![Gates de seguridad](https://img.shields.io/badge/gates_de_seguridad-7%2F7-2d7d46)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
-[![Pruebas](https://img.shields.io/badge/pruebas-46_unitarias_sin_E2E-e08000)](.ai-dlc/gates/gate-3-testing.md)
+[![Pruebas](https://img.shields.io/badge/pruebas-48_unitarias_sin_E2E-e08000)](.ai-dlc/gates/gate-3-testing.md)
 [![Versión](https://img.shields.io/badge/versi%C3%B3n-v0.3.0-333333)](CHANGELOG.md)
 
 <!--
@@ -91,8 +91,8 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 |---|---|---|---|
 | 0 | Requisitos | ✅ Superado | [gate-0](.ai-dlc/gates/gate-0-requirements.md) |
 | 1 | Diseño | ✅ Superado | [gate-1](.ai-dlc/gates/gate-1-design.md) |
-| 2 | Implementación | ❌ Abierto — hay unitarias, falta medir cobertura | [gate-2](.ai-dlc/gates/gate-2-implementation.md) |
-| 3 | Pruebas | ❌ Abierto — 46 unitarias; faltan E2E, a11y, rendimiento y DAST | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
+| 2 | Implementación | 🟡 Sus ítems están cumplidos; cerrarlo es decisión del owner | [gate-2](.ai-dlc/gates/gate-2-implementation.md) |
+| 3 | Pruebas | ❌ Abierto — 48 unitarias; faltan E2E, a11y, rendimiento y DAST | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
 | 4 | Despliegue | 🟡 Parcial — falta firma, digest y archivar el SBOM | [gate-4](.ai-dlc/gates/gate-4-deployment.md) |
 | 5 | Monitoreo | ❌ Abierto — sin observabilidad | [gate-5](.ai-dlc/gates/gate-5-monitoring.md) |
 
@@ -100,7 +100,7 @@ Los gates abiertos lo están con su razón documentada. Ninguno se marca por con
 
 El CI ya está conectado y las siete comprobaciones pasan. El motivo por el que Gate 2 sigue
 abierto ha cambiado dos veces: primero dejó de ser la falta de pipeline, y desde el 2026-07-30
-tampoco es la ausencia total de pruebas —hay 46 unitarias—, sino que **no se mide cobertura**.
+tampoco es la ausencia total de pruebas —hay 48 unitarias—, sino que ya no queda ítem abierto: la cobertura se mide y da 100 % de funciones.
 Cerrarlo o no es decisión del owner, no de la herramienta.
 
 ## Pruebas
@@ -108,6 +108,7 @@ Cerrarlo o no es decisión del owner, no de la herramienta.
 ```bash
 npm ci
 npm test          # node --test sobre el index.html real, ~4 s
+npm run coverage  # mide y gatea la cobertura del <script> inline
 ```
 
 Las unitarias cargan el `index.html` **real** en jsdom y ejecutan su script inline, así que no
