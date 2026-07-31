@@ -2,10 +2,10 @@
 
 * **Estado:** review — **no superado**
 * **Fecha:** 2026-07-29
-* **Revisión:** 2026-07-31 — implementados el unitario (51), el E2E + accesibilidad (51) y el presupuesto de rendimiento
+* **Revisión:** 2026-07-31 — implementados el unitario (51), el E2E + accesibilidad (51) y el presupuesto de rendimiento y el DAST
 * **Decisores:** Jeremi Alcalá (owner)
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.4.0
+* **Versión:** 0.5.0
 
 - [ ] Pirámide completa pasando (unit → integration → contract → e2e → security) —
       **unit ✅ (50 pruebas, cobertura 100 %), contract ✅** (invariantes del HTML y cabeceras en
@@ -13,7 +13,8 @@
       seguridad dinámica.
 - [ ] Matriz OWASP Top 10 ejecutada — A05 con U3.5, y A02/A04 con E3.7 y E5. El resto sin
       prueba automatizada
-- [ ] DAST limpio — sin herramienta asignada
+- [x] DAST limpio — **ZAP baseline**: 0 fallos, 0 avisos nuevos, 64 reglas en verde y
+      3 hallazgos aceptados con su motivo en `.zap/rules.tsv`. Ver `docs/04-testing/dast.md`
 - [x] Rendimiento dentro de SLOs — **LCP 1 933 ms** (mediana) contra un presupuesto de 2 500
       en **3G lento real**, y 104 KB contra 350. Gateado en el CI. Ver
       `docs/04-testing/rendimiento.md`
@@ -43,15 +44,20 @@ Qué cubren y qué no:
 | E2E en navegador real | ✅ 51 pruebas: breakpoint real, sin JS, CSP aplicándose, 404, cero terceros |
 | Accesibilidad | ✅ axe con **todas las reglas** —incluidas buenas prácticas— y umbral en `moderate`, en ES, EN, menú abierto y 404. Más ocho comprobaciones que axe no hace: skip link, landmarks, foco visible, sin trampa de foco, reflow a 320px, zoom 200 %, `reduced-motion` y el contraste que axe dejaba en «incompleto» |
 | Rendimiento (Lighthouse) | ✅ LCP 1 933 ms y 104 KB en 3G lento, mediana de 3 ejecuciones, gateado |
-| Seguridad dinámica (ZAP) | ❌ |
+| Seguridad dinámica (ZAP) | ✅ baseline pasivo: 0 fallos, 3 aceptados y documentados, gateado |
 | Mutation testing | ❌ — descartado por ahora a propósito |
 
-**El gate sigue abierto**, y el motivo se estrecha por cuarta vez. Queda **un solo ítem de la
-pirámide: DAST**. Mutation testing sigue descartado a propósito.
+**Todos los niveles de la pirámide propuesta están implementados.** El único checkbox sin marcar
+es **mutation testing ≥ 60 %**, descartado a propósito: añadiría otra dependencia grande y lo
+primero era que existiera algo que mutar.
 
-Vale la pena mirar el recorrido entero, porque el motivo nunca fue el mismo dos veces: faltaba
-pipeline → faltaban pruebas → faltaba medir la cobertura → faltaba todo lo que necesita un
-navegador → falta la seguridad dinámica.
+El recorrido merece leerse entero, porque el motivo del bloqueo nunca fue el mismo dos veces:
+
+> faltaba pipeline → faltaban pruebas → faltaba medir la cobertura → faltaba todo lo que
+> necesita un navegador → faltaba el rendimiento → faltaba la seguridad dinámica
+
+**Cerrar el gate es decisión del owner.** El `Estado` de la cabecera se deja como estaba porque
+cambiarlo sería tomarla desde la herramienta — el mismo criterio que se aplicó al Gate 2.
 
 Lo que se hizo antes de que existiera la suite, y consta como evidencia manual en
 `docs/05-deployment/deployment.md` §Verificación:
@@ -75,7 +81,7 @@ lo que ya se arregló. Propuesta mínima y proporcionada:
 | Contract | `htmlhint` + `nginx -t` | HTML válido; configuración que arranca |
 | E2E | Playwright | **Implementado**, y con más alcance del previsto: además del menú, la i18n y el 404, cubre la página sin JS, la CSP aplicándose y la ausencia de terceros. Ver `docs/04-testing/e2e-tests.md` |
 | Accesibilidad | `axe-core` vía Playwright | **Implementado**: ES, EN, menú abierto y 404 |
-| Seguridad | ZAP baseline | Cabeceras presentes, CSP efectiva |
+| Seguridad | ZAP baseline | **Implementado**: `docs/04-testing/dast.md`. Por Docker y no por acción de GitHub, para poder ejecutarlo igual en local |
 | Rendimiento | Lighthouse | **Implementado**: `docs/04-testing/rendimiento.md`. Con throttling real y mediana de 3 ejecuciones, porque el simulado daba 5,26 s donde el navegador mide 1,6 |
 
 Las tres pruebas E2E de la fila "E2E" corresponden exactamente a los tres bugs corregidos en

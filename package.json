@@ -9,7 +9,8 @@
     "coverage": "node tests/cobertura.mjs",
     "e2e": "playwright test",
     "e2e:install": "playwright install --with-deps chromium",
-    "perf": "node tests/rendimiento.mjs"
+    "perf": "node tests/rendimiento.mjs",
+    "dast": "node tests/dast.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",

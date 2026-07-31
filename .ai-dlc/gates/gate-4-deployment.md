@@ -7,11 +7,12 @@
 * **Versión:** 0.3.0
 
 - [ ] Pipeline con 7 gates limpio (SAST, SCA, secrets, license, container, IaC, DAST) —
-      **5 de 7 resueltos**: SAST ✅ Semgrep, secrets ✅ gitleaks, container ✅ Trivy,
+      **6 de 7 resueltos**: SAST ✅ Semgrep, secrets ✅ gitleaks, container ✅ Trivy,
       SCA ✅ **real desde el 2026-07-30** —`npm audit --audit-level=high` en el job `deps`;
       antes era ✅ por ausencia de dependencias, ahora hay 46 paquetes de desarrollo por
       jsdom y el gate escanea de verdad—, IaC ✅ N/A parcial (ver ítem siguiente).
-      Faltan **license** (sin escaneo de licencias) y **DAST** (sin ZAP ni equivalente).
+      DAST ✅ **desde el 2026-07-31**: ZAP baseline por Docker, 0 hallazgos fuera de los
+      aceptados (`docs/04-testing/dast.md`). Queda **license** como único ausente: **6 de 7**.
       No confundir esta lista canónica con las siete comprobaciones G1–G7 de
       `docs/05-deployment/deployment.md`, que son otro conjunto y sí están las siete en verde.
 - [x] IaC escaneada sin findings críticos — **N/A parcial**: no hay Terraform ni Kubernetes.
@@ -46,7 +47,7 @@
 | 5 | ~~HSTS~~ | **Hecho** el 2026-07-31: `max-age=31536000; includeSubDomains; preload` (12 meses), emitido por Cloudflare y verificado en los tres hostnames y en varias rutas. Fleco restante: `preload` sigue inerte porque la lista exige que el **apex** sirva la cabecera, y no resuelve |
 | 9 | El apex `higerotech.com` no está enrutado | Sin registro DNS ni regla de ingress: responde **HTTP 530**. Todo el SEO del sitio (`canonical`, `hreflang`, `og:url`, `sitemap.xml`, `robots.txt`) apunta ahí. Decidir entre enrutarlo o mover el canonical a `www` |
 | 6 | Escaneo de licencias | El gate canónico `license` no tiene herramienta asignada |
-| 7 | DAST | Sin ZAP baseline ni equivalente; propuesto en `gate-3-testing.md` |
+| 7 | ~~DAST~~ | **Hecho** el 2026-07-31: ZAP baseline gateado en el CI, con los hallazgos aceptados documentados en `.zap/rules.tsv` |
 | 8 | ~~Obligatoriedad del pipeline~~ | **Hecho** el 2026-07-31: repositorio público y `main` protegido —PR obligatoria, los 7 checks en verde y al día, sin force-push ni borrado, administradores incluidos—. Un rojo ya impide mergear |
 
 ## Hallazgo operativo — cerrado el 2026-07-30

@@ -295,6 +295,45 @@ jobs:
       - if: always()
         run: docker rm -f sitio-perf
 
-  # ── Gate 3 · Seguridad dinámica ──────────────────────────────────────
-  # TODO: DAST (ZAP baseline), que además cierra uno de los dos gates
-  #   canónicos ausentes. Ver .ai-dlc/gates/gate-3-testing.md.
+  # ── Gate 3 · Seguridad dinámica (DAST) ───────────────────────────────
+  # Un contenedor escaneando a otro. Se usa la imagen oficial de ZAP por
+  # Docker y no la acción de GitHub, para que el comando sea el mismo aquí y
+  # en la máquina de quien lo depura.
+  #
+  # `zap-baseline.py` sale con código 2 ante cualquier aviso nuevo, así que
+  # `.zap/rules.tsv` es la lista completa y explícita de lo aceptado: nada se
+  # silencia sin un motivo escrito.
+  dast:
+    name: DAST (ZAP baseline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Levantar el sitio
+        run: |
+          docker build -t higerotech/landing:dast .
+          docker run -d --name sitio-dast -p 8082:80 higerotech/landing:dast
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:8082/ && break
+            sleep 1
+          done
+          curl -sf -o /dev/null http://localhost:8082/ || { echo "::error::el sitio no levantó"; exit 1; }
+
+      - name: ZAP baseline
+        run: npm run dast
+        env:
+          PUERTO: '8082'
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap
+          path: coverage/zap/
+          retention-days: 7
+
+      - if: always()
+        run: docker rm -f sitio-dast
