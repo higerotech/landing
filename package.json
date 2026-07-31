@@ -1,6 +1,6 @@
 {
   "name": "higerotech-landing",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "Pruebas del sitio estatico. El sitio no se construye con npm: este paquete existe solo para ejecutar las unitarias.",
   "license": "UNLICENSED",

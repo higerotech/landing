@@ -7,30 +7,43 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
-### Cambiado
-- **Barrido de coherencia documental tras el cutover.** Once documentos seguían describiendo un
-  sistema que ya no es el que hay. Lo corregido, por orden de gravedad:
-  - **`SECURITY.md` afirmaba «cero dependencias de gestores de paquetes: sin `npm`, sin
-    lockfiles»**, y eso hacía semanas que era falso. Sigue siendo cierto de **lo que se publica**
-    —`index.html` es autocontenido— pero no del repositorio, que tiene Playwright, jsdom, Stryker,
-    Lighthouse y `wrangler`. Ninguna llega al visitante, pero forman parte de la superficie de la
-    cadena de suministro, que es justo lo que un documento de seguridad no puede tener mal.
-  - **ADR-0006 pasa a `accepted`**, y con ello se registra la amenaza que dejaba pendiente:
-    **T18**, el token de despliegue del CI (score 4,8). El alcance de **T9** queda acotado — desde
-    el cutover ese tramo en HTTP plano **solo existe en el camino de contingencia**.
-  - **`architecture.md`** describía el contenedor tras el túnel como si fuera producción. No se
-    sustituye el diagrama, y la razón importa: el contenedor **no es un camino muerto**, el suite
-    y el DAST siguen corriéndose contra él en cada PR. Lo que se añade es qué describe hoy.
-  - **El apex «no resuelve, responde 530»** seguía escrito en cuatro sitios —`deployment.md`, el
-    PRD, el gate 4 y el mapeo OWASP— y con él la idea de que al `preload` de HSTS le faltaba un
-    requisito. **Los cuatro se cumplen**; lo que queda es una decisión, no un arreglo.
-  - **`e2e-tests.md`** daba por pendientes Lighthouse, DAST y mutación, los tres hechos.
-  - **El `README`** ofrecía como «pendiente» confirmar el dominio, el número de WhatsApp y
-    diagnosticar el contenedor `unhealthy` — cerrados hace días. Y contaba 61 unitarias donde hay
-    **64**.
-- **Registrado en `dast.md` un pendiente que no se ve solo**: el escaneo apunta a `/404.html`, que
-  en el contenedor devuelve 404 y en el Worker responde **307 hacia `/404`**. Mientras el DAST
-  mida el contenedor no cambia nada; queda escrito para que no se descubra tarde.
+### Pendiente de decisión humana
+- **Solicitar el `preload` de HSTS.** Los cuatro requisitos se cumplen desde el 2026-07-31: ya no
+  falta nada técnico, solo la decisión. Y conviene tomarla despacio, porque **entrar en la lista
+  es prácticamente irreversible** —salir tarda meses en llegar a los navegadores— y con
+  `includeSubDomains` alcanzaría a `media.`, `encuesta.`, `bots.` y a cualquier subdominio futuro
+  que naciera sin HTTPS. Tener la cabecera bien puesta y pedir la precarga son dos cosas
+  distintas; la primera está hecha.
+- **Cerrar el Gate 3.** Los cinco checkboxes están cumplidos y con evidencia ejecutable desde el
+  2026-07-31. Se mantiene abierto por decisión del owner, no por falta de trabajo.
+- **Segundo objetivo del DAST.** El escaneo apunta a `/404.html`, que en el contenedor devuelve
+  404 y en el Worker responde **307 hacia `/404`**. Mientras el DAST mida el contenedor no
+  cambia nada; el día que se mida el camino canónico hay que elegir entre seguir la redirección
+  o cambiar el objetivo.
+- **Reetiquetar E3.6 y E9.2 como específicas del contenedor.** Comprueban que no se filtre
+  `nginx/x.y`; contra el Worker eso es trivialmente cierto porque no hay nginx. Dejarlas como
+  están sería meter a propósito el patrón que este repositorio lleva semanas desmontando: una
+  comprobación que no puede fallar.
+- Arreglar `gitgraph_from_log.py` (vive en el skill de AI-DLC) y regenerar después
+  `docs/03-implementation/repo-history.md`, cuyo grafo se quedó en `a0b767b`. Se intentó
+  regenerarlo y la salida no es publicable: el `gitGraph` incluye solo la rama de la primera PR
+  y omite las tres siguientes, la bitácora duplica commits no mergeados porque recorre refs
+  remotas además de `main`, y los autores de los merges salen con mojibake. Publicar eso sería
+  cambiar un documento desactualizado por uno incorrecto.
+
+## [0.5.0] - 2026-07-31
+
+**El release del cutover.** La landing deja de depender de una máquina doméstica: el apex y `www`
+se sirven desde un **Worker de Cloudflare** desplegado por CI, y el contenedor nginx queda como
+contingencia — probada en cada PR, no declarada. De paso se completó la pirámide de pruebas
+(rendimiento, DAST, mutación y la matriz OWASP) y `main` pasó a estar protegido de verdad.
+
+El hilo que recorre casi todo lo de abajo es el mismo: **comprobaciones que pasaban sin medir
+nada.** Un healthcheck que nunca llegó a verde, una cobertura del 100 % del conjunto vacío, un
+gate SCA en verde «por ausencia de dependencias», un DAST que nunca pedía la página 404, una
+verificación de despliegue apuntando a una URL que no existía y otra apuntando a una pantalla de
+login. Cada una se documentó en vez de arreglarse en silencio, porque el patrón importa más que
+el caso.
 
 ### Añadido
 - **Cutover completado**: el apex y `www` sirven desde el Worker, `demo.` y `web.` siguen en el
@@ -58,8 +71,6 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   caché del cliente no toca la del router ni la del ISP. Confundirlo con un fallo de
   configuración lleva a deshacer algo que estaba bien; se distingue en diez segundos preguntando
   a un resolver público por DoH o forzando la IP con `curl --resolve`.
-
-### Añadido
 - **`npm run verificar:zona`** — la comprobación que faltaba, y que existe por lo que destapó el
   paso 3: el suite corría contra `localhost`, el contenedor y `workers.dev`, y **el borde de la
   zona no interviene en ninguno de los tres**. Para cada hostname canónico comprueba que lo sirve
@@ -114,19 +125,6 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   servidor—. Ninguna prueba lo detectó, y con razón: Playwright sigue redirecciones y ambas rutas
   acaban en el mismo contenido. Pero el DAST apunta a `/404.html` como segundo objetivo, así que
   hay que decidir antes de moverlo al Worker.
-
-### Corregido
-- **El workflow de despliegue verificaba contra una URL configurada a mano.** Leía
-  `vars.URL_PUBLICA`, que ni siquiera existía: con el interruptor activado habría desplegado y
-  después verificado contra `http://localhost`. Y aunque existiera, una variable puede decir una
-  cosa mientras el despliegue fue a otra — la verificación daría verde sobre algo que no es lo
-  recién publicado, que es el patrón que este repositorio lleva semanas desmontando. Ahora la URL
-  se **deriva de la salida de `wrangler deploy`** y el job falla si no puede extraerla, en vez de
-  verificar a ciegas. Añadido `workers_dev: true` para que esa URL exista siempre, que es lo que
-  hace comprobable el paso 1 del cutover antes de tocar ningún DNS. Y `WRANGLER_SEND_METRICS=false`:
-  el mismo criterio que llevó a autoalojar las fuentes para no filtrar IPs (ADR-0004).
-
-### Añadido
 - **Plan de despliegue en Cloudflare Workers** ([ADR-0006](docs/00-project/adr/0006-servir-desde-cloudflare-workers.md)
   y `docs/05-deployment/plan-cloudflare-workers.md`), con todas las piezas del repositorio ya
   preparadas e **inertes** hasta que se active el interruptor `DESPLIEGUE_WORKER`. El apex y
@@ -229,7 +227,41 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   **D2** y deja **RF05** verificado en sus dos ramas. Requiere **redesplegar**: el contenedor en
   producción sirve la versión sin botón.
 
+### Cambiado
+- **Barrido de coherencia documental tras el cutover.** Once documentos seguían describiendo un
+  sistema que ya no es el que hay. Lo corregido, por orden de gravedad:
+  - **`SECURITY.md` afirmaba «cero dependencias de gestores de paquetes: sin `npm`, sin
+    lockfiles»**, y eso hacía semanas que era falso. Sigue siendo cierto de **lo que se publica**
+    —`index.html` es autocontenido— pero no del repositorio, que tiene Playwright, jsdom, Stryker,
+    Lighthouse y `wrangler`. Ninguna llega al visitante, pero forman parte de la superficie de la
+    cadena de suministro, que es justo lo que un documento de seguridad no puede tener mal.
+  - **ADR-0006 pasa a `accepted`**, y con ello se registra la amenaza que dejaba pendiente:
+    **T18**, el token de despliegue del CI (score 4,8). El alcance de **T9** queda acotado — desde
+    el cutover ese tramo en HTTP plano **solo existe en el camino de contingencia**.
+  - **`architecture.md`** describía el contenedor tras el túnel como si fuera producción. No se
+    sustituye el diagrama, y la razón importa: el contenedor **no es un camino muerto**, el suite
+    y el DAST siguen corriéndose contra él en cada PR. Lo que se añade es qué describe hoy.
+  - **El apex «no resuelve, responde 530»** seguía escrito en cuatro sitios —`deployment.md`, el
+    PRD, el gate 4 y el mapeo OWASP— y con él la idea de que al `preload` de HSTS le faltaba un
+    requisito. **Los cuatro se cumplen**; lo que queda es una decisión, no un arreglo.
+  - **`e2e-tests.md`** daba por pendientes Lighthouse, DAST y mutación, los tres hechos.
+  - **El `README`** ofrecía como «pendiente» confirmar el dominio, el número de WhatsApp y
+    diagnosticar el contenedor `unhealthy` — cerrados hace días. Y contaba 61 unitarias donde hay
+    **64**.
+- **Registrado en `dast.md` un pendiente que no se ve solo**: el escaneo apunta a `/404.html`, que
+  en el contenedor devuelve 404 y en el Worker responde **307 hacia `/404`**. Mientras el DAST
+  mida el contenedor no cambia nada; queda escrito para que no se descubra tarde.
+
 ### Corregido
+- **El workflow de despliegue verificaba contra una URL configurada a mano.** Leía
+  `vars.URL_PUBLICA`, que ni siquiera existía: con el interruptor activado habría desplegado y
+  después verificado contra `http://localhost`. Y aunque existiera, una variable puede decir una
+  cosa mientras el despliegue fue a otra — la verificación daría verde sobre algo que no es lo
+  recién publicado, que es el patrón que este repositorio lleva semanas desmontando. Ahora la URL
+  se **deriva de la salida de `wrangler deploy`** y el job falla si no puede extraerla, en vez de
+  verificar a ciegas. Añadido `workers_dev: true` para que esa URL exista siempre, que es lo que
+  hace comprobable el paso 1 del cutover antes de tocar ningún DNS. Y `WRANGLER_SEND_METRICS=false`:
+  el mismo criterio que llevó a autoalojar las fuentes para no filtrar IPs (ADR-0004).
 - **Una medición mía que estuvo a punto de registrarse como hallazgo grave.** Al contar qué pedía
   ZAP, el log de nginx decía «4 peticiones, todas a `/`» — parecía que el escaneo no recorría
   nada. Era falso: `nginx.conf` tiene `access_log off` en assets, `robots.txt` y `sitemap.xml`,
@@ -355,23 +387,6 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   dejaba escritos los reemplazos; comprobado que ambos endpoints responden 200 —«AI-DLC Security
   Gates - passing» y «versión: v0.4.0»— cuando mientras el repositorio fue privado devolvían 404.
   El de pruebas sigue estático: no existe endpoint que cuente pruebas.
-
-### Pendiente de decisión humana
-- **El `preload` de HSTS sigue sin efecto, ahora por un solo motivo.** El `max-age` ya cumple;
-  falta que el **dominio base** sirva la cabecera, y el apex no resuelve. Cuando se enrute,
-  solicitar la precarga sigue siendo una decisión aparte de tener la cabecera bien puesta:
-  **entrar en la lista es prácticamente irreversible** —salir tarda meses en llegar a los
-  navegadores— y con `includeSubDomains` alcanzaría a `media.`, `encuesta.`, `bots.` y a
-  cualquier subdominio futuro.
-- Enrutar el apex `higerotech.com` (registro DNS + regla de ingress) **o** mover el canonical y
-  las URLs absolutas a `www.higerotech.com`. Lo primero mantiene la marca; lo segundo se
-  resuelve solo en el repositorio. Cualquiera de las dos, pero no dejarlo como está.
-- Arreglar `gitgraph_from_log.py` (vive en el skill de AI-DLC) y regenerar después
-  `docs/03-implementation/repo-history.md`, cuyo grafo se quedó en `a0b767b`. Se intentó
-  regenerarlo y la salida no es publicable: el `gitGraph` incluye solo la rama de la primera PR
-  y omite las tres siguientes, la bitácora duplica commits no mergeados porque recorre refs
-  remotas además de `main`, y los autores de los merges salen con mojibake. Publicar eso sería
-  cambiar un documento desactualizado por uno incorrecto.
 
 ## [0.4.0] - 2026-07-30
 
@@ -731,7 +746,8 @@ editorial: el copy y el diseño son los mismos.
   `docker-compose.yml`. Registrada intacta en el commit `f09c213` antes de cualquier
   corrección, para que diagnóstico y arreglo sean auditables por separado.
 
-[Unreleased]: https://github.com/higerotech/landing/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/higerotech/landing/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/higerotech/landing/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/higerotech/landing/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/higerotech/landing/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/higerotech/landing/compare/v0.1.0...v0.2.0

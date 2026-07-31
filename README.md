@@ -1,7 +1,7 @@
 # Higerotech — Landing Page
 
 [![CI](https://github.com/higerotech/landing/actions/workflows/security-gates.yml/badge.svg)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
-[![Pruebas](https://img.shields.io/badge/pruebas-61_unit_%2B_58_e2e_%2B_perf_dast_mut-e08000)](.ai-dlc/gates/gate-3-testing.md)
+[![Pruebas](https://img.shields.io/badge/pruebas-64_unit_%2B_58_e2e_%2B_perf_dast_mut-e08000)](.ai-dlc/gates/gate-3-testing.md)
 [![Versión](https://img.shields.io/github/v/tag/higerotech/landing?label=versi%C3%B3n)](CHANGELOG.md)
 
 <!--
