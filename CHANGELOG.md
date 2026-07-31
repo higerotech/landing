@@ -8,6 +8,24 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **Matriz de verificación OWASP Top 10**, con la trazabilidad categoría → prueba en
+  `.ai-dlc/owasp-mapping.md`. Antes el mapeo describía controles sin decir quién los comprobaba:
+  tres categorías no tenían ninguna prueba y dos descansaban en una premisa que nadie vigilaba.
+  Ahora **nueve de diez** tienen verificación automatizada; la única sin ella es **A09**, y no
+  por descuido — es la brecha abierta del Gate 5, no hay observabilidad que verificar.
+- **14 pruebas nuevas** para cerrar esos huecos: 7 unitarias (**U11**) y 7 E2E (**E9**). Cubren
+  la **premisa** de A01/A07 —sin formularios, sin entradas, sin cookies—, un payload real en
+  `?lang` que el threat model daba por verificado en T12 y no lo estaba, las **directivas
+  concretas** de la CSP —E5 comprobaba que la política se aplicara, no que conservara
+  `frame-ancestors`, `object-src`, `base-uri` y `form-action`—, la versión de nginx y las cinco
+  cabeceras **en una respuesta 404**, que es otro `location` y justo donde la herencia rota de
+  `add_header` se cuela, la tríada COOP/COEP/CORP, el endurecimiento declarado en el compose, la
+  pila de fuentes que nunca cae a serif, y el comportamiento ante un método y una ruta anómalos.
+- **Pruebas de las categorías «No aplica».** A01 y A07 lo están porque no hay autenticación ni
+  entradas de usuario, pero eso es una **premisa, no un control**. Este repositorio ya vio
+  caducar una: el gate SCA estuvo en ✅ «por ausencia de dependencias» hasta que entró `jsdom`, y
+  el ✅ no se movió solo. U11.1 y U11.2 hacen que la premisa falle en voz alta el día que aparezca
+  un formulario, en vez de dejar que la etiqueta envejezca en silencio.
 - **Mutation testing con Stryker: 92,36 %**, umbral propio en **90**, ejecución **semanal** en su
   propio workflow. Cierra el último checkbox del Gate 3. Con 100 % de cobertura de líneas y
   funciones, **encontró cinco huecos reales** donde las pruebas no habrían detectado el fallo:
@@ -62,6 +80,12 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   producción sirve la versión sin botón.
 
 ### Corregido
+- **Dos afirmaciones caducas en el A03 del mapeo OWASP.** Decía «sin gestor de paquetes: cero
+  dependencias de npm/pip, por tanto cero riesgo de dependencia transitiva» —falso desde que
+  entraron las herramientas de prueba— y que `gitleaks-action` y `semgrep-action` seguían
+  anclados por tag, cuando pasaron a SHA. Corregidas ambas: hoy hay dependencias **de
+  desarrollo**, ninguna viaja en la imagen, y el riesgo pasó de inexistente a acotado al CI y
+  vigilado por el gate SCA.
 - **La razón por la que se saltaba el mutation testing había caducado, y el bloqueo técnico que
   se le suponía era falso.** Se había descartado con «lo primero era que existiera algo que
   mutar» —cierto entonces, obsoleto desde que hubo suite— y con la idea de que Stryker no puede
