@@ -44,8 +44,8 @@
 | 2 | Archivar el SBOM | Se genera en cada run pero caduca con el artefacto: publicarlo por release para poder auditar una imagen desplegada |
 | 3 | Imagen por digest | Cambiar `nginx:1.30-alpine` por `nginx:1.30-alpine@sha256:…` |
 | 4 | Firma de imagen | `cosign sign` + verificación antes de desplegar |
-| 5 | ~~HSTS~~ | **Hecho** el 2026-07-31: `max-age=31536000; includeSubDomains; preload` (12 meses), emitido por Cloudflare y verificado en los tres hostnames y en varias rutas. Fleco restante: `preload` sigue inerte porque la lista exige que el **apex** sirva la cabecera, y no resuelve |
-| 9 | El apex `higerotech.com` no está enrutado | Sin registro DNS ni regla de ingress: responde **HTTP 530**. Todo el SEO del sitio (`canonical`, `hreflang`, `og:url`, `sitemap.xml`, `robots.txt`) apunta ahí. Decidir entre enrutarlo o mover el canonical a `www` |
+| 5 | ~~HSTS~~ | **Hecho** el 2026-07-31: `max-age=31536000; includeSubDomains; preload` (12 meses), emitido por Cloudflare y verificado en varios hostnames y rutas. El fleco del `preload` **se cerró el mismo día** al enrutar el apex: los cuatro requisitos se cumplen. Solicitar la precarga sigue sin hacerse, y a propósito — es irreversible en la práctica |
+| 9 | ~~El apex `higerotech.com` no está enrutado~~ | **Hecho** el 2026-07-31: el apex y `www` se sirven desde un Worker (ADR-0006), con 58/58 E2E contra el sitio publicado y `verificar:zona` en verde. Responde 200 donde daba 530 |
 | 6 | Escaneo de licencias | El gate canónico `license` no tiene herramienta asignada |
 | 7 | ~~DAST~~ | **Hecho** el 2026-07-31: ZAP baseline gateado en el CI, con los hallazgos aceptados documentados en `.zap/rules.tsv` |
 | 8 | ~~Obligatoriedad del pipeline~~ | **Hecho** el 2026-07-31: repositorio público y `main` protegido —PR obligatoria, los 7 checks en verde y al día, sin force-push ni borrado, administradores incluidos—. Un rojo ya impide mergear |

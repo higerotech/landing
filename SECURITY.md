@@ -11,18 +11,28 @@ security@higerotech.com como buzón dedicado>`
 
 Este repositorio publica una **landing page estática**. No procesa datos de usuario, no
 tiene backend, base de datos, autenticación ni formularios. La superficie de ataque real
-se concentra en tres puntos:
+se concentra en cuatro puntos:
 
-1. **Configuración de nginx** — cabeceras, CSP, exposición de rutas.
-2. **Cadena de suministro de la imagen** — la base `nginx:1.30-alpine`.
-3. **Integridad del contenido servido** — que lo publicado sea lo revisado.
+1. **Configuración de lo que sirve** — cabeceras, CSP y exposición de rutas, hoy en **dos**
+   sitios: `cloudflare/_headers` (Worker, camino canónico) y `nginx.conf` +
+   `security-headers.conf` (contenedor, contingencia). Que las dos definiciones no diverjan lo
+   vigila la prueba **U12**; sin ella, la duplicación sería el agujero.
+2. **Cadena de suministro** — la imagen base `nginx:1.30-alpine` y las dependencias de
+   desarrollo del repositorio.
+3. **Integridad del contenido servido** — que lo publicado sea lo revisado. Lo comprueba
+   `scripts/verificar-zona.mjs` comparando byte a byte lo servido contra el artefacto del build.
+4. **El token de despliegue del CI** — una credencial que puede publicar en el dominio
+   canónico. Alcance mínimo (`Workers Scripts: Edit`, sin permiso sobre DNS) y rotable. Es la
+   amenaza **T18** del threat model.
 
 El detalle por riesgo OWASP está en [`.ai-dlc/owasp-mapping.md`](.ai-dlc/owasp-mapping.md)
 y el análisis STRIDE en [`docs/02-design/threat-model.md`](docs/02-design/threat-model.md).
 
 ## Fuera de alcance
 
-- La terminación TLS y el borde (túnel/proxy) viven fuera de este repositorio.
+- La terminación TLS vive fuera de este repositorio: la hace Cloudflare. Lo que **sí** está
+  aquí desde el 2026-07-31 es la configuración del Worker (`wrangler.jsonc`,
+  `cloudflare/_headers`), así que las cabeceras del camino canónico ya son revisables en un PR.
 - El correo `contacto@higerotech.com` publicado en la página es información comercial
   deliberadamente pública; su recolección por scrapers es un coste asumido, no un incidente.
 
@@ -44,8 +54,14 @@ El gate de detección de secretos **ya existe** y cubre lo que entra por PR.
 
 ## Supply chain (A03)
 
-- Cero dependencias de gestores de paquetes: sin `npm`, sin `pip`, sin lockfiles.
-  Es una propiedad deliberada de la arquitectura (ver ADR-0003).
+- **El sitio que se publica no tiene ninguna dependencia**: ni `npm`, ni CDNs, ni nada que se
+  descargue en tiempo de ejecución. Es una propiedad deliberada de la arquitectura (ADR-0003) y
+  sigue intacta — `index.html` es autocontenido.
+- El **repositorio** sí tiene dependencias desde que existen las pruebas y el despliegue
+  (Playwright, jsdom, Stryker, Lighthouse, `wrangler`), todas de desarrollo y ancladas en
+  `package-lock.json`. Ninguna llega al visitante, pero **sí forman parte de la superficie de
+  la cadena de suministro** y por eso el gate SCA las cubre. Decir «cero dependencias» a secas
+  dejaría de ser cierto.
 - Fuentes tipográficas **autoalojadas** (ADR-0004): no se carga nada desde CDNs de terceros.
 - Imagen base anclada a `nginx:1.30-alpine`, escaneada con Trivy en cada PR (0 CVEs
   corregibles de severidad HIGH o CRITICAL).

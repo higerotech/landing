@@ -90,6 +90,12 @@ Corregido: el escaneo tiene ahora **dos objetivos**, el sitio y `/404.html`. Amb
 reglas cada uno. Que E9.2 y E9.3 ya comprueben las cabeceras y la versión en un 404 no lo cubría:
 esas son dos aserciones concretas; aquí pasan 64 reglas pasivas.
 
+> **Pendiente desde el cutover del 2026-07-31.** El escaneo corre contra **el contenedor**, y ahí
+> `/404.html` devuelve 404 porque la página está declarada como *interna*. En el Worker esa misma
+> ruta responde **307 hacia `/404`**. Mientras el DAST siga apuntando al contenedor no cambia
+> nada; el día que se mida el camino canónico hay que decidir si basta con seguir la redirección
+> o si el segundo objetivo pasa a ser `/404`. Queda escrito para que no se descubra tarde.
+
 ### ¿Basta con un escaneo pasivo?
 
 Era una afirmación —«no hay superficie que un escaneo activo exploraría»— y ahora es un hecho

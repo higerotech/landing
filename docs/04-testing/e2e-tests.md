@@ -156,11 +156,11 @@ desborda un párrafo o un botón, sí aparece.
 
 | Fuera de alcance | A quién le toca |
 |---|---|
-| Rendimiento, LCP, peso de la primera carga | Lighthouse CI — **pendiente** |
-| Seguridad dinámica sobre el sitio en marcha | ZAP baseline — **pendiente**, cierra el gate canónico DAST |
-| Calidad de las propias pruebas | Mutation testing — **descartado por ahora** |
+| Rendimiento, LCP, peso de la primera carga | Lighthouse — ✅ **hecho el 2026-07-31**, con presupuesto gateado |
+| Seguridad dinámica sobre el sitio en marcha | ZAP baseline — ✅ **hecho el 2026-07-31**, gate canónico DAST cerrado |
+| Calidad de las propias pruebas | Mutation testing — ✅ **medido y gateado** el 2026-07-31, semanal con umbral 90 |
 | Otros motores (Firefox, WebKit) | Solo Chromium. Un segundo motor multiplicaría el tiempo de CI para un sitio estático sin JS de terceros |
-| **Que lo publicado sea esta imagen** | El paso 4 de verificación por el borde |
+| **Que lo publicado sea este build** | `npm run verificar:zona`, que compara byte a byte lo servido contra `dist/`. Ya no es un `curl` de cabeceras: un `curl` no ve lo que el borde inyecta |
 
 ## En el CI
 

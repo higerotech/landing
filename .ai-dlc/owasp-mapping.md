@@ -138,7 +138,9 @@ No hay datos en reposo: el contenedor no escribe nada (`read_only: true`).
 **Quién termina TLS: Cloudflare**, confirmado el 2026-07-30 (`docker inspect landing-tunnel` +
 sus logs de configuración; detalle en `docs/05-deployment/deployment.md` §El borde). El tramo
 entre el contenedor del túnel y nginx va en HTTP plano dentro del host, que es la amenaza T9
-aceptada del threat model.
+aceptada del threat model. **Desde el 2026-07-31 ese tramo solo existe en el camino de
+contingencia**: los hostnames canónicos se sirven desde un Worker en el borde (ADR-0006), donde
+no hay salto a la LAN.
 
 **HSTS activo desde el 2026-07-31**, emitido por Cloudflare como correspondía. Verificado con
 `curl -sI` en `www`, `web` y `demo`, y en varias rutas incluida una que devuelve 404:
@@ -149,10 +151,9 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 
 Sigue siendo correcto **no** emitirla desde nginx, por la razón del párrafo anterior.
 
-El `max-age` pasó a **12 meses el 2026-07-31**, con lo que cumple el mínimo de la lista de
-precarga. Queda **un requisito por cumplir**: hstspreload.org exige que el **dominio base** sirva
-la cabecera, y el apex `higerotech.com` no resuelve (responde 530). Hasta enrutarlo, el token
-`preload` es una declaración sin efecto.
+El `max-age` pasó a **12 meses el 2026-07-31**, y ese mismo día se enrutó el apex al Worker, con
+lo que **los cuatro requisitos de la lista de precarga se cumplen**. Ya no hay nada que corregir:
+lo que queda es una decisión, no un arreglo.
 
 Solicitar la precarga es una decisión aparte de tener la cabecera bien puesta, y conviene
 tomarla despacio: **entrar en la lista es prácticamente irreversible** —salir tarda meses en

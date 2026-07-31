@@ -7,6 +7,31 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Cambiado
+- **Barrido de coherencia documental tras el cutover.** Once documentos seguían describiendo un
+  sistema que ya no es el que hay. Lo corregido, por orden de gravedad:
+  - **`SECURITY.md` afirmaba «cero dependencias de gestores de paquetes: sin `npm`, sin
+    lockfiles»**, y eso hacía semanas que era falso. Sigue siendo cierto de **lo que se publica**
+    —`index.html` es autocontenido— pero no del repositorio, que tiene Playwright, jsdom, Stryker,
+    Lighthouse y `wrangler`. Ninguna llega al visitante, pero forman parte de la superficie de la
+    cadena de suministro, que es justo lo que un documento de seguridad no puede tener mal.
+  - **ADR-0006 pasa a `accepted`**, y con ello se registra la amenaza que dejaba pendiente:
+    **T18**, el token de despliegue del CI (score 4,8). El alcance de **T9** queda acotado — desde
+    el cutover ese tramo en HTTP plano **solo existe en el camino de contingencia**.
+  - **`architecture.md`** describía el contenedor tras el túnel como si fuera producción. No se
+    sustituye el diagrama, y la razón importa: el contenedor **no es un camino muerto**, el suite
+    y el DAST siguen corriéndose contra él en cada PR. Lo que se añade es qué describe hoy.
+  - **El apex «no resuelve, responde 530»** seguía escrito en cuatro sitios —`deployment.md`, el
+    PRD, el gate 4 y el mapeo OWASP— y con él la idea de que al `preload` de HSTS le faltaba un
+    requisito. **Los cuatro se cumplen**; lo que queda es una decisión, no un arreglo.
+  - **`e2e-tests.md`** daba por pendientes Lighthouse, DAST y mutación, los tres hechos.
+  - **El `README`** ofrecía como «pendiente» confirmar el dominio, el número de WhatsApp y
+    diagnosticar el contenedor `unhealthy` — cerrados hace días. Y contaba 61 unitarias donde hay
+    **64**.
+- **Registrado en `dast.md` un pendiente que no se ve solo**: el escaneo apunta a `/404.html`, que
+  en el contenedor devuelve 404 y en el Worker responde **307 hacia `/404`**. Mientras el DAST
+  mida el contenedor no cambia nada; queda escrito para que no se descubra tarde.
+
 ### Añadido
 - **Cutover completado**: el apex y `www` sirven desde el Worker, `demo.` y `web.` siguen en el
   túnel como contingencia. Los dos hallazgos del paso 3 quedan cerrados —`www` resuelve y el

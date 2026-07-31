@@ -4,10 +4,10 @@
 * **Fecha:** 2026-07-29
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 05-deployment
-* **Versión:** 0.3.0
+* **Versión:** 0.4.0
 * **Gate:** 4 — **parcial**
-* **Entorno objetivo:** Host único con Docker; borde expuesto mediante túnel
-* **Estrategia de release:** Reemplazo directo del contenedor (sin blue-green ni canary)
+* **Entorno objetivo:** Worker de Cloudflare (canónico) · host único con Docker tras el túnel (contingencia)
+* **Estrategia de release:** `wrangler deploy` desde el CI, verificado contra lo publicado · en contingencia, reemplazo directo del contenedor
 
 ## Topología
 
@@ -55,7 +55,7 @@ Confirmado el 2026-07-30 con `docker inspect landing-tunnel` y sus propios logs:
 | Software | **cloudflared** en modo token (`tunnel run --token …`) |
 | Dónde vive el *ingress* | Panel de Cloudflare, **no** en este repositorio ni en el host |
 | Origen configurado | `http://192.168.1.44:80` — la **IP del host**, no la del contenedor |
-| Hostnames enrutados | `www.higerotech.com`, `web.higerotech.com`, `demo.higerotech.com` |
+| Hostnames enrutados | `web.higerotech.com`, `demo.higerotech.com`. **`www` y el apex salieron del ingress el 2026-07-31**: los sirve el Worker |
 | Regla final | `http_status:404` |
 | Terminación TLS | Cloudflare, en el borde. Del túnel al host el tramo es HTTP plano (T9) |
 | HSTS | Activo desde el 2026-07-31, emitido por Cloudflare: `max-age=31536000; includeSubDomains; preload` (12 meses). Ver la nota de abajo sobre `preload` |
@@ -68,14 +68,15 @@ Dos consecuencias que conviene tener escritas:
    público sin servir aunque el contenedor esté perfectamente sano. Que el origen sea la IP
    del host y no la del contenedor es una suerte: hace que la red de Docker sea indiferente
    y que recrear el contenedor no rompa el enrutado.
-2. **El apex `higerotech.com` no está enrutado.** No tiene registro en DNS (la consulta
-   devuelve solo SOA) y no figura en el ingress; forzando la IP de Cloudflare responde
-   **HTTP 530**. Ninguno de los otros cuatro túneles del host lo sirve tampoco. Es un
-   problema real de SEO, no cosmético: `canonical`, los tres `hreflang`, `og:url`, las URLs
-   del `sitemap.xml` y la línea `Sitemap:` de `robots.txt` apuntan todos a
-   `https://higerotech.com/`, un host que no resuelve. Y como `www`, `web` y `demo` sirven
-   el mismo contenido, hay contenido duplicado en tres hostnames sin un canonical válido que
-   los consolide.
+2. ~~**El apex `higerotech.com` no está enrutado.**~~ **Resuelto el 2026-07-31.** El apex y
+   `www` se sirven desde un Worker (ADR-0006) y salieron del ingress del túnel. Con eso el
+   `canonical`, los tres `hreflang`, `og:url`, el `sitemap.xml` y `robots.txt` —que siempre
+   apuntaron al apex— dejan de señalar a un host inexistente, y el contenido duplicado en
+   varios hostnames queda consolidado.
+
+   Queda una consecuencia viva: **este bloque describe ahora el camino de contingencia.** El
+   túnel conserva `web.` y `demo.`, que siguen sirviendo desde el contenedor y siguen midiéndose
+   en cada PR.
 
 ### Sobre el `preload` de HSTS
 
@@ -88,14 +89,13 @@ en la lista de precarga de los navegadores, hstspreload.org exige:
 | `max-age` ≥ 31 536 000 s (1 año) | ✅ **Corregido el 2026-07-31**: 31 536 000 s |
 | `includeSubDomains` | ✅ |
 | Redirección HTTP→HTTPS | ✅ 301 |
-| Que el **dominio base** sirva la cabecera | ❌ El apex `higerotech.com` **no resuelve** (530) |
+| Que el **dominio base** sirva la cabecera | ✅ **Corregido el 2026-07-31**: el apex sirve desde el Worker con `max-age=31536000; includeSubDomains; preload` |
 
-Queda **un solo requisito incumplido**, y es el mismo apex que bloquea el SEO. Hasta que se
-enrute, el token `preload` sigue siendo una declaración sin efecto: una solicitud a
-hstspreload.org se rechazaría.
+**Los cuatro requisitos se cumplen desde el 2026-07-31.** Ya no hay nada que arreglar: lo que
+queda es una decisión, no una corrección — solicitar la precarga en hstspreload.org es un acto
+aparte de tener la cabecera bien puesta, y sigue **sin hacerse a propósito**.
 
-Cuando el apex esté enrutado, conviene pararse antes de solicitar la precarga: **entrar en la
-lista es prácticamente irreversible** —salir tarda meses en propagarse a los navegadores— y con
+Conviene pararse antes de solicitarla: **entrar en la lista es prácticamente irreversible** —salir tarda meses en propagarse a los navegadores— y con
 `includeSubDomains` alcanzaría a `media.`, `encuesta.`, `bots.` y a cualquier subdominio futuro
 que naciera sin HTTPS. Solicitarla es una decisión aparte de tener la cabecera bien puesta.
 
