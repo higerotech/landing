@@ -99,9 +99,27 @@ sus logs de configuración; detalle en `docs/05-deployment/deployment.md` §El b
 entre el contenedor del túnel y nginx va en HTTP plano dentro del host, que es la amenaza T9
 aceptada del threat model.
 
-**Acción pendiente:** activar HSTS en Cloudflare. Sigue siendo correcto no emitirla desde
-nginx por la razón del párrafo anterior; ahora al menos se sabe exactamente dónde hay que
-ponerla y quién puede hacerlo.
+**HSTS activo desde el 2026-07-31**, emitido por Cloudflare como correspondía. Verificado con
+`curl -sI` en `www`, `web` y `demo`, y en varias rutas incluida una que devuelve 404:
+
+```
+Strict-Transport-Security: max-age=2592000; includeSubDomains; preload
+```
+
+Sigue siendo correcto **no** emitirla desde nginx, por la razón del párrafo anterior.
+
+**Acción pendiente, menor pero real: la directiva `preload` es hoy inerte y contradice al
+`max-age`.** Para entrar en la lista de precarga de los navegadores, hstspreload.org exige
+`max-age` ≥ **31 536 000 s (1 año)** y aquí hay **2 592 000 s (30 días)**. Además exige que el
+**dominio base** sirva la cabecera y redirija HTTP→HTTPS, y el apex `higerotech.com` **no
+resuelve** (responde 530). O sea: una eventual solicitud de precarga se rechazaría por dos
+motivos independientes.
+
+No es urgente —30 días de HSTS protegen igual a quien ya visitó el sitio— pero conviene
+decidirlo a conciencia, porque **`preload` es prácticamente irreversible**: salir de la lista
+tarda meses en llegar a los navegadores. Con `includeSubDomains` afectaría a `media.`,
+`encuesta.`, `bots.` y a cualquier subdominio futuro. Las salidas son quitar `preload` hasta que
+haga falta, o subir a un año **después** de enrutar el apex.
 
 ## A05 — Injection
 
