@@ -1,10 +1,11 @@
 # DAST — Escaneo dinámico con ZAP baseline
 
-* **Estado:** **implementado** — 0 hallazgos fuera de los aceptados
+* **Estado:** **implementado y validado** — 0 hallazgos fuera de los aceptados
 * **Fecha:** 2026-07-31
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.1.0
+* **Versión:** 0.2.0
+* **Validación:** 2026-07-31 — cobertura del rastreo medida y contrastada con un escaneo activo
 * **Gate:** cierra el último ítem de la pirámide del Gate 3 y el gate canónico **DAST** del Gate 4
 * **Herramienta:** `ghcr.io/zaproxy/zaproxy:stable` por Docker
 * **Ejecución:** `npm run dast` — ~2 min contra el contenedor
@@ -60,16 +61,66 @@ y el primer intento enseñó algo:
 La primera fila estuvo a punto de registrarse como «el gate no detecta nada». Verificar con un
 solo caso habría dado esa conclusión, y habría sido falsa.
 
+## Validación del gate *(2026-07-31)*
+
+Antes de cerrar el Gate 3 con esta evidencia se validó que la evidencia **mide algo**. Dos
+preguntas, dos respuestas medidas.
+
+### ¿Recorre el sitio o se queda en la home?
+
+Se midió desde el **log de nginx**, no desde el informe de ZAP —que solo dice dónde se levantó
+cada alerta, no qué se visitó—. El primer intento dio «4 peticiones, todas a `/`» y estuvo a
+punto de registrarse como hallazgo grave. Era falso: `nginx.conf` tiene `access_log off` en
+assets, `robots.txt` y `sitemap.xml`, así que el propio log escondía el tráfico.
+
+Repetido contra un contenedor de un solo uso con el registro completo:
+
+```
+7 GET /            1 GET /assets/logo_white_trans.png
+1 GET /robots.txt  1 GET /assets/isotipo_charcoal_lg.png
+1 GET /sitemap.xml 1 GET /assets/isotipo.svg
+                   2 GET /assets/fonts/*.woff2
+```
+
+**8 URLs, 14 peticiones.** El spider funciona. Pero apareció un punto ciego real: **nunca pedía
+la página 404**, porque el spider solo sigue enlaces y a `/404.html` no apunta ninguno — es
+nginx quien la sirve ante una ruta inexistente. Es una página que los visitantes sí ven.
+
+Corregido: el escaneo tiene ahora **dos objetivos**, el sitio y `/404.html`. Ambos limpios, 64
+reglas cada uno. Que E9.2 y E9.3 ya comprueben las cabeceras y la versión en un 404 no lo cubría:
+esas son dos aserciones concretas; aquí pasan 64 reglas pasivas.
+
+### ¿Basta con un escaneo pasivo?
+
+Era una afirmación —«no hay superficie que un escaneo activo exploraría»— y ahora es un hecho
+medido. Se ejecutó una vez `zap-full-scan.py`, que **ataca**: SQL injection, inyección de
+comandos, SSTI, path traversal, XSS reflejado, XXE, deserialización.
+
+```
+FAIL-NEW: 0   WARN-NEW: 0   IGNORE: 1   PASS: 140
+```
+
+**140 reglas, más del doble que las 64 del baseline, y ni un hallazgo nuevo.** El único aviso fue
+el `unsafe-inline` ya aceptado.
+
+Queda como comando bajo demanda —`npm run dast -- --activo`— y **no** como gate: en un sitio sin
+formularios, sin API y sin sesión, ejecutarlo en cada PR gasta minutos para confirmar lo mismo.
+
+**El disparador para volver a él está automatizado.** La premisa «no hay superficie de entrada»
+la vigila **U11.1**: si algún día aparece un formulario o un `<input>`, esa prueba se pone roja,
+y ese es el momento de pasar el baseline a `full-scan`. La premisa no envejece en silencio.
+
 ## Alcance: qué es y qué no es un baseline
 
 `zap-baseline.py` hace un escaneo **pasivo**: rastrea la aplicación y analiza las respuestas,
 pero **no ataca**. No inyecta payloads, no fuerza rutas, no prueba autenticación.
 
-Para este sitio esa limitación importa poco: no hay formularios, ni API, ni sesión, ni base de
-datos — el 100 % del contenido es material de marketing público servido estáticamente. La
-superficie que un escaneo activo exploraría no existe. Si algún día aparece un formulario o un
-endpoint, este documento es el que hay que releer: entonces el baseline se queda corto y toca
-`zap-full-scan.py`.
+Para este sitio esa limitación importa poco, y ya no es una suposición: el escaneo activo se
+ejecutó y no encontró nada (ver §Validación del gate). No hay formularios, ni API, ni sesión, ni
+base de datos — el 100 % del contenido es material de marketing público servido estáticamente.
+
+Si algún día aparece un formulario o un endpoint, el baseline se queda corto y toca
+`zap-full-scan.py`. Ese momento lo señala **U11.1**, no la memoria de nadie.
 
 ## En el CI
 

@@ -10,7 +10,11 @@
    esté en `.zap/rules.tsv` como IGNORE rompe el build, así que ese archivo es
    la lista completa y explícita de lo aceptado. Ver `docs/04-testing/dast.md`.
 
-   Uso:  npm run dast          (PUERTO para apuntar a otro puerto del host)  */
+   `--activo` cambia a `zap-full-scan.py`, que **ataca** en vez de observar.
+   No forma parte del gate — ver `docs/04-testing/dast.md` §Validación.
+
+   Uso:  npm run dast                  (PUERTO apunta a otro puerto del host)
+         npm run dast -- --activo      (escaneo activo, bajo demanda)         */
 
 import { spawnSync } from 'node:child_process'
 import { copyFileSync, mkdirSync, rmSync, existsSync } from 'node:fs'
@@ -23,32 +27,58 @@ const PUERTO = process.env.PUERTO || '80'
 
 /* `host.docker.internal` con `--add-host` funciona igual en Docker Desktop y
    en los runners de Linux; `--network host` no. */
-const OBJETIVO = `http://host.docker.internal:${PUERTO}`
+const BASE = `http://host.docker.internal:${PUERTO}`
+
+/* Dos objetivos, no uno.
+
+   Al validar el gate se midió desde el log de nginx qué pedía ZAP de verdad:
+   8 URLs —la home, robots, sitemap, imágenes y fuentes— y **nunca la página
+   404**. El spider solo sigue enlaces, y a `/404.html` no apunta ninguno: es
+   nginx quien la sirve ante una ruta inexistente. Era un punto ciego real,
+   sobre una página que los visitantes sí ven.
+
+   Que las cabeceras y la ausencia de versión en el 404 ya las comprueben E9.2
+   y E9.3 no lo cubre: esas son dos aserciones concretas, y aquí pasan 64
+   reglas pasivas. */
+/* Se lee de argv y no de una variable de entorno: `ACTIVO=1 npm run …` no es
+   portable a Windows sin dependencias añadidas, y `npm run dast -- --activo`
+   funciona igual en los dos sitios. */
+const ACTIVO = process.argv.includes('--activo')
+
+const OBJETIVOS = [
+  { nombre: 'sitio', url: BASE },
+  { nombre: 'pagina-404', url: `${BASE}/404.html` }
+]
 
 if (existsSync(TRABAJO)) rmSync(TRABAJO, { recursive: true, force: true })
 mkdirSync(TRABAJO, { recursive: true })
 copyFileSync(join(RAIZ, '.zap', 'rules.tsv'), join(TRABAJO, 'rules.tsv'))
 
-console.log(`ZAP baseline sobre ${OBJETIVO}\n`)
+let codigo = 0
 
-const r = spawnSync('docker', [
-  'run', '--rm',
-  '--add-host=host.docker.internal:host-gateway',
-  '-v', `${TRABAJO}:/zap/wrk/:rw`,
-  'ghcr.io/zaproxy/zaproxy:stable',
-  'zap-baseline.py',
-  '-t', OBJETIVO,
-  '-c', 'rules.tsv',
-  '-J', 'informe.json',
-  '-r', 'informe.html'
-], { stdio: 'inherit' })
+for (const { nombre, url } of OBJETIVOS) {
+  console.log(`\n── ZAP ${ACTIVO ? 'ACTIVO (ataca)' : 'baseline (pasivo)'} sobre ${url} ──\n`)
 
-if (r.error) {
-  console.error(`\nNo se pudo ejecutar docker: ${r.error.message}`)
-  process.exit(1)
+  const r = spawnSync('docker', [
+    'run', '--rm',
+    '--add-host=host.docker.internal:host-gateway',
+    '-v', `${TRABAJO}:/zap/wrk/:rw`,
+    'ghcr.io/zaproxy/zaproxy:stable',
+    ACTIVO ? 'zap-full-scan.py' : 'zap-baseline.py',
+    '-t', url,
+    '-c', 'rules.tsv',
+    '-J', `${nombre}.json`,
+    '-r', `${nombre}.html`
+  ], { stdio: 'inherit' })
+
+  if (r.error) {
+    console.error(`\nNo se pudo ejecutar docker: ${r.error.message}`)
+    process.exit(1)
+  }
+
+  // Se ejecutan todos los objetivos aunque uno falle: interesa el cuadro entero.
+  codigo = Math.max(codigo, r.status ?? 1)
 }
-
-const codigo = r.status ?? 1
 
 console.log(`\nInformes en ${TRABAJO}`)
 
