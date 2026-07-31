@@ -37,23 +37,9 @@ jobs:
       - name: Preparar dist/
         run: npm run preparar
 
-      # La URL se DERIVA de la salida del despliegue, no de una variable
-      # mantenida a mano. Una variable puede decir una cosa mientras el
-      # despliegue fue a otra, y entonces la verificación da verde sobre algo
-      # que no es lo que acabamos de publicar — el patrón que este repositorio
-      # lleva semanas desmontando.
       - name: wrangler deploy
         id: desplegar
-        run: |
-          set -o pipefail
-          npx wrangler deploy 2>&1 | tee salida-despliegue.txt
-          url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' salida-despliegue.txt | head -1)
-          if [ -z "$url" ]; then
-            echo "::error::no se pudo derivar la URL del despliegue; no hay nada que verificar"
-            exit 1
-          fi
-          echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "Desplegado en $url"
+        run: npx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -71,21 +57,29 @@ jobs:
       # Limitación reconocida: esto corre DESPUÉS de desplegar, así que detecta
       # el problema, no lo previene. El rollback es una edición del ingress del
       # túnel, sin reconstruir nada — ver el plan §Rollback.
-      # Se verifica la URL de workers.dev, que es lo que este despliegue
-      # acaba de publicar. Cuando los dominios propios estén enganchados, el
-      # paso 4 de §Verificar antes de publicar sigue midiendo por el borde.
+      #
+      # Se mide contra el hostname CANÓNICO, no contra `*.workers.dev`. Dos
+      # razones, y la segunda es la de fondo:
+      #
+      #  1. Desde el 2026-07-31 `workers.dev` está detrás de Cloudflare Access
+      #     y devuelve un 302 a una pantalla de login. El suite corría contra
+      #     esa pantalla — 48 pruebas caídas por «element(s) not found».
+      #  2. Aunque respondiera, `workers.dev` NO pertenece a la zona, así que
+      #     nada de lo que Cloudflare añade en el borde aparece allí. Ese hueco
+      #     escondió el beacon de Web Analytics inyectado en producción con los
+      #     diez gates en verde, porque ninguno miraba donde ocurría.
+      #
+      # Antes esta URL se derivaba de la salida de `wrangler deploy` para no
+      # depender de una variable escrita a mano que pudiera apuntar a otro
+      # sitio. Esa garantía no se pierde: ahora la da `verificar:zona`
+      # comparando byte a byte lo servido contra `dist/`, que es más fuerte
+      # —prueba que el CONTENIDO es el de este build, no solo que una URL
+      # responde—.
       - name: Verificar lo publicado
         run: npm run e2e
         env:
-          BASE_URL: ${{ steps.desplegar.outputs.url }}
+          BASE_URL: https://higerotech.com
 
-      # Y ahora contra los hostnames CANÓNICOS, que es donde mira el visitante.
-      #
-      # El paso anterior verifica `*.workers.dev`, que prueba que el despliegue
-      # salió bien pero NO lo que recibe la gente: workers.dev no pertenece a la
-      # zona, así que nada de lo que Cloudflare añade en el borde aparece allí.
-      # Ese hueco escondió el beacon de Web Analytics inyectado en producción,
-      # con los diez gates en verde, porque ninguno miraba donde ocurría.
       - name: Verificar los hostnames de la zona
         run: npm run verificar:zona
 
