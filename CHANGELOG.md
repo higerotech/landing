@@ -27,13 +27,24 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   líneas del enlace de WhatsApp ya no dependían de un fixture con el fuente mutado —que el
   medidor descarta— porque ahora se ejercitan sobre el fuente real.
 
+### Seguridad
+- **HSTS activo**, emitido por Cloudflare como correspondía. Verificado el 2026-07-31 con
+  `curl -sI` en `www`, `web` y `demo`, y en varias rutas incluida una que devuelve 404:
+  `Strict-Transport-Security: max-age=2592000; includeSubDomains; preload`. Cierra el ítem 5 de
+  «Lo que falta» del gate 4 y la acción pendiente del A04. Sigue siendo correcto no emitirla
+  desde nginx: hacerlo detrás de un terminador TLS que no se controla puede dejar el dominio
+  inaccesible si la cadena se rompe.
+
 ### Pendiente de decisión humana
-- **HSTS sigue sin llegar.** Comprobado el 2026-07-31 con `curl -sI` en los tres hostnames
-  (`www`, `web`, `demo`): no aparece `Strict-Transport-Security`. Sí está activo «Always Use
-  HTTPS» —`http://` responde 301 a `https://`—, así que hay configuración del borde hecha, pero
-  no la de HSTS, que en Cloudflare es un interruptor aparte en **SSL/TLS → Edge Certificates →
-  HTTP Strict Transport Security (HSTS)** y exige aceptar un aviso antes de guardar. Nada que
-  este repositorio pueda emitir: desde nginx sigue siendo mala idea (A04 del mapeo OWASP).
+- **El `preload` de HSTS es inerte y contradice al `max-age`.** La lista de precarga exige
+  `max-age` ≥ 1 año y aquí hay **30 días**; además exige que el **dominio base** sirva la
+  cabecera, y el apex `higerotech.com` no resuelve. Una solicitud se rechazaría por dos motivos
+  independientes, así que el token está declarado sin efecto. No es urgente —30 días protegen
+  igual a quien ya visitó el sitio—, pero conviene decidirlo a conciencia porque **entrar en la
+  lista es prácticamente irreversible**: salir tarda meses en llegar a los navegadores, y con
+  `includeSubDomains` alcanzaría a `media.`, `encuesta.`, `bots.` y a cualquier subdominio
+  futuro. Salidas: quitar `preload` hasta que se quiera de verdad, o subir a un año **después**
+  de enrutar el apex, nunca antes.
 - Enrutar el apex `higerotech.com` (registro DNS + regla de ingress) **o** mover el canonical y
   las URLs absolutas a `www.higerotech.com`. Lo primero mantiene la marca; lo segundo se
   resuelve solo en el repositorio. Cualquiera de las dos, pero no dejarlo como está.

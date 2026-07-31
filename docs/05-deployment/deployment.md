@@ -58,6 +58,8 @@ Confirmado el 2026-07-30 con `docker inspect landing-tunnel` y sus propios logs:
 | Hostnames enrutados | `www.higerotech.com`, `web.higerotech.com`, `demo.higerotech.com` |
 | Regla final | `http_status:404` |
 | Terminación TLS | Cloudflare, en el borde. Del túnel al host el tramo es HTTP plano (T9) |
+| HSTS | Activo desde el 2026-07-31, emitido por Cloudflare: `max-age=2592000; includeSubDomains; preload`. Ver la nota de abajo sobre `preload` |
+| Redirección a HTTPS | Activa: `http://` responde 301 |
 
 Dos consecuencias que conviene tener escritas:
 
@@ -74,6 +76,27 @@ Dos consecuencias que conviene tener escritas:
    `https://higerotech.com/`, un host que no resuelve. Y como `www`, `web` y `demo` sirven
    el mismo contenido, hay contenido duplicado en tres hostnames sin un canonical válido que
    los consolide.
+
+### Sobre el `preload` de HSTS
+
+La cabecera declara `preload`, pero **hoy esa directiva no hace nada y contradice al resto de la
+política**. Para entrar en la lista de precarga de los navegadores, hstspreload.org exige:
+
+| Requisito | Estado |
+|---|---|
+| `max-age` ≥ 31 536 000 s (1 año) | ❌ Hay **2 592 000 s** (30 días) |
+| `includeSubDomains` | ✅ |
+| Redirección HTTP→HTTPS | ✅ 301 |
+| Que el **dominio base** sirva la cabecera | ❌ El apex `higerotech.com` **no resuelve** (530) |
+
+Una solicitud de precarga se rechazaría por dos motivos independientes, así que el token está
+declarado sin efecto. No es urgente —30 días de HSTS protegen igual a quien ya visitó el sitio—
+pero conviene decidirlo, porque **entrar en la lista es prácticamente irreversible**: salir tarda
+meses en propagarse a los navegadores, y con `includeSubDomains` alcanzaría a `media.`,
+`encuesta.`, `bots.` y a cualquier subdominio futuro que naciera sin HTTPS.
+
+Dos salidas coherentes: **quitar `preload`** hasta que se quiera de verdad, o **subir el
+`max-age` a un año, pero después de enrutar el apex**, nunca antes.
 
 `<TODO: decidir entre dar registro e ingress al apex o mover el canonical a www; y anotar
 quién administra la cuenta de Cloudflare, hoy conocimiento tácito>`
@@ -209,7 +232,7 @@ curl -s -o /dev/null -w '%{http_code}\n' http://localhost/no-existe             
 docker compose ps                                                                                 # => healthy
 
 # 4. Y por el borde, que es lo que ve el visitante
-curl -sI https://www.higerotech.com/ | grep -ci -E 'frame|nosniff|referrer|content-security'     # => 4
+curl -sI https://www.higerotech.com/ | grep -ci -E 'frame|nosniff|referrer|content-security|strict-transport'  # => 5
 ```
 
 El puerto es 80, no 8080: ver §El borde. Y la comprobación 4 no es redundante —el paso 3

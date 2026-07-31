@@ -167,7 +167,7 @@ Y un cuarto que no es opcional aunque los tres anteriores estén en verde:
 
 ```bash
 # 4. Lo mismo, pero por el borde: comprueba que el túnel apunta a esta imagen
-curl -sI https://www.higerotech.com/ | grep -ci -E 'frame|nosniff|referrer|content-security'     # => 4
+curl -sI https://www.higerotech.com/ | grep -ci -E 'frame|nosniff|referrer|content-security|strict-transport'  # => 5
 ```
 
 Los tres primeros validan la **imagen**; el cuarto valida lo **publicado**. El 2026-07-30 los
