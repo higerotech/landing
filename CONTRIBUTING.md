@@ -19,12 +19,15 @@ En un sitio estático el ciclo se adapta, pero el orden se mantiene:
 git config core.hooksPath .githooks
 ```
 
-Activa `.githooks/pre-push`, que rechaza los pushes directos a `main`. Hace falta porque
-la org está en plan Free y el repo es privado: en esa combinación GitHub no ofrece branch
-protection ni rulesets, así que la regla la impone el clon y no el servidor. Es una red de
-seguridad contra el despiste, no un control: `--no-verify`, otra máquina o un merge desde
-la web se la saltan. `core.hooksPath` es configuración local, así que cada clon nuevo
-necesita el comando otra vez.
+Activa `.githooks/pre-push`, que rechaza los pushes directos a `main`.
+
+Desde el 2026-07-31 **el servidor ya impone esa regla**: el repositorio es público, `main` está
+protegido y exige pull request con los siete checks en verde, con los administradores incluidos.
+El hook pasó de ser la única barrera a ser una redundancia local, y se conserva porque falla
+antes —te avisa en tu máquina en vez de que lo descubras tras el `git push`—. Sigue siendo una
+red contra el despiste y no un control: `--no-verify` o un clon sin configurar se la saltan;
+la que no se salta es la del servidor. `core.hooksPath` es configuración local, así que cada
+clon nuevo necesita el comando otra vez.
 
 ## Antes de abrir una PR
 

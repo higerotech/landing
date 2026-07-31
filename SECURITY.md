@@ -75,4 +75,4 @@ curl -sI https://higerotech.com/ | grep -i -E 'frame|nosniff|referrer|permission
 | Sin alertas de disponibilidad | Medio | **Abierto** — Gate 5 no superado |
 | SBOM sin archivar por release y sin firma de imagen | Bajo | **Abierto** — Gate 4. El SBOM se genera, pero caduca con el artefacto del run |
 | Sin pruebas automatizadas | Medio | **Abierto** — Gate 3 |
-| Los gates de seguridad no bloquean el merge | **Alto** | **Abierto** — sin branch protection (org Free + repo privado). El pipeline pasa, pero un rojo no impide mergear; la única barrera es un hook local que no consulta el CI |
+| Los gates de seguridad no bloquean el merge | **Alto** | ✅ **Cerrado el 2026-07-31.** Al hacerse público el repositorio dejó de aplicar la limitación del plan Free, y `main` quedó protegido: pull request obligatoria, los **siete** checks en verde y actualizados respecto a `main`, sin force-push, sin borrado y **con los administradores incluidos**. Cero aprobaciones requeridas, para no bloquear a un mantenedor único. Verificado por API |

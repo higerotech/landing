@@ -28,31 +28,41 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   medidor descarta— porque ahora se ejercitan sobre el fuente real.
 
 ### Seguridad
-- **HSTS activo**, emitido por Cloudflare como correspondía. Verificado el 2026-07-31 con
-  `curl -sI` en `www`, `web` y `demo`, y en varias rutas incluida una que devuelve 404:
-  `Strict-Transport-Security: max-age=2592000; includeSubDomains; preload`. Cierra el ítem 5 de
-  «Lo que falta» del gate 4 y la acción pendiente del A04. Sigue siendo correcto no emitirla
-  desde nginx: hacerlo detrás de un terminador TLS que no se controla puede dejar el dominio
-  inaccesible si la cadena se rompe.
+- **HSTS activo**, emitido por Cloudflare como correspondía, y a **12 meses**:
+  `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`. Verificado el
+  2026-07-31 con `curl -sI` en `www`, `web` y `demo`, y en varias rutas incluida una que devuelve
+  404. Se activó primero con `max-age` de 30 días, que contradecía al propio token `preload` —la
+  lista de precarga exige un año—, y se corrigió el mismo día. Cierra el ítem 5 de «Lo que falta»
+  del gate 4 y la acción pendiente del A04. Sigue siendo correcto no emitirla desde nginx:
+  hacerlo detrás de un terminador TLS que no se controla puede dejar el dominio inaccesible si la
+  cadena se rompe.
+- **`main` protegido y el pipeline por fin obligatorio.** Al hacerse público el repositorio
+  desapareció la limitación del plan Free y se configuró la protección de rama: **pull request
+  obligatoria, los siete checks en verde y actualizados respecto a `main`, sin force-push, sin
+  borrado y con los administradores incluidos**. Cero aprobaciones requeridas, para no bloquear a
+  un mantenedor único. Cierra el riesgo **Alto** que `SECURITY.md` arrastraba desde el principio
+  —«los gates de seguridad no bloquean el merge»— y convierte el nodo `Merge bloqueado` del
+  diagrama del pipeline, que llevaba meses describiendo una intención, en lo que ocurre de
+  verdad. `.githooks/pre-push` se conserva como barrera local redundante.
+- **Activadas las tres protecciones que un repositorio público trae gratis**, todas desactivadas
+  hasta ahora: *secret scanning*, ***push protection* de secretos** —la más valiosa, porque
+  rechaza el push que contiene un secreto en vez de avisar cuando ya está publicado— y
+  **Dependabot**, que desde la entrada de `jsdom` tiene 46 paquetes que vigilar.
+- Badges de CI y versión pasan a **dinámicos**. La nota del README anticipaba este momento y
+  dejaba escritos los reemplazos; comprobado que ambos endpoints responden 200 —«AI-DLC Security
+  Gates - passing» y «versión: v0.4.0»— cuando mientras el repositorio fue privado devolvían 404.
+  El de pruebas sigue estático: no existe endpoint que cuente pruebas.
 
 ### Pendiente de decisión humana
-- **El `preload` de HSTS es inerte y contradice al `max-age`.** La lista de precarga exige
-  `max-age` ≥ 1 año y aquí hay **30 días**; además exige que el **dominio base** sirva la
-  cabecera, y el apex `higerotech.com` no resuelve. Una solicitud se rechazaría por dos motivos
-  independientes, así que el token está declarado sin efecto. No es urgente —30 días protegen
-  igual a quien ya visitó el sitio—, pero conviene decidirlo a conciencia porque **entrar en la
-  lista es prácticamente irreversible**: salir tarda meses en llegar a los navegadores, y con
-  `includeSubDomains` alcanzaría a `media.`, `encuesta.`, `bots.` y a cualquier subdominio
-  futuro. Salidas: quitar `preload` hasta que se quiera de verdad, o subir a un año **después**
-  de enrutar el apex, nunca antes.
+- **El `preload` de HSTS sigue sin efecto, ahora por un solo motivo.** El `max-age` ya cumple;
+  falta que el **dominio base** sirva la cabecera, y el apex no resuelve. Cuando se enrute,
+  solicitar la precarga sigue siendo una decisión aparte de tener la cabecera bien puesta:
+  **entrar en la lista es prácticamente irreversible** —salir tarda meses en llegar a los
+  navegadores— y con `includeSubDomains` alcanzaría a `media.`, `encuesta.`, `bots.` y a
+  cualquier subdominio futuro.
 - Enrutar el apex `higerotech.com` (registro DNS + regla de ingress) **o** mover el canonical y
   las URLs absolutas a `www.higerotech.com`. Lo primero mantiene la marca; lo segundo se
   resuelve solo en el repositorio. Cualquiera de las dos, pero no dejarlo como está.
-- Activar **HSTS** en Cloudflare. No puede emitirse desde nginx: emitir HSTS desde detrás de un
-  terminador TLS que no se controla puede dejar el dominio inaccesible si la cadena se rompe.
-- Proteger `main` en el servidor: la org está en plan Free y el repo es privado, y GitHub no
-  ofrece branch protection ni rulesets en esa combinación. Salidas: subir a GitHub Team
-  (mantiene el repo privado) o hacerlo público. Hasta entonces la única barrera es el hook.
 - Arreglar `gitgraph_from_log.py` (vive en el skill de AI-DLC) y regenerar después
   `docs/03-implementation/repo-history.md`, cuyo grafo se quedó en `a0b767b`. Se intentó
   regenerarlo y la salida no es publicable: el `gitGraph` incluye solo la rama de la primera PR
