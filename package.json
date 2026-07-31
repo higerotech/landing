@@ -11,7 +11,8 @@
     "e2e:install": "playwright install --with-deps chromium",
     "perf": "node tests/rendimiento.mjs",
     "dast": "node tests/dast.mjs",
-    "mutacion": "stryker run"
+    "mutacion": "stryker run",
+    "preparar": "node scripts/preparar-assets.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
@@ -19,7 +20,8 @@
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/tap-runner": "^9.6.1",
     "jsdom": "^28.0.0",
-    "lighthouse": "^13.4.1"
+    "lighthouse": "^13.4.1",
+    "wrangler": "^4.118.0"
   },
   "engines": {
     "node": ">=22"

@@ -1,0 +1,24 @@
+# Cabeceras de seguridad en el camino del Worker.
+#
+# Equivalente a `security-headers.conf`, que es el mismo contrato para nginx.
+# Las dos definiciones existen porque hay dos caminos a producción —el Worker
+# sirve el apex y www; el contenedor queda como contingencia y sirve demo.— y
+# no hay build que las sincronice.
+#
+# Esa duplicación es deriva esperando a ocurrir, así que la vigila la prueba
+# U12: compara ambos archivos y falla si divergen. Si cambias una cabecera
+# aquí, cámbiala también en `security-headers.conf`.
+#
+# Nota sobre el ámbito: en nginx hubo que incluir el snippet en CADA `location`
+# porque `add_header` no se hereda cuando el nivel define el suyo (ADR-0002).
+# Aquí `/*` cubre todas las rutas de una vez, incluido el 404.
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests

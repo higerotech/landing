@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "higerotech-landing",
+  "compatibility_date": "2026-07-31",
+
+  // Sitio estático puro: no hay código de Worker, solo assets. Si algún día
+  // hiciera falta lógica en el borde, aquí entraría un "main".
+  "assets": {
+    "directory": "./dist",
+
+    // Una ruta inexistente devuelve 404 DE VERDAD con nuestra página, no un
+    // 200 con la landing. El soft 404 fue un bug real (T15) y costó un ADR
+    // arreglarlo en nginx: "single-page-application" lo reintroduciría.
+    "not_found_handling": "404-page",
+
+    // /index.html redirige a / y las rutas sin extensión resuelven al .html
+    // correspondiente. Equivale a lo que hace nginx hoy.
+    "html_handling": "auto-trailing-slash"
+  }
+}

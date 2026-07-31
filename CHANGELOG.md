@@ -8,6 +8,24 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **Plan de despliegue en Cloudflare Workers** ([ADR-0006](docs/00-project/adr/0006-servir-desde-cloudflare-workers.md)
+  y `docs/05-deployment/plan-cloudflare-workers.md`), con todas las piezas del repositorio ya
+  preparadas e **inertes** hasta que se active el interruptor `DESPLIEGUE_WORKER`. El apex y
+  `www` pasarían a servirse desde el borde; `demo.` y `web.` siguen por el túnel contra el
+  contenedor, que **se conserva como contingencia** y se mantiene verificado gratis porque las 58
+  E2E y el DAST ya corren contra él en cada PR. Enrutar el apex desbloquea de una vez el
+  canonical, el `sitemap`, el `og:url` y el `preload` de HSTS.
+- **Corregida la premisa de la petición inicial**, que era apuntar el túnel al Worker. No es lo
+  que se hace: un túnel existe para exponer un origen *privado*, y si el contenido vive en un
+  Worker ya está en el borde. Enrutarlo por el túnel sería Cloudflare → LAN → Cloudflare, más
+  latencia y seguir dependiendo del host que el cambio busca eliminar. Lo que se apunta al Worker
+  es el **hostname**. Queda escrito en el ADR para que la pregunta no se repita.
+- **U12: guarda de deriva entre los dos caminos a producción.** El plan crea dos definiciones de
+  las mismas cabeceras —`security-headers.conf` y `cloudflare/_headers`— sin build que las
+  sincronice, que es la misma deriva que ya obligó a escribir U2.5 para el `@font-face` y con más
+  motivo, porque son cabeceras de seguridad. U12.1 y U12.2 comparan nombres y valores; U12.3
+  comprueba que la lista de publicables y los `COPY` del Dockerfile coincidan. Verificado que
+  detecta: cambiar `DENY` por `SAMEORIGIN` en uno de los dos pone el suite en rojo con el diff.
 - **Validado el gate DAST antes de darlo por bueno**, y aparecieron dos cosas. Primera: se midió
   qué recorre el escaneo de verdad —desde el log de nginx, no desde el informe de ZAP, que solo
   dice dónde se levantó cada alerta—. Son **8 URLs y 14 peticiones**, así que el spider funciona;
