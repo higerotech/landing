@@ -27,6 +27,39 @@ el threat model.
 
 ---
 
+## Matriz de verificación *(2026-07-31)*
+
+Cada categoría con las **pruebas automatizadas** que la verifican. Antes de esta tabla, el mapeo
+describía controles sin decir quién los comprobaba; tres categorías no tenían ninguna prueba y
+dos descansaban en una premisa que nadie vigilaba.
+
+| | Categoría | Verificado por | Estado |
+|---|---|---|---|
+| **A01** | Broken Access Control | **U11.1**, **U11.2** (la premisa de «No aplica»), E3.5 (dotfiles denegados) | ✅ |
+| **A02** | Security Misconfiguration | E3.7 + **E9.3** (cabeceras en rutas y en 404), E3.6 + **E9.2** (versión de nginx), **E9.1** (directivas de la CSP), **E9.4** (COOP/COEP/CORP), E5.1–E5.3 (la CSP bloquea), **U11.7** (endurecimiento del compose), `nginx -t` y Trivy en el CI | ✅ |
+| **A03** | Software Supply Chain | E5.4 (cero terceros), E5.5 (fuentes autoalojadas), **U11.5** (nada externo en el marcado), Trivy + `npm audit` en el CI | 🟡 falta digest y archivar el SBOM |
+| **A04** | Cryptographic Failures | **E9.1** (`upgrade-insecure-requests`). HSTS lo emite el borde: paso 4 de verificación, **manual** | 🟡 el borde no se automatiza |
+| **A05** | Injection | U3.5 (nada ejecutable en `data-*`), **U11.3**, **U11.4**, **E9.5**, E5.2–E5.3 | ✅ |
+| **A06** | Insecure Design | Control de proceso, no de prueba. Lo comprobable es la degradación declarada: E4, U9.1, U4.6 | ✅ |
+| **A07** | Identification & Auth | **U11.1**, **U11.2** (la premisa de «No aplica») | ✅ |
+| **A08** | Software & Data Integrity | **U11.5**, E5.4 (si aparece un recurso externo, SRI pasa a ser obligatorio) | 🟡 falta firma de imagen |
+| **A09** | Logging & Monitoring | **Ninguna.** Es la brecha abierta del Gate 5 | 🔴 |
+| **A10** | Mishandling of Exceptional Conditions | E3.1 (404 real), E4 (sin JS), U9.1 (sin observer), U4.6 (`localStorage` bloqueado), U8.1 (sin número), **U11.6** (pila de fuentes), **E9.6**–**E9.7** (método y ruta anómalos) | ✅ |
+
+Las marcadas en negrita son nuevas. **A09 es la única sin ninguna verificación automatizada**, y
+no por descuido: no hay observabilidad que verificar.
+
+### Por qué se prueban las categorías «No aplica»
+
+A01 y A07 están clasificadas como no aplicables porque no hay recursos protegidos, ni identidad,
+ni formularios. Eso es una **premisa**, no un control — y este repositorio ya vio caducar una:
+el gate SCA estuvo en ✅ «por ausencia de dependencias» hasta que entró `jsdom`, y el ✅ no se
+movió solo.
+
+U11.1 y U11.2 convierten esa premisa en algo que falla. El día que aparezca un formulario de
+contacto o un área de clientes, la prueba se pone roja y obliga a reclasificar A01 y A07 en vez
+de dejar que la etiqueta envejezca en silencio.
+
 ## A01 — Broken Access Control
 
 **No aplica en este alcance.** No existen recursos protegidos, roles, ni identidad: el 100 %
@@ -64,7 +97,12 @@ sobre la imagen.
 
 **Controles aplicados**
 
-- Sin gestor de paquetes: cero dependencias de npm/pip, por tanto cero riesgo de dependencia
+- **Corregido el 2026-07-31:** esto decía «sin gestor de paquetes: cero dependencias de npm/pip,
+  por tanto cero riesgo de dependencia transitiva», y dejó de ser cierto al entrar las
+  herramientas de prueba. Hoy hay **dependencias de desarrollo** —jsdom, Playwright, Lighthouse,
+  Stryker— y ninguna viaja en la imagen: el `Dockerfile` copia archivos concretos, verificado. El
+  riesgo pasó de inexistente a acotado al CI, y lo vigila el gate SCA (`npm audit`). El sitio
+  publicado sigue sin gestor de paquetes
   alucinada o typosquatting. Es una propiedad deliberada de la arquitectura (ADR-0003).
 - Imagen base anclada a `nginx:1.30-alpine`.
 - **Fuentes autoalojadas** (ADR-0004): antes el render dependía de `fonts.googleapis.com`;
@@ -76,9 +114,12 @@ sobre la imagen.
 **Brechas abiertas**
 - La imagen base se ancla por *tag*, no por *digest*: `nginx:1.30-alpine` puede cambiar bajo
   el mismo nombre. Pinear por `sha256` cuando se establezca cadencia de actualización.
-- `gitleaks/gitleaks-action@v2` y `semgrep/semgrep-action@v1` siguen anclados por tag mayor,
-  que el dueño del repo puede repuntar. Menos agudo que `@master`, pero es la misma clase de
-  riesgo: anclarlos por SHA.
+- ~~`gitleaks-action` y `semgrep-action` anclados por tag~~ — **resuelto el 2026-07-31**. Un tag
+  lo puede repuntar su dueño en cualquier momento, y estas acciones ejecutan código en el CI:
+  menos agudo que `@master`, pero la misma clase de riesgo. Hoy **todas las acciones de terceros
+  van por SHA de commit**. Las oficiales (`actions/*`) siguen por tag de major a propósito: las
+  publica GitHub y mover uno exigiría comprometer la plataforma. La política está escrita en la
+  cabecera del workflow.
 - El SBOM se genera pero **no se archiva por release**: el artefacto caduca con el run, así
   que no hay forma de reconstruir qué contenía una imagen ya desplegada (ver Gate 4).
 

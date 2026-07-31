@@ -5,14 +5,18 @@
 * **Revisión:** 2026-07-31 — implementados el unitario (51), el E2E + accesibilidad (51) y el presupuesto de rendimiento, el DAST y el mutation testing
 * **Decisores:** Jeremi Alcalá (owner)
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.6.0
+* **Versión:** 0.7.0
 
 - [ ] Pirámide completa pasando (unit → integration → contract → e2e → security) —
       **unit ✅ (50 pruebas, cobertura 100 %), contract ✅** (invariantes del HTML y cabeceras en
       cuatro rutas), **e2e ✅ (51 pruebas)**, **accesibilidad ✅ (axe-core)**. Falta el nivel de
       seguridad dinámica.
-- [ ] Matriz OWASP Top 10 ejecutada — A05 con U3.5, y A02/A04 con E3.7 y E5. El resto sin
-      prueba automatizada
+- [x] Matriz OWASP Top 10 ejecutada — **nueve de diez categorías con prueba automatizada**, con
+      la trazabilidad categoría → prueba en `.ai-dlc/owasp-mapping.md` §Matriz de verificación.
+      La única sin cobertura es **A09**, que es la brecha abierta del Gate 5: no hay
+      observabilidad que verificar. Incluye pruebas de la **premisa** de A01 y A07, marcadas «No
+      aplica» sobre la base de que no hay autenticación ni entradas de usuario — una premisa que
+      hasta ahora nadie vigilaba
 - [x] DAST limpio — **ZAP baseline**: 0 fallos, 0 avisos nuevos, 64 reglas en verde y
       3 hallazgos aceptados con su motivo en `.zap/rules.tsv`. Ver `docs/04-testing/dast.md`
 - [x] Rendimiento dentro de SLOs — **LCP 1 933 ms** (mediana) contra un presupuesto de 2 500
