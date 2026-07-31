@@ -61,7 +61,13 @@ const html = readFileSync(join(RAIZ, 'index.html'), 'utf8')
 const enScript = html.match(/<script>([\s\S]*?)<\/script>/)
 if (!enScript) throw new Error('no se encontró el <script> inline en index.html')
 
-const fuente = enScript[1]
+/* Normalizado a LF a propósito: en un clon de Windows el archivo puede tener
+   CRLF, y el parser de HTML convierte los saltos a LF antes de compilar el
+   script. Sin esto, el fuente medido es un carácter más largo por línea que el
+   que V8 registró, ningún rango casa con `fuente.length` y el informe sale
+   vacío: «no se registró cobertura». Pasó de verdad el 2026-07-31, tras una
+   edición que reescribió el archivo con saltos de Windows. */
+const fuente = enScript[1].replace(/\r\n/g, '\n')
 const lineaBase = html.slice(0, enScript.index + '<script>'.length).split('\n').length - 1
 
 // ── 3. Fundir los contadores de todas las instancias de jsdom ────────────
