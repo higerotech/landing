@@ -8,6 +8,19 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **Validado el gate DAST antes de darlo por bueno**, y aparecieron dos cosas. Primera: se midió
+  qué recorre el escaneo de verdad —desde el log de nginx, no desde el informe de ZAP, que solo
+  dice dónde se levantó cada alerta—. Son **8 URLs y 14 peticiones**, así que el spider funciona;
+  pero **nunca pedía la página 404**, porque solo sigue enlaces y a `/404.html` no apunta ninguno:
+  la sirve nginx ante una ruta inexistente. Punto ciego real sobre una página que los visitantes
+  sí ven, corregido escaneando **dos objetivos**. Segunda: la afirmación «un baseline pasivo basta
+  aquí» pasa de suposición a hecho medido — se ejecutó `zap-full-scan.py`, que **ataca** (SQLi,
+  inyección de comandos, SSTI, path traversal, XSS, XXE): **140 reglas, más del doble que las 64
+  del baseline, y ni un hallazgo nuevo**. Queda como comando bajo demanda
+  (`npm run dast -- --activo`) y no como gate, porque en un sitio sin formularios ni API gastaría
+  minutos por PR para confirmar lo mismo. **El disparador para volver a él está automatizado:**
+  la premisa «no hay superficie de entrada» la vigila U11.1, así que el día que aparezca un
+  formulario esa prueba se pone roja y avisa de que toca cambiar de escaneo.
 - **Matriz de verificación OWASP Top 10**, con la trazabilidad categoría → prueba en
   `.ai-dlc/owasp-mapping.md`. Antes el mapeo describía controles sin decir quién los comprobaba:
   tres categorías no tenían ninguna prueba y dos descansaban en una premisa que nadie vigilaba.
@@ -80,6 +93,12 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   producción sirve la versión sin botón.
 
 ### Corregido
+- **Una medición mía que estuvo a punto de registrarse como hallazgo grave.** Al contar qué pedía
+  ZAP, el log de nginx decía «4 peticiones, todas a `/`» — parecía que el escaneo no recorría
+  nada. Era falso: `nginx.conf` tiene `access_log off` en assets, `robots.txt` y `sitemap.xml`,
+  así que el propio log escondía el tráfico. Repetido contra un contenedor de un solo uso con
+  registro completo, salieron las 8 URLs reales. La herramienta de medida formaba parte del
+  sistema medido.
 - **Dos afirmaciones caducas en el A03 del mapeo OWASP.** Decía «sin gestor de paquetes: cero
   dependencias de npm/pip, por tanto cero riesgo de dependencia transitiva» —falso desde que
   entraron las herramientas de prueba— y que `gitleaks-action` y `semgrep-action` seguían

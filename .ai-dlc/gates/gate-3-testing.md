@@ -5,7 +5,7 @@
 * **Revisión:** 2026-07-31 — implementados el unitario (51), el E2E + accesibilidad (51) y el presupuesto de rendimiento, el DAST y el mutation testing
 * **Decisores:** Jeremi Alcalá (owner)
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.7.0
+* **Versión:** 0.8.0
 
 - [ ] Pirámide completa pasando (unit → integration → contract → e2e → security) —
       **unit ✅ (50 pruebas, cobertura 100 %), contract ✅** (invariantes del HTML y cabeceras en
@@ -17,8 +17,11 @@
       observabilidad que verificar. Incluye pruebas de la **premisa** de A01 y A07, marcadas «No
       aplica» sobre la base de que no hay autenticación ni entradas de usuario — una premisa que
       hasta ahora nadie vigilaba
-- [x] DAST limpio — **ZAP baseline**: 0 fallos, 0 avisos nuevos, 64 reglas en verde y
-      3 hallazgos aceptados con su motivo en `.zap/rules.tsv`. Ver `docs/04-testing/dast.md`
+- [x] DAST limpio — **ZAP baseline** sobre **dos objetivos** (el sitio y la página 404): 0 fallos,
+      0 avisos nuevos, 64 reglas en verde en cada uno y 3 hallazgos aceptados con su motivo en
+      `.zap/rules.tsv`. **Validado el 2026-07-31**: se midió la cobertura real del rastreo —8
+      URLs— y se contrastó con un escaneo **activo** de 140 reglas que no encontró nada nuevo.
+      Ver `docs/04-testing/dast.md` §Validación del gate
 - [x] Rendimiento dentro de SLOs — **LCP 1 933 ms** (mediana) contra un presupuesto de 2 500
       en **3G lento real**, y 104 KB contra 350. Gateado en el CI. Ver
       `docs/04-testing/rendimiento.md`
