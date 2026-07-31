@@ -130,7 +130,7 @@ Escala 1–10 por criterio; **Score = media**. Umbral de atención obligatoria: 
 | **T1** | Cabeceras de seguridad ausentes en la home y los assets por herencia rota de `add_header` | 7 | 10 | 9 | 10 | 3 | **7,8** | ✅ Cerrado | Snippet en cada `location` + job de CI · ADR-0002 |
 | **T7** | La página queda invisible si el JS **no se ejecuta** (deshabilitado, bloqueado, navegador sin observer) | 8 | 10 | 8 | 9 | 2 | **7,4** | ✅ Cerrado | `noscript` + rama sin observer + reduced-motion · ADR-0005. **El ✅ vale solo con esa lectura**: ver T17 |
 | **T17** | La página queda invisible si el JS **se ejecuta y lanza a mitad** | 8 | 2 | 8 | 9 | 2 | **5,8** | 🔴 **Abierto** | Ninguno alcanza este caso. Detección diseñada: U1/U2 de `docs/04-testing/unit-tests.md`. Prevención: la 4.ª alternativa de ADR-0005 |
-| **T3** | CTA de WhatsApp apuntando a `https://wa.me/` sin número | 7 | 10 | 10 | 8 | 1 | **7,2** | ✅ Cerrado | `CONTACT.whatsapp`; el botón no se publica si está vacío |
+| **T3** | CTA de WhatsApp apuntando a `https://wa.me/` sin número | 7 | 10 | 10 | 8 | 1 | **7,2** | ✅ Cerrado | `CONTACT.whatsapp`. **Su mitigación tenía un defecto propio hasta el 2026-07-31**: ver abajo |
 | **T16** | Caída del sitio no detectada por ausencia de alertas | 8 | 8 | 7 | 7 | 4 | **6,8** | 🔴 **Abierto** | Ninguno. Gate 5 no superado · A09 |
 | **T5** | Recurso de terceros (Google Fonts) comprometido o caído | 8 | 3 | 2 | 9 | 6 | **5,6** | ✅ Cerrado | Fuentes autoalojadas · ADR-0004 |
 | **T4** | XSS aprovechando `'unsafe-inline'` en la CSP | 9 | 2 | 3 | 8 | 6 | **5,6** | ⚠️ **Aceptado** | Sin vector de entrada hoy. Disparador de revisión · ADR-0003 |
@@ -161,6 +161,38 @@ Nótese el contraste entre T4 y T13. T4 (XSS) tiene el impacto más alto de la t
 probabilidad muy baja: no existe un camino por el que entre contenido no confiable. T13
 (fuga de IP) tenía impacto moderado pero ocurría en **el 100 % de las visitas**. Priorizar
 solo por impacto habría dejado T13 sin tocar durante meses.
+
+### T3: la mitigación que no ocultaba nada *(añadido el 2026-07-31)*
+
+T3 sigue cerrado —el `href` a `https://wa.me/` sin número desapareció en `7c7bc78`— pero **su
+mitigación no hacía lo que decía**, y se descubrió al escribir las E2E.
+
+El botón lleva el atributo `hidden` y `initWhatsApp()` lo retira solo si hay número. El problema
+es que **la hoja de estilos no tenía ninguna regla `[hidden]`**, y `display` del navegador para
+ese atributo lo pisa cualquier regla de autor que fije `display`: `.btn-secondary` usa
+`inline-flex`. Medido en Chromium antes del arreglo:
+
+```
+el.hidden = true  →  getComputedStyle(el).display === 'flex'   (altura > 0, visible)
+```
+
+Es decir: durante todo el tiempo en que `CONTACT.whatsapp` estuvo vacío, **el botón «Hablar por
+WhatsApp» se veía**, con `href="#contacto"` — un enlace que salta a la sección en la que ya
+está. La amenaza literal quedó cerrada; la intención declarada —«no publicar un CTA muerto»— no.
+
+**Por qué nadie lo vio.** La verificación registrada era `wa-cta.hidden === true`: una propiedad
+del DOM, comprobada por inspección y más tarde por la unitaria U8.1 en jsdom. jsdom no resuelve
+el conflicto entre la hoja del navegador y la de autor, así que la aserción pasaba y seguirá
+pasando: **es correcta y es insuficiente**. Un atributo puesto no es un elemento oculto.
+
+Corregido con `[hidden] { display: none !important; }` y verificado por E6.4, que fija el
+`hidden` en tiempo de ejecución y exige `display: none` y altura cero. La unitaria U2.4 vigila
+además que la regla no desaparezca de la hoja.
+
+Es el tercer caso de la misma familia en esta semana, y el patrón ya no es anecdótico: **una
+comprobación que no podía fallar de forma significativa** —el healthcheck que nunca dio verde, la
+cobertura del 100 % sobre el conjunto vacío, el ítem SCA cerrado por ausencia, y ahora un
+atributo verificado sin cascada—. Todas pasaban. Ninguna medía lo que decía medir.
 
 ### T17: la mitigación que comparte destino con el fallo *(añadido el 2026-07-30)*
 
@@ -199,7 +231,7 @@ El impacto, en cambio, es idéntico, y de ahí que aun así supere el umbral de 
 |---|---|---|---|---|
 | T1 | `include security-headers.conf` en cada `location` | `nginx.conf` | A02 | Job `headers` del pipeline; `curl -sI` en 4 rutas |
 | T2 | `X-Frame-Options: DENY`, `frame-ancestors 'none'` | `security-headers.conf` | A02 | Intento de iframe bloqueado (comprobado) |
-| T3 | Constante única + ocultación del botón sin número | `index.html` `CONTACT` | — | Inspección; `wa-cta.hidden === true` |
+| T3 | Constante única + ocultación del botón sin número + regla `[hidden]` en la hoja de estilos | `index.html` `CONTACT` y su CSS | — | **E6.4** de las E2E, con cascada real. La verificación anterior —`wa-cta.hidden === true`— no servía: ver §T3 |
 | T4 | CSP cerrada salvo `'unsafe-inline'`; riesgo aceptado | `security-headers.conf` | A05 | ADR-0003 §Disparador de revisión |
 | T5, T13 | Fuentes autoalojadas; cero terceros | `assets/fonts/` | A03, A08 | Sin peticiones cross-origin en la pestaña de red |
 | T6 | `server_tokens off` | `nginx.conf` | A02 | Job del pipeline verifica la cabecera `Server` |

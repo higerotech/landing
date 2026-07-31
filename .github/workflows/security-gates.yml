@@ -202,8 +202,53 @@ jobs:
       - name: Auditoría de vulnerabilidades
         run: npm audit --audit-level=high
 
-  # ── Gate 3 · Accesibilidad y rendimiento ─────────────────────────────
-  # TODO: conectar cuando exista la suite E2E (ver .ai-dlc/gates/gate-3-testing.md).
-  #   - Playwright: menú móvil, i18n sin pérdida de contenido, 404
-  #   - axe-core: contraste, aria, orden de encabezados
-  #   - Lighthouse CI: presupuesto LCP < 2,5 s
+  # ── Gate 3 · E2E y accesibilidad ─────────────────────────────────────
+  # Corren contra el CONTENEDOR, no contra un servidor de ficheros: es lo que
+  # hace que las cabeceras, los 404 y la CSP sean los de nginx. Por eso este
+  # job reconstruye la imagen en vez de reutilizar el artefacto de `build`:
+  # necesita el contexto completo y tarda lo mismo que descargarlo.
+  e2e:
+    name: E2E + accesibilidad
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Instalar Chromium
+        run: npm run e2e:install
+
+      - name: Levantar el sitio
+        run: |
+          docker build -t higerotech/landing:e2e .
+          docker run -d --name sitio-e2e -p 8080:80 higerotech/landing:e2e
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:8080/ && break
+            sleep 1
+          done
+          curl -sf -o /dev/null http://localhost:8080/ || { echo "::error::el sitio no levantó"; exit 1; }
+
+      - name: Playwright
+        run: npm run e2e
+        env:
+          BASE_URL: http://localhost:8080
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - if: always()
+        run: docker rm -f sitio-e2e
+
+  # ── Gate 3 · Rendimiento ─────────────────────────────────────────────
+  # TODO: Lighthouse CI con presupuesto LCP < 2,5 s en 3G lento.
+  #   Y DAST (ZAP baseline), que además cierra uno de los dos gates
+  #   canónicos ausentes. Ver .ai-dlc/gates/gate-3-testing.md.

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'node:test'
 import assert from 'node:assert/strict'
-import { cargarDOM } from '../helpers/cargar-dom.mjs'
+import { cargarDOM, fuente } from '../helpers/cargar-dom.mjs'
 
 const IDS_EXIGIDOS = ['wa-cta', 'nav-toggle', 'nav-links', 'btn-es', 'btn-en', 'year']
 
@@ -41,6 +41,22 @@ describe('U2 · contrato entre el script y el DOM', () => {
         `#nav-toggle carece de ${attr}: syncToggleLabel() pondría aria-label a null`
       )
     }
+  })
+
+  test('U2.4 · la hoja de estilos define una regla [hidden]', () => {
+    /* Sin ella, el `display` del navegador para [hidden] lo pisa cualquier
+       regla de autor que fije display —`.btn-secondary` usa inline-flex— y el
+       atributo deja de ocultar. Le pasaba a #wa-cta: con el número sin
+       configurar el botón se veía igual, un CTA muerto a `#contacto`.
+
+       Esta es la guarda barata sobre el fuente. La comprobación de verdad, con
+       cascada real, es E6.4 en las E2E: jsdom no resuelve el conflicto entre la
+       hoja del navegador y la de autor, así que aquí no se puede verificar el
+       comportamiento, solo que la regla exista. */
+    assert.match(
+      fuente(), /\[hidden\]\s*\{[^}]*display:\s*none[^}]*\}/,
+      'falta la regla [hidden] { display: none !important }'
+    )
   })
 
   test('U2.3 · #wa-cta sale del HTML oculto', () => {

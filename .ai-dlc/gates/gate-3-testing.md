@@ -2,15 +2,17 @@
 
 * **Estado:** review — **no superado**
 * **Fecha:** 2026-07-29
-* **Revisión:** 2026-07-30 — implementado el nivel unitario (46 pruebas)
+* **Revisión:** 2026-07-31 — implementados el nivel unitario (50) y el E2E + accesibilidad (43)
 * **Decisores:** Jeremi Alcalá (owner)
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.2.0
+* **Versión:** 0.3.0
 
 - [ ] Pirámide completa pasando (unit → integration → contract → e2e → security) —
-      **unit ✅ (49 pruebas, cobertura 100 %), contract ✅ parcial** (invariantes del HTML dentro del mismo
-      suite y `nginx -t` en el build). Faltan e2e y security.
-- [ ] Matriz OWASP Top 10 ejecutada — solo A05 tiene prueba automatizada (U3.5)
+      **unit ✅ (50 pruebas, cobertura 100 %), contract ✅** (invariantes del HTML y cabeceras en
+      cuatro rutas), **e2e ✅ (43 pruebas)**, **accesibilidad ✅ (axe-core)**. Falta el nivel de
+      seguridad dinámica.
+- [ ] Matriz OWASP Top 10 ejecutada — A05 con U3.5, y A02/A04 con E3.7 y E5. El resto sin
+      prueba automatizada
 - [ ] DAST limpio — sin herramienta asignada
 - [ ] Rendimiento dentro de SLOs — sin Lighthouse CI
 - [ ] Mutation testing ≥ 60% — descartado a propósito por ahora: añadiría otra dependencia
@@ -18,24 +20,33 @@
 
 ## Estado real
 
-**Desde el 2026-07-30 hay 49 pruebas unitarias** (`npm test`, ~4 s), diseñadas en
-`docs/04-testing/unit-tests.md` y ejecutadas en el CI por el job «Pruebas unitarias». Cargan el
-`index.html` real en jsdom, así que no pueden desviarse del artefacto que se despliega.
+**Hay dos niveles implementados**, ambos en el CI y ambos contra el artefacto real:
+
+- **50 unitarias** (`npm test`, ~4 s) sobre el `index.html` real en jsdom. Diseño en
+  `docs/04-testing/unit-tests.md`.
+- **43 E2E + accesibilidad** (`npm run e2e`, ~15 s) con Playwright y axe-core **contra el
+  contenedor**, no contra un servidor de ficheros. Diseño en `docs/04-testing/e2e-tests.md`.
+
+Las E2E encontraron un bug en su primera ejecución: el atributo `hidden` del botón de WhatsApp
+**no ocultaba nada**, porque no había regla `[hidden]` en la hoja y `.btn-secondary` fija
+`display: inline-flex`. Con el número sin configurar el CTA muerto se publicaba igual. Es una
+clase de defecto que jsdom no puede ver, y está registrada como corrección de T3 en el threat
+model.
 
 Qué cubren y qué no:
 
 | Nivel | Estado |
 |---|---|
-| Unit + contrato del HTML | ✅ 49 pruebas, cobertura 100 %: paridad bilingüe (R2), contrato JS↔DOM, i18n, menú, RF05, reveal |
-| E2E en navegador real | ❌ |
-| Accesibilidad (`axe-core`) | ❌ |
+| Unit + contrato del HTML | ✅ 50 pruebas, cobertura 100 %: paridad bilingüe (R2), contrato JS↔DOM, i18n, menú, RF05, reveal |
+| E2E en navegador real | ✅ 43 pruebas: breakpoint real, sin JS, CSP aplicándose, 404, cero terceros |
+| Accesibilidad (`axe-core`) | ✅ ES, EN, menú móvil abierto y página 404; sin violaciones `serious` ni `critical` |
 | Rendimiento (Lighthouse) | ❌ |
 | Seguridad dinámica (ZAP) | ❌ |
-| Mutation testing | ❌ |
+| Mutation testing | ❌ — descartado por ahora a propósito |
 
-**El gate sigue abierto**, y con razón: un nivel de la pirámide no es la pirámide. Lo que ha
-cambiado es el motivo — antes era «no hay ninguna prueba», ahora es «falta todo lo que necesita
-un navegador de verdad».
+**El gate sigue abierto**, pero por tercera vez cambia el motivo. Ya no falta «todo lo que
+necesita un navegador de verdad»: eso está. Lo que falta es **rendimiento, DAST y mutation
+testing**. Son tres ítems concretos, no una categoría entera.
 
 Lo que se hizo antes de que existiera la suite, y consta como evidencia manual en
 `docs/05-deployment/deployment.md` §Verificación:
@@ -55,10 +66,10 @@ lo que ya se arregló. Propuesta mínima y proporcionada:
 
 | Nivel | Herramienta sugerida | Qué protege |
 |---|---|---|
-| Unit | `node:test` + `jsdom` | Ocho unidades con ramas reales en `index.html:884-992`. **Diseñado** en `docs/04-testing/unit-tests.md` |
+| Unit | `node:test` + `jsdom` | Ocho unidades con ramas reales en `index.html:884-992`. **Implementado**: `docs/04-testing/unit-tests.md` |
 | Contract | `htmlhint` + `nginx -t` | HTML válido; configuración que arranca |
-| E2E | Playwright | Menú móvil abre/cierra, i18n no pierde contenido, 404 responde 404 |
-| Accesibilidad | `axe-core` vía Playwright | Contraste, `aria-*`, orden de encabezados |
+| E2E | Playwright | **Implementado**, y con más alcance del previsto: además del menú, la i18n y el 404, cubre la página sin JS, la CSP aplicándose y la ausencia de terceros. Ver `docs/04-testing/e2e-tests.md` |
+| Accesibilidad | `axe-core` vía Playwright | **Implementado**: ES, EN, menú abierto y 404 |
 | Seguridad | ZAP baseline | Cabeceras presentes, CSP efectiva |
 | Rendimiento | Lighthouse CI | Presupuesto: LCP < 2,5 s en 3G lento |
 

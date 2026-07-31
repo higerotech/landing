@@ -6,9 +6,13 @@
   "license": "UNLICENSED",
   "scripts": {
     "test": "node --test \"tests/unit/**/*.test.mjs\"",
-    "coverage": "node tests/cobertura.mjs"
+    "coverage": "node tests/cobertura.mjs",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install --with-deps chromium"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.62.1",
     "jsdom": "^28.0.0"
   },
   "engines": {

@@ -21,6 +21,10 @@ node_modules/
 # Artefactos de build / escaneo
 dist/
 coverage/
+test-results/
+playwright-report/
+blob-report/
+.playwright/
 sbom.json
 trivy-report.*
 *.tfstate*

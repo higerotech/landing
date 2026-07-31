@@ -71,6 +71,12 @@
 
     /* ─── Reset & Base ──────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* El `display` del navegador para [hidden] lo pisa cualquier regla de autor
+       que fije display —`.btn-secondary` usa inline-flex—, así que sin esto el
+       atributo `hidden` no oculta nada. Le pasaba a #wa-cta: el botón de
+       WhatsApp se veía aunque el número no estuviera configurado, justo el CTA
+       muerto que se pretendía evitar. Detectado por la prueba E4.5. */
+    [hidden] { display: none !important; }
     html { scroll-behavior: smooth; }
     body {
       font-family: var(--font-sans);
