@@ -8,6 +8,20 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **`npm run verificar:zona`** — la comprobación que faltaba, y que existe por lo que destapó el
+  paso 3: el suite corría contra `localhost`, el contenedor y `workers.dev`, y **el borde de la
+  zona no interviene en ninguno de los tres**. Para cada hostname canónico comprueba que lo sirve
+  el Worker (por la redirección de `/index.html`, porque proxiados los dos ni la IP ni `Server`
+  los distinguen), las ocho cabeceras **con su valor exacto** leídas de `cloudflare/_headers` en
+  vez de copiadas, el HSTS, el 404 real, que **el HTML sea el mismo pidiéndolo con dos `Accept`
+  distintos**, y que nada que el navegador vaya a *descargar* venga de fuera.
+  La penúltima es la clave: Cloudflare **inyecta solo a peticiones de navegador**, así que pedir
+  la página dos veces y comparar tamaños caza cualquier reescritura del borde **sin depender de
+  saber qué inyecta**. Hoy el script **falla**, y falla por los dos motivos correctos.
+- El paso 4 del `curl -sI` de verificación del `README` y de `deployment.md` pasa a ser este
+  script. El `curl` no podía ver una inyección del borde ni teniéndola delante: recibe el HTML
+  byte a byte idéntico al desplegado y da verde mientras el visitante recibe otra cosa. Es el
+  mismo modo de fallo que esas dos secciones ya describían, una capa más abajo.
 - **Pasos 2 y 3 del cutover**: el apex ya sirve desde el Worker —**200 donde antes daba 530**— con
   las cinco cabeceras, COOP/COEP/CORP y HSTS correctos. Que lo sirva el Worker y no el túnel se
   confirmó con **el discriminador que salió del paso 1** (la redirección de `/index.html`): una

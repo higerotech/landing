@@ -234,12 +234,18 @@ curl -s -o /dev/null -w '%{http_code}\n' http://localhost/no-existe             
 docker compose ps                                                                                 # => healthy
 
 # 4. Y por el borde, que es lo que ve el visitante
-curl -sI https://www.higerotech.com/ | grep -ci -E 'frame|nosniff|referrer|content-security|strict-transport'  # => 5
+npm run verificar:zona
 ```
 
 El puerto es 80, no 8080: ver §El borde. Y la comprobación 4 no es redundante —el paso 3
 valida la imagen, el 4 valida que el túnel apunte a ella. El 2026-07-30 el paso 3 daba verde
 contra la imagen mientras el borde servía otra cosa (ver §Hallazgo operativo).
+
+La comprobación 4 fue un `curl -sI` a las cabeceras hasta el 2026-07-31. Se sustituyó porque
+**un `curl` no puede ver lo que Cloudflare inyecta**: el borde solo reescribe el HTML para
+peticiones de navegador, así que `curl` recibe exactamente lo desplegado y da verde aunque el
+visitante esté recibiendo otra cosa. Justo el modo de fallo que esta sección lleva describiendo
+desde el 2026-07-30, una capa más abajo.
 
 Si el paso 3 no da esos tres resultados, no se publica: se hace rollback.
 

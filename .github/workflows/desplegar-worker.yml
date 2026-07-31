@@ -79,6 +79,16 @@ jobs:
         env:
           BASE_URL: ${{ steps.desplegar.outputs.url }}
 
+      # Y ahora contra los hostnames CANÓNICOS, que es donde mira el visitante.
+      #
+      # El paso anterior verifica `*.workers.dev`, que prueba que el despliegue
+      # salió bien pero NO lo que recibe la gente: workers.dev no pertenece a la
+      # zona, así que nada de lo que Cloudflare añade en el borde aparece allí.
+      # Ese hueco escondió el beacon de Web Analytics inyectado en producción,
+      # con los diez gates en verde, porque ninguno miraba donde ocurría.
+      - name: Verificar los hostnames de la zona
+        run: npm run verificar:zona
+
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

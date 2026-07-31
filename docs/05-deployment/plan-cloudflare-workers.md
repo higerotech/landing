@@ -99,12 +99,24 @@ Aquí aplica igual, y con más motivo: son cabeceras de seguridad.
 Estas tres cosas no están en el repositorio y las tiene que hacer una persona con acceso a la
 cuenta:
 
-1. **Token de API** con permiso `Workers Scripts: Edit` sobre la cuenta, y **solo eso**. Se
-   guarda como secreto `CLOUDFLARE_API_TOKEN` del repositorio, junto a `CLOUDFLARE_ACCOUNT_ID`.
-   Es una credencial que puede desplegar: alcance mínimo y rotable.
-2. **Dominios propios del Worker** para `higerotech.com` y `www.higerotech.com`. Cloudflare crea
-   los registros DNS necesarios — incluido el del **apex, que hoy no existe**.
+1. ~~**Token de API** con permiso `Workers Scripts: Edit` sobre la cuenta, y **solo eso**.~~
+   ✅ hecho. Es una credencial que puede desplegar: alcance mínimo y rotable.
+2. **Dominios propios del Worker.** ✅ `higerotech.com` — ⬜ `www.higerotech.com`.
+   Cloudflare crea los registros DNS necesarios.
 3. **Retirar del ingress del túnel** las entradas de `www` y del apex, dejando `demo.` y `web.`.
+4. **Desactivar la inyección automática de Web Analytics** en la zona (Hallazgo 2).
+
+### Por qué los dominios propios se crean a mano y no en `wrangler.jsonc`
+
+`wrangler` sabe crearlos: bastaría un bloque `routes` con `custom_domain: true` y el despliegue
+los engancharía solo. Sería más reproducible, y aun así **no se hace**, porque el precio es
+ampliar el token del CI con permiso sobre **DNS de la zona**. Un token que solo publica un script
+y un token que puede reescribir el DNS del dominio no son la misma credencial ni de lejos, y
+ADR-0006 se compromete a alcance mínimo.
+
+La contrapartida es no quedarse sin red: **`scripts/verificar-zona.mjs` afirma lo que debería ser
+cierto** aunque no lo cree. No crea el dominio propio, pero no deja que se quede mal en silencio
+— que es lo que pasó con `www`.
 
 ## Secuencia de cutover
 
@@ -116,7 +128,7 @@ minutos.
 | 1 | ~~Añadir los archivos del Worker y desplegar a un `*.workers.dev`~~ | ✅ **Hecho el 2026-07-31** — ver §Resultado del paso 1 |
 | 2 | ~~Enrutar **solo el apex** al Worker~~ | ✅ **Hecho el 2026-07-31** — 200 en vez de 530 |
 | 3 | ~~Verificar el apex con el suite completo~~ | ✅ **Hecho** — 54/58, y los 4 fallos destaparon algo real; ver §Resultado de los pasos 2 y 3 |
-| 4 | Mover `www` al Worker y quitarlo del ingress | Paso 4 de §Verificar antes de publicar, ahora contra el Worker |
+| 4 | **En curso** — mover `www` al Worker y quitarlo del ingress. Hoy `www` no resuelve | Paso 4 de §Verificar antes de publicar, ahora contra el Worker |
 | 5 | Dejar `demo.` en el túnel como estaba | `curl -sI https://demo.higerotech.com/` sigue sirviendo desde el contenedor |
 
 **El paso 2 es deliberadamente el apex y no `www`.** Hoy el apex no sirve a nadie —responde
@@ -269,6 +281,50 @@ seguiría siendo.
 Es la misma familia que la deriva de dos semanas: los gates avalaban un artefacto correcto
 mientras lo que recibía el visitante era otra cosa. **Acción:** que la verificación posterior al
 despliegue apunte al hostname de la zona, no solo a `workers.dev`.
+
+### La verificación que faltaba: `npm run verificar:zona`
+
+El Hallazgo 2 no es solo un beacon que quitar; es que **había un sitio entero donde nadie
+miraba**. El suite corría contra `localhost`, contra el contenedor y contra `workers.dev`, y el
+borde de la zona no interviene en ninguno de los tres.
+
+`scripts/verificar-zona.mjs` cubre exactamente ese hueco. Para cada hostname canónico —la lista
+vive en el propio script, que es la forma de que el repositorio **declare** lo que debe ser
+cierto— comprueba:
+
+| Comprobación | Qué caza |
+|---|---|
+| `/index.html` responde 307 | Que lo sirve el Worker y no nginx. Los dos van proxiados por Cloudflare, así que ni la IP ni `Server` los distinguen: el discriminador tuvo que salir midiendo |
+| Las 8 cabeceras, **con su valor exacto** | Una CSP con una directiva de menos protege menos, y comparando solo nombres sería invisible |
+| HSTS presente | Lo pone el borde, no `_headers`; si se cae, no lo nota nadie más |
+| Ruta inexistente → 404 | Que el soft 404 no vuelva por la puerta de atrás al cambiar de origen |
+| **Mismo HTML con dos `Accept` distintos** | Cualquier reescritura del borde |
+| Nada que el navegador **descargue** viene de fuera | Terceros inyectados, contra ADR-0004 |
+
+Las cabeceras se leen de `cloudflare/_headers` en vez de copiarse: una tercera lista escrita a
+mano sería una tercera cosa que puede divergir, que es justo lo que U12 vigila entre las dos que
+ya hay.
+
+La quinta es la que importa y la que no se le habría ocurrido a nadie antes del 31 de julio.
+**Cloudflare inyecta solo a peticiones de navegador**: con un `Accept` genérico el HTML sale byte
+a byte idéntico al desplegado, y con `Accept: text/html` trae 359 bytes de más. Pedir la misma
+página dos veces y comparar el tamaño **no depende de saber qué inyecta** — caza igual Rocket
+Loader, la ofuscación de correo o lo que active mañana quien administre la zona.
+
+Y no es una comprobación que pase por no medir nada: ahora mismo **falla**, y falla por los dos
+motivos correctos.
+
+```
+❌ higerotech.com
+    · el borde reescribe el HTML según quién lo pida: 81163 bytes con Accept genérico
+      y 81522 con Accept:text/html (+359)
+    · el navegador descargaría de terceros: https://static.cloudflareinsights.com/beacon.min.js/…
+❌ www.higerotech.com
+    · no se pudo alcanzar
+```
+
+Se engancha al workflow de despliegue **después** del suite contra `workers.dev`: ese paso prueba
+que el despliegue salió bien; este prueba lo que recibe la gente.
 
 ## Rollback
 
