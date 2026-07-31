@@ -54,6 +54,20 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   producción sirve la versión sin botón.
 
 ### Corregido
+- **Todas las acciones del CI pasan a runtime node24.** El job de secretos avisaba de que
+  `actions/checkout@v4` y `gitleaks/gitleaks-action@v2` apuntan a Node 20 y se estaban forzando
+  sobre Node 24. No es cosmético: GitHub **retira Node 20 de los runners el 2026-09-16** y a
+  partir de ahí esas acciones dejan de funcionar. Actualizadas `checkout` v4→v6, `setup-node`
+  v4→v6, `upload-artifact` v4→v7, `download-artifact` v4→v7 y `gitleaks-action` v2→v3.
+  Dos comprobaciones que evitaron elegir mal: **`upload-artifact@v5` sigue siendo node20** pese
+  a que sus notas de release dicen «supports Node v24.x», y `download-artifact` no llega a
+  node24 hasta **v7** —v5 y v6 siguen en node20—, así que un salto «conservador» a v5 no habría
+  resuelto nada. El criterio no fue coger la más nueva sino **la major más antigua que ya fuera
+  node24 y llevara meses en circulación**: `checkout@v7` y `setup-node@v7` tenían 11 y 17 días.
+  `gitleaks-action` v3 es una migración pura de runtime, sin cambios de entradas ni
+  comportamiento; `semgrep-action` es de tipo docker y no le afectaba.
+  Verificado además que **`GITLEAKS_LICENSE` sigue siendo necesaria**: depende de que el
+  propietario sea una organización, no de que el repositorio sea público.
 - **Un round trip de más en la cadena crítica: −645 ms de LCP.** En todas las mediciones
   **FCP == LCP**, o sea que la página no pintaba nada hasta tener el CSS, y
   `assets/fonts/fonts.css` —2 KB— era una petición externa render-blocking: con 400 ms de RTT,
@@ -107,6 +121,12 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   medidor descarta— porque ahora se ejercitan sobre el fuente real.
 
 ### Seguridad
+- **Acciones de terceros ancladas por SHA.** `gitleaks-action` y `semgrep-action` estaban
+  fijadas por tag, y un tag lo puede repuntar su dueño en cualquier momento: estas acciones
+  ejecutan código en el CI, así que quien controle el tag ejecuta lo que quiera. Es el mismo
+  razonamiento que se aplicó a `trivy-action` cuando estaba en `@master`. La política —oficiales
+  por tag de major, terceros por SHA— queda escrita en la cabecera del workflow, y con ella se
+  cierra la desviación que `unit-tests.md` registraba como pendiente.
 - **`Cross-Origin-Embedder-Policy: require-corp`**, detectado como ausente por el escaneo DAST
   (ZAP 90004). El sitio ya emitía COOP y CORP; faltaba el tercero de la tríada. Es seguro aquí
   **precisamente** porque no se carga nada de otro origen (ADR-0004): esa directiva rompería

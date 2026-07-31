@@ -413,7 +413,7 @@ Ninguna cambia el fondo, pero conviene que estén escritas y no descubrirlas ley
 | # | Diseñado | Implementado | Por qué |
 |---|---|---|---|
 | 1 | El job de CI corre **antes** que los de contenedor | Corre **en paralelo** | Los cinco jobs duran menos de un minuto. Encadenarlos añadiría latencia a cada ejecución para ahorrar unos segundos de runner cuando falle |
-| 2 | `actions/setup-node` anclada **por SHA** | Anclada por tag `@v4` | El repositorio ancla por SHA lo de terceros y por tag mayor las acciones oficiales (`checkout@v4`, `upload-artifact@v4`). Anclar solo esta por SHA introduciría un tercer estilo. **Migrar todo a SHA es una decisión aparte y pendiente** |
+| 2 | `actions/setup-node` anclada **por SHA** | Anclada por tag de major | El repositorio ancla por SHA lo de terceros y por tag las acciones oficiales. Anclar solo esta por SHA introduciría un tercer estilo. **Resuelto el 2026-07-31**: la política quedó escrita en la cabecera del workflow y `gitleaks` y `semgrep` pasaron a SHA |
 | 3 | Solo el suite unitario | Añadido un job **`deps` de SCA** (`npm audit --audit-level=high`) | La consecuencia nº 1 de este documento decía que el gate SCA pasaba a ser aplicable. Dejarlo escrito sin cablearlo habría sido justo lo que este repositorio evita |
 
 ### Dos casos que el diseño no preveía

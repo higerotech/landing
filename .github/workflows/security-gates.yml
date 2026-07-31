@@ -1,5 +1,21 @@
 name: AI-DLC Security Gates
 
+# ── Política de anclado de acciones ──────────────────────────────────────
+# · Acciones oficiales (`actions/*`): por tag de major. Las publica GitHub y
+#   mover un tag de major requeriría comprometer la propia plataforma.
+# · Acciones de TERCEROS: por SHA de commit, con el tag en un comentario al
+#   lado. Un tag lo puede repuntar su dueño en cualquier momento, y estas
+#   acciones ejecutan código en el CI: quien controle el tag ejecuta lo que
+#   quiera. Es el mismo criterio que se aplicó a `trivy-action` cuando estaba
+#   en `@master`.
+#
+# ── Runtime ──────────────────────────────────────────────────────────────
+# Todas corren en **node24**. Desde el 2026-06-02 GitHub fuerza las acciones
+# de Node 20 sobre Node 24 con un aviso de deprecación, y el **2026-09-16
+# retira Node 20 de los runners**: entonces dejarían de funcionar. Al elegir
+# versión no se cogió la más nueva por serlo, sino la major más antigua que ya
+# fuera node24 **y** llevara meses en circulación. Detalle en `CHANGELOG.md`.
+
 on:
   pull_request:
   push:
@@ -14,7 +30,7 @@ jobs:
     name: Build + validar nginx.conf
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # `RUN nginx -t` dentro del Dockerfile hace que una configuración
       # inválida rompa aquí y no en producción.
@@ -24,7 +40,7 @@ jobs:
       - name: Guardar imagen para los jobs siguientes
         run: docker save higerotech/landing:ci -o /tmp/landing.tar
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: imagen
           path: /tmp/landing.tar
@@ -42,10 +58,10 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # `gitleaks-action` exige licencia en repos de organización. Sin esta
@@ -58,9 +74,9 @@ jobs:
     name: SAST
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Semgrep
-        uses: semgrep/semgrep-action@v1
+        uses: semgrep/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d # v1
         with:
           config: >-
             p/security-audit
@@ -72,7 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: imagen
           path: /tmp
@@ -98,7 +114,7 @@ jobs:
           format: cyclonedx
           output: sbom.cdx.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: sbom.cdx.json
@@ -111,7 +127,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: imagen
           path: /tmp
@@ -166,8 +182,8 @@ jobs:
     name: Pruebas unitarias
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -193,8 +209,8 @@ jobs:
     name: Dependencias (SCA)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -211,9 +227,9 @@ jobs:
     name: E2E + accesibilidad
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -238,7 +254,7 @@ jobs:
         env:
           BASE_URL: http://localhost:8080
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
@@ -257,9 +273,9 @@ jobs:
     name: Presupuesto de rendimiento
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -285,7 +301,7 @@ jobs:
         env:
           BASE_URL: http://localhost:8081
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: lighthouse
@@ -307,9 +323,9 @@ jobs:
     name: DAST (ZAP baseline)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
 
@@ -328,7 +344,7 @@ jobs:
         env:
           PUERTO: '8082'
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: zap
