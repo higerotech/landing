@@ -2,7 +2,7 @@
 
 [![Gates de seguridad](https://img.shields.io/badge/gates_de_seguridad-7%2F7-2d7d46)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
 [![Pruebas](https://img.shields.io/badge/pruebas-48_unitarias_sin_E2E-e08000)](.ai-dlc/gates/gate-3-testing.md)
-[![Versión](https://img.shields.io/badge/versi%C3%B3n-v0.3.0-333333)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/versi%C3%B3n-v0.4.0-333333)](CHANGELOG.md)
 
 <!--
   Los tres badges son ESTÁTICOS a propósito, y hay que actualizarlos a mano.
@@ -72,10 +72,12 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 │   ├── 01-requirements/        # PRD (Gate 0)
 │   ├── 02-design/              # Arquitectura C4 y threat model (Gate 1)
 │   ├── 03-implementation/      # Historial derivado de git
+│   ├── 04-testing/             # Diseño de las unitarias y cobertura (Gate 3)
 │   └── 05-deployment/          # Topología, pipeline, verificación y rollback
 │
+├── tests/                      # 48 unitarias + el medidor de cobertura
 ├── CHANGELOG.md  SECURITY.md  CONTRIBUTING.md
-└── .github/workflows/          # Pipeline: 5 jobs, 7 comprobaciones G1–G7 (ver deployment.md)
+└── .github/workflows/          # Pipeline: 7 jobs — G1–G7 más unitarias y SCA
 ```
 
 > **Ojo con «los 7 gates»:** el pipeline implementa las siete comprobaciones **G1–G7** de
