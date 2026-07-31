@@ -7,6 +7,17 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Corregido
+- **El workflow de despliegue verificaba contra una URL configurada a mano.** Leía
+  `vars.URL_PUBLICA`, que ni siquiera existía: con el interruptor activado habría desplegado y
+  después verificado contra `http://localhost`. Y aunque existiera, una variable puede decir una
+  cosa mientras el despliegue fue a otra — la verificación daría verde sobre algo que no es lo
+  recién publicado, que es el patrón que este repositorio lleva semanas desmontando. Ahora la URL
+  se **deriva de la salida de `wrangler deploy`** y el job falla si no puede extraerla, en vez de
+  verificar a ciegas. Añadido `workers_dev: true` para que esa URL exista siempre, que es lo que
+  hace comprobable el paso 1 del cutover antes de tocar ningún DNS. Y `WRANGLER_SEND_METRICS=false`:
+  el mismo criterio que llevó a autoalojar las fuentes para no filtrar IPs (ADR-0004).
+
 ### Añadido
 - **Plan de despliegue en Cloudflare Workers** ([ADR-0006](docs/00-project/adr/0006-servir-desde-cloudflare-workers.md)
   y `docs/05-deployment/plan-cloudflare-workers.md`), con todas las piezas del repositorio ya
