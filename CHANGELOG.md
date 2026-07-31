@@ -7,6 +7,41 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Pendiente de decisión humana
+- Configurar `CONTACT.whatsapp` en `index.html`. Mientras esté vacío el botón de WhatsApp
+  no se publica.
+- Enrutar el apex `higerotech.com` (registro DNS + regla de ingress) **o** mover el canonical y
+  las URLs absolutas a `www.higerotech.com`. Lo primero mantiene la marca; lo segundo se
+  resuelve solo en el repositorio. Cualquiera de las dos, pero no dejarlo como está.
+- Activar **HSTS** en Cloudflare. No puede emitirse desde nginx: emitir HSTS desde detrás de un
+  terminador TLS que no se controla puede dejar el dominio inaccesible si la cadena se rompe.
+- Proteger `main` en el servidor: la org está en plan Free y el repo es privado, y GitHub no
+  ofrece branch protection ni rulesets en esa combinación. Salidas: subir a GitHub Team
+  (mantiene el repo privado) o hacerlo público. Hasta entonces la única barrera es el hook.
+- Arreglar `gitgraph_from_log.py` (vive en el skill de AI-DLC) y regenerar después
+  `docs/03-implementation/repo-history.md`, cuyo grafo se quedó en `a0b767b`. Se intentó
+  regenerarlo y la salida no es publicable: el `gitGraph` incluye solo la rama de la primera PR
+  y omite las tres siguientes, la bitácora duplica commits no mergeados porque recorre refs
+  remotas además de `main`, y los autores de los merges salen con mojibake. Publicar eso sería
+  cambiar un documento desactualizado por uno incorrecto.
+
+## [0.4.0] - 2026-07-30
+
+**Cierre del Gate 2 — Implementación**, y la versión en la que el repositorio dejó de creerse a
+sí mismo: al medir el sitio publicado resultó que **producción no servía ninguna de las
+correcciones de este repositorio** desde hacía dos semanas. Se diagnosticó, se hizo el cutover y
+se añadió la comprobación que faltaba para que no vuelva a pasar inadvertido.
+
+De cero pruebas automatizadas a **48 unitarias con cobertura medida** (100 % de funciones del
+script inline). Por el camino aparecieron dos casos del mismo patrón —una señal en verde que no
+medía nada— que conviene recordar juntos: el healthcheck que **nunca** había dado verde y llevaba
+dos semanas en rojo sin lector, y la cobertura incorporada de Node que informaba 100 % midiendo
+solo el arnés.
+
+> ⚠️ **Requiere acción al desplegar.** `docker-compose.yml` publica ahora en el **puerto 80** del
+> host y no en 8080, porque el ingress del túnel de Cloudflare apunta ahí. Un `docker compose up`
+> con la configuración anterior deja el sitio público sin servir. Ver `README.md` §Despliegue.
+
 ### Añadido
 - **Gate 2 — Implementación: cerrado el 2026-07-30** por decisión del owner, con los cinco
   ítems cumplidos y evidencia ejecutable de cada uno. Se deja escrito el recorrido en vez de
@@ -235,24 +270,6 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   hostnames son contenido duplicado sin un canonical válido que los consolide. Registrado como
   dependencia D1b en los requisitos y como fila 9 de «Lo que falta» en el gate 4.
 
-### Pendiente de decisión humana
-- Configurar `CONTACT.whatsapp` en `index.html`. Mientras esté vacío el botón de WhatsApp
-  no se publica.
-- Enrutar el apex `higerotech.com` (registro DNS + regla de ingress) **o** mover el canonical y
-  las URLs absolutas a `www.higerotech.com`. Lo primero mantiene la marca; lo segundo se
-  resuelve solo en el repositorio. Cualquiera de las dos, pero no dejarlo como está.
-- Activar **HSTS** en Cloudflare. No puede emitirse desde nginx: emitir HSTS desde detrás de un
-  terminador TLS que no se controla puede dejar el dominio inaccesible si la cadena se rompe.
-- Proteger `main` en el servidor: la org está en plan Free y el repo es privado, y GitHub no
-  ofrece branch protection ni rulesets en esa combinación. Salidas: subir a GitHub Team
-  (mantiene el repo privado) o hacerlo público. Hasta entonces la única barrera es el hook.
-- Arreglar `gitgraph_from_log.py` (vive en el skill de AI-DLC) y regenerar después
-  `docs/03-implementation/repo-history.md`, cuyo grafo se quedó en `a0b767b`. Se intentó
-  regenerarlo y la salida no es publicable: el `gitGraph` incluye solo la rama de la primera PR
-  y omite las tres siguientes, la bitácora duplica commits no mergeados porque recorre refs
-  remotas además de `main`, y los autores de los merges salen con mojibake. Publicar eso sería
-  cambiar un documento desactualizado por uno incorrecto.
-
 ## [0.3.0] - 2026-07-29
 
 Fases 03 y 05 documentadas. Gate 2 y Gate 4 quedan **abiertos** con su razón registrada.
@@ -366,7 +383,8 @@ editorial: el copy y el diseño son los mismos.
   `docker-compose.yml`. Registrada intacta en el commit `f09c213` antes de cualquier
   corrección, para que diagnóstico y arreglo sean auditables por separado.
 
-[Unreleased]: https://github.com/higerotech/landing/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/higerotech/landing/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/higerotech/landing/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/higerotech/landing/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/higerotech/landing/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/higerotech/landing/releases/tag/v0.1.0
