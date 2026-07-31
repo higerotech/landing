@@ -1,13 +1,14 @@
 # Pruebas E2E y de accesibilidad — Landing corporativa Higerotech
 
-* **Estado:** **implementado** — 43 pruebas en verde
+* **Estado:** **implementado** — 51 pruebas en verde
 * **Fecha:** 2026-07-31
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.1.0
+* **Versión:** 0.2.0
 * **Gate:** 3 — **sigue no superado**: faltan rendimiento (Lighthouse), DAST y mutation testing
 * **Herramientas:** Playwright (Chromium) + axe-core
 * **Ejecución:** `npm run e2e` — ~15 s contra el contenedor
+* **Revisión:** 2026-07-31 — añadido el grupo E8 y endurecido el gate de axe
 
 ## Qué añade este nivel que el unitario no puede dar
 
@@ -65,7 +66,8 @@ como corrección de T3.
 | **E4** · Sin JavaScript | 5 | La prueba que ADR-0005 se propuso a sí mismo y nunca se escribió |
 | **E5** · CSP y terceros | 6 | Que la política **bloquee**, cero peticiones externas, fuentes autoalojadas, consola limpia |
 | **E6** · CTA y reveal | 6 | El botón publicado y seguro, `[hidden]` efectivo, la aparición progresiva |
-| **E7** · Accesibilidad | 6 | axe-core en ES, EN, menú abierto y 404; un solo `h1` sin saltos; foco navegable |
+| **E7** · Accesibilidad (axe) | 6 | axe-core en ES, EN, menú abierto y 404; un solo `h1` sin saltos; foco navegable |
+| **E8** · Accesibilidad manual | 8 | Skip link, landmarks, foco visible, sin trampa de foco, reflow a 320px, zoom 200 %, `prefers-reduced-motion` y el contraste que axe no puede calcular |
 
 ### Decisiones que conviene tener escritas
 
@@ -83,10 +85,72 @@ igual con una CSP que no se aplicara: cero es también lo que se ve cuando no ha
 `IntersectionObserver` dispara para lo que llega a intersecar, no para lo que se sobrevuela. La
 primera versión saltaba y culpaba al sitio de un fallo que era del test.
 
+**El identificador de foco incluye el texto del elemento.** Los enlaces del menú no tienen `id`:
+identificarlos solo por etiqueta hacía que seis elementos distintos parecieran el mismo, y E7.6
+concluía «el foco no avanza» cuando avanzaba perfectamente.
+
 **No se asserta que haya algún `.reveal` visible al cargar.** Medido: son **0 de 15**, porque el
 primero nace a 1191px bajo un viewport de 900. Asertar «alguno» sería atarse a la altura del
 hero; lo que importa es que no estén **todos**, que es lo que distingue al observer de la rama de
 respaldo.
+
+## Accesibilidad más allá de axe
+
+axe automatizado detecta como mucho **un tercio** de los criterios WCAG, y hay una diferencia
+que conviene no pasar por alto: además de `violations` devuelve `incomplete`, que **no es
+aprobado** — es «no he podido comprobarlo».
+
+### Lo que el gate original dejaba pasar
+
+E7 nació filtrando por etiquetas WCAG y fallando solo ante `serious`/`critical`. Esa doble
+rendija escondía **70 incidencias reales**, visibles al ejecutar axe sin filtros:
+
+| Regla | Impacto | Ocurrencias |
+|---|---|---|
+| `region` — contenido fuera de todo landmark | moderate | **69** |
+| `landmark-one-main` — no existía `<main>` | moderate | 1 |
+
+La página no tenía `<main>`, ni `<header>`, ni skip link. Para quien navega con lector de
+pantalla eso significa no poder saltar al contenido ni moverse por regiones: 69 elementos
+huérfanos. Añadidos los tres, axe pasa a **cero violaciones con todas las reglas activas**, y el
+gate se sube para que no vuelvan a colarse: incluye `best-practice` y falla también ante
+`moderate`. Solo se informan los `minor`.
+
+### El contraste que axe no pudo calcular
+
+axe devolvía `color-contrast` como **incompleto** en **13 nodos del hero**, con el motivo
+«background color could not be determined due to a pseudo element». Trece textos sin verificar,
+en la zona más visible del sitio.
+
+E8.8 los mide resolviendo el fondo efectivo por la cadena de ancestros, como haría axe. Dos
+trampas que aparecieron al hacerlo:
+
+1. **El botón primario del hero.** Comparar su texto contra el fondo del `body` da 1.00 y parece
+   un suspenso clamoroso; su fondo real es el propio botón (`--teal`) y el ratio es **10,67**.
+   Medir contra el fondo equivocado produce un falso positivo alarmante.
+2. **El texto sobre degradado.** `.hero-title .grad` usa `-webkit-text-fill-color: transparent`
+   con `background-clip: text`: su color visible **no** es la propiedad `color` sino los extremos
+   del degradado. Se miden ambos: `--teal` 10,67 y `--sage` 8,76, sobre un mínimo de 3:1 por ser
+   texto grande.
+
+Todos los nodos pasan. La diferencia es que ahora consta, en vez de quedar en «incompleto».
+
+### Criterios que axe no comprueba
+
+| Prueba | Criterio |
+|---|---|
+| E8.1 | Skip link operativo — WCAG 2.4.1 |
+| E8.3 | Indicador de foco visible — WCAG 2.4.7 |
+| E8.4 | Sin trampa de foco en el menú móvil — WCAG 2.1.2 |
+| E8.5 | Reflow a 320px — WCAG 1.4.10 |
+| E8.6 | Zoom al 200 % — WCAG 1.4.4 |
+| E8.7 | `prefers-reduced-motion` — WCAG 2.3.3, y tercera capa de ADR-0005 |
+
+**Sobre el reflow:** `body { overflow-x: hidden }` esconde el síntoma, así que E8.5 mide por
+geometría y no por scroll. Solo cuenta lo que obligaría a desplazarse —elementos con texto propio
+o interactivos—: los anillos decorativos del hero miden 340px y sobresalen 10px a 320px, pero
+están recortados y no exigen scroll a nadie. Excluir la decoración es deliberado; si algún día
+desborda un párrafo o un botón, sí aparece.
 
 ## Lo que este nivel tampoco cubre
 

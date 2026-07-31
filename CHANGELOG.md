@@ -8,6 +8,18 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **Landmarks y skip link.** La página no tenía `<main>`, ni `<header>`, ni forma de saltarse la
+  navegación con el teclado. Ejecutando axe **sin el filtro de etiquetas** aparecían **70
+  incidencias**: 69 de `region` —contenido fuera de todo landmark— y `landmark-one-main`. Para
+  quien usa lector de pantalla eso es no poder saltar al contenido ni moverse por regiones.
+  Añadidos los tres; axe pasa a **cero violaciones con todas las reglas activas**.
+- **8 pruebas de accesibilidad que axe no cubre** (grupo E8): skip link operativo (2.4.1),
+  indicador de foco visible (2.4.7), sin trampa de foco en el menú móvil (2.1.2), reflow a 320px
+  (1.4.10), zoom al 200 % (1.4.4), `prefers-reduced-motion` (2.3.3) y **el contraste de los 13
+  nodos del hero que axe devolvía como «incompleto»** —ni aprobado ni suspenso— por no poder
+  determinar el fondo tras un pseudo-elemento. Todos cumplen: se resuelve el fondo efectivo por
+  la cadena de ancestros y, en el texto recortado sobre degradado, se miden **ambos extremos**
+  (`--teal` 10,67 y `--sage` 8,76 sobre un mínimo de 3:1). Son 51 pruebas E2E.
 - **43 pruebas E2E y de accesibilidad** con Playwright y axe-core (`npm run e2e`, ~15 s),
   **contra el contenedor** y no contra un servidor de ficheros: es lo que permite comprobar lo
   que jsdom no puede ver. Cubren el breakpoint **real** de 980/981px, la página **sin
@@ -20,6 +32,16 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   producción sirve la versión sin botón.
 
 ### Corregido
+- **El gate de axe miraba por una rendija doble.** Filtraba por etiquetas WCAG y solo fallaba
+  ante `serious`/`critical`, y esas dos restricciones juntas escondían las 70 incidencias de
+  arriba. Ahora incluye las reglas de buenas prácticas y falla también ante `moderate`; solo se
+  informan los `minor`, porque un gate que salta por un aviso menor acaba ignorado.
+- **El medidor de cobertura dejó de registrar nada en Windows.** El archivo pasó a tener saltos
+  CRLF tras una edición, y el parser de HTML los normaliza a LF antes de compilar el script: el
+  fuente medido resultaba **108 caracteres más largo** —uno por línea— que el que V8 registró,
+  ningún rango casaba y el informe salía vacío con «no se registró cobertura». Normalizado a LF
+  dentro del medidor. `.gitattributes` ya guardaba LF en el repositorio, así que el CI nunca se
+  vio afectado; el fallo era solo local, que es donde peor se diagnostica.
 - **El atributo `hidden` no ocultaba nada, y las E2E lo encontraron en su primera ejecución.**
   La hoja de estilos no tenía ninguna regla `[hidden]`, y el `display` que el navegador aplica a
   ese atributo lo pisa cualquier regla de autor que fije `display`: `.btn-secondary` usa

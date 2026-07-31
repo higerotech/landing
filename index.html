@@ -77,6 +77,16 @@
        WhatsApp se veía aunque el número no estuviera configurado, justo el CTA
        muerto que se pretendía evitar. Detectado por la prueba E4.5. */
     [hidden] { display: none !important; }
+    /* Fuera de pantalla hasta recibir el foco: no estorba al diseño y sigue
+       siendo alcanzable con el tabulador. No se usa display:none ni
+       visibility:hidden porque eso lo sacaría del orden de tabulación. */
+    .skip-link {
+      position: absolute; left: -9999px; top: 0; z-index: 200;
+      background: var(--teal); color: var(--ink);
+      padding: 12px 20px; border-radius: 0 0 8px 0;
+      font-family: var(--font-sans); font-size: 15px; font-weight: 700;
+    }
+    .skip-link:focus { left: 0; }
     html { scroll-behavior: smooth; }
     body {
       font-family: var(--font-sans);
@@ -466,7 +476,12 @@
 </head>
 <body>
 
+  <!-- Primer elemento enfocable: permite saltarse la navegación con el
+       teclado (WCAG 2.4.1). Invisible hasta que recibe el foco. -->
+  <a href="#contenido" class="skip-link" data-es="Saltar al contenido" data-en="Skip to content">Saltar al contenido</a>
+
   <!-- ── Navbar ────────────────────────────────────── -->
+  <header>
   <nav aria-label="Principal">
     <div class="container nav-inner">
       <a href="#inicio" class="nav-logo"><img src="assets/logo_white_trans.png" alt="Higerotech — inicio" /></a>
@@ -492,6 +507,9 @@
       </div>
     </div>
   </nav>
+  </header>
+
+  <main id="contenido">
 
   <!-- ── Hero ──────────────────────────────────────── -->
   <section class="hero" id="inicio">
@@ -850,6 +868,8 @@
       </div>
     </div>
   </section>
+
+  </main>
 
   <!-- ── Footer ────────────────────────────────────── -->
   <footer>

@@ -3,19 +3,22 @@
    Playwright, así que analiza el DOM ya renderizado, con la CSS aplicada y el
    JS ejecutado: el contraste real, no el teórico.
 
-   Se falla solo ante impacto `serious` y `critical`. Los `minor`/`moderate` se
-   informan sin bloquear: un gate que se dispara por un aviso menor acaba
-   ignorado, y entonces tampoco atrapa los graves. */
+   Desde el 2026-07-31 el gate incluye las reglas de **buenas prácticas** y falla
+   también ante `moderate`. Antes filtraba solo por etiquetas WCAG y exigía
+   `serious`/`critical`, y esa doble rendija escondía 70 incidencias reales: 69
+   de `region` —contenido fuera de todo landmark— y la ausencia de `<main>`.
+   Corregidas con los landmarks y el skip link; el gate se sube para que no
+   vuelvan a colarse. Solo se dejan pasar los `minor`, que se informan. */
 
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
-const GRAVES = new Set(['serious', 'critical'])
+const GRAVES = new Set(['moderate', 'serious', 'critical'])
 
 /** Ejecuta axe y devuelve {graves, leves} ya separados. */
 async function analizar (page, contexto = '') {
   const { violations } = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'])
     .analyze()
 
   const formatear = v =>
@@ -34,7 +37,7 @@ async function analizar (page, contexto = '') {
 }
 
 test.describe('E7 · accesibilidad', () => {
-  test('E7.1 · la página en español no tiene violaciones graves', async ({ page }) => {
+  test('E7.1 · la página en español no tiene violaciones', async ({ page }) => {
     await page.goto('/')
     const { graves } = await analizar(page, 'es')
     expect(graves).toEqual([])
@@ -92,7 +95,11 @@ test.describe('E7 · accesibilidad', () => {
       await page.keyboard.press('Tab')
       alcanzados.push(await page.evaluate(() => {
         const a = document.activeElement
-        return a ? `${a.tagName.toLowerCase()}${a.id ? '#' + a.id : ''}` : 'ninguno'
+        if (!a || a === document.body) return 'ninguno'
+        /* Los enlaces del menú no tienen id: identificarlos solo por etiqueta
+           haría que seis elementos distintos parecieran el mismo y el test
+           diría «el foco no avanza» cuando sí avanza. */
+        return `${a.tagName.toLowerCase()}${a.id ? '#' + a.id : ''}:${(a.textContent || '').trim().slice(0, 24)}`
       }))
     }
 
