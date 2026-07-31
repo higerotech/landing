@@ -1,7 +1,7 @@
 # Higerotech — Landing Page
 
 [![CI](https://github.com/higerotech/landing/actions/workflows/security-gates.yml/badge.svg)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
-[![Pruebas](https://img.shields.io/badge/pruebas-50_unit_%2B_51_e2e-e08000)](.ai-dlc/gates/gate-3-testing.md)
+[![Pruebas](https://img.shields.io/badge/pruebas-51_unit_%2B_51_e2e_%2B_perf-e08000)](.ai-dlc/gates/gate-3-testing.md)
 [![Versión](https://img.shields.io/github/v/tag/higerotech/landing?label=versi%C3%B3n)](CHANGELOG.md)
 
 <!--
@@ -11,7 +11,7 @@
   "AI-DLC Security Gates - passing" y "versión: v0.4.0"). Ya no hay que tocarlos a mano.
 
   El de Pruebas sigue ESTÁTICO porque no existe un endpoint que cuente pruebas: dice
-  "50 unit + 51 e2e" y se actualiza a mano. Sigue en ÁMBAR y no en verde, aunque ahora
+  "51 unit + 51 e2e + perf" y se actualiza a mano. Sigue en ÁMBAR y no en verde, aunque ahora
   haya E2E y accesibilidad: la pirámide continúa incompleta —faltan rendimiento, DAST y
   mutation testing— y el Gate 3 sigue abierto. Se pondrá verde cuando lo esté el gate, no
   cuando el número parezca suficiente. Si crece la suite y nadie lo toca, el badge miente
@@ -64,12 +64,12 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 │   ├── 01-requirements/        # PRD (Gate 0)
 │   ├── 02-design/              # Arquitectura C4 y threat model (Gate 1)
 │   ├── 03-implementation/      # Historial derivado de git
-│   ├── 04-testing/             # Diseño de unitarias, cobertura y E2E (Gate 3)
+│   ├── 04-testing/             # Unitarias, cobertura, E2E y rendimiento (Gate 3)
 │   └── 05-deployment/          # Topología, pipeline, verificación y rollback
 │
-├── tests/                      # 50 unitarias, 51 E2E y el medidor de cobertura
+├── tests/                      # 51 unitarias, 51 E2E, cobertura y rendimiento
 ├── CHANGELOG.md  SECURITY.md  CONTRIBUTING.md
-└── .github/workflows/          # Pipeline: 8 jobs — G1–G7, unitarias, SCA y E2E
+└── .github/workflows/          # Pipeline: 9 jobs — G1–G7, unit, SCA, E2E y perf
 ```
 
 > **Ojo con «los 7 gates»:** el pipeline implementa las siete comprobaciones **G1–G7** de
@@ -86,7 +86,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 | 0 | Requisitos | ✅ Superado | [gate-0](.ai-dlc/gates/gate-0-requirements.md) |
 | 1 | Diseño | ✅ Superado | [gate-1](.ai-dlc/gates/gate-1-design.md) |
 | 2 | Implementación | ✅ Superado — cerrado el 2026-07-30 | [gate-2](.ai-dlc/gates/gate-2-implementation.md) |
-| 3 | Pruebas | ❌ Abierto — 50 unit + 51 E2E/a11y; faltan rendimiento, DAST y mutation | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
+| 3 | Pruebas | ❌ Abierto — 51 unit + 51 E2E/a11y + presupuesto de rendimiento; **solo falta DAST** | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
 | 4 | Despliegue | 🟡 Parcial — falta firma, digest y archivar el SBOM | [gate-4](.ai-dlc/gates/gate-4-deployment.md) |
 | 5 | Monitoreo | ❌ Abierto — sin observabilidad | [gate-5](.ai-dlc/gates/gate-5-monitoring.md) |
 

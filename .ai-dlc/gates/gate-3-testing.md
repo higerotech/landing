@@ -2,10 +2,10 @@
 
 * **Estado:** review — **no superado**
 * **Fecha:** 2026-07-29
-* **Revisión:** 2026-07-31 — implementados el nivel unitario (50) y el E2E + accesibilidad (51)
+* **Revisión:** 2026-07-31 — implementados el unitario (51), el E2E + accesibilidad (51) y el presupuesto de rendimiento
 * **Decisores:** Jeremi Alcalá (owner)
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.3.0
+* **Versión:** 0.4.0
 
 - [ ] Pirámide completa pasando (unit → integration → contract → e2e → security) —
       **unit ✅ (50 pruebas, cobertura 100 %), contract ✅** (invariantes del HTML y cabeceras en
@@ -14,7 +14,9 @@
 - [ ] Matriz OWASP Top 10 ejecutada — A05 con U3.5, y A02/A04 con E3.7 y E5. El resto sin
       prueba automatizada
 - [ ] DAST limpio — sin herramienta asignada
-- [ ] Rendimiento dentro de SLOs — sin Lighthouse CI
+- [x] Rendimiento dentro de SLOs — **LCP 1 933 ms** (mediana) contra un presupuesto de 2 500
+      en **3G lento real**, y 104 KB contra 350. Gateado en el CI. Ver
+      `docs/04-testing/rendimiento.md`
 - [ ] Mutation testing ≥ 60% — descartado a propósito por ahora: añadiría otra dependencia
       grande y lo primero era que la suite existiera
 
@@ -40,13 +42,16 @@ Qué cubren y qué no:
 | Unit + contrato del HTML | ✅ 50 pruebas, cobertura 100 %: paridad bilingüe (R2), contrato JS↔DOM, i18n, menú, RF05, reveal |
 | E2E en navegador real | ✅ 51 pruebas: breakpoint real, sin JS, CSP aplicándose, 404, cero terceros |
 | Accesibilidad | ✅ axe con **todas las reglas** —incluidas buenas prácticas— y umbral en `moderate`, en ES, EN, menú abierto y 404. Más ocho comprobaciones que axe no hace: skip link, landmarks, foco visible, sin trampa de foco, reflow a 320px, zoom 200 %, `reduced-motion` y el contraste que axe dejaba en «incompleto» |
-| Rendimiento (Lighthouse) | ❌ |
+| Rendimiento (Lighthouse) | ✅ LCP 1 933 ms y 104 KB en 3G lento, mediana de 3 ejecuciones, gateado |
 | Seguridad dinámica (ZAP) | ❌ |
 | Mutation testing | ❌ — descartado por ahora a propósito |
 
-**El gate sigue abierto**, pero por tercera vez cambia el motivo. Ya no falta «todo lo que
-necesita un navegador de verdad»: eso está. Lo que falta es **rendimiento, DAST y mutation
-testing**. Son tres ítems concretos, no una categoría entera.
+**El gate sigue abierto**, y el motivo se estrecha por cuarta vez. Queda **un solo ítem de la
+pirámide: DAST**. Mutation testing sigue descartado a propósito.
+
+Vale la pena mirar el recorrido entero, porque el motivo nunca fue el mismo dos veces: faltaba
+pipeline → faltaban pruebas → faltaba medir la cobertura → faltaba todo lo que necesita un
+navegador → falta la seguridad dinámica.
 
 Lo que se hizo antes de que existiera la suite, y consta como evidencia manual en
 `docs/05-deployment/deployment.md` §Verificación:
@@ -71,7 +76,7 @@ lo que ya se arregló. Propuesta mínima y proporcionada:
 | E2E | Playwright | **Implementado**, y con más alcance del previsto: además del menú, la i18n y el 404, cubre la página sin JS, la CSP aplicándose y la ausencia de terceros. Ver `docs/04-testing/e2e-tests.md` |
 | Accesibilidad | `axe-core` vía Playwright | **Implementado**: ES, EN, menú abierto y 404 |
 | Seguridad | ZAP baseline | Cabeceras presentes, CSP efectiva |
-| Rendimiento | Lighthouse CI | Presupuesto: LCP < 2,5 s en 3G lento |
+| Rendimiento | Lighthouse | **Implementado**: `docs/04-testing/rendimiento.md`. Con throttling real y mediana de 3 ejecuciones, porque el simulado daba 5,26 s donde el navegador mide 1,6 |
 
 Las tres pruebas E2E de la fila "E2E" corresponden exactamente a los tres bugs corregidos en
 `7c7bc78`. Son las que evitan una regresión de lo ya pagado.

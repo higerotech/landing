@@ -8,12 +8,14 @@
     "test": "node --test \"tests/unit/**/*.test.mjs\"",
     "coverage": "node tests/cobertura.mjs",
     "e2e": "playwright test",
-    "e2e:install": "playwright install --with-deps chromium"
+    "e2e:install": "playwright install --with-deps chromium",
+    "perf": "node tests/rendimiento.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.62.1",
-    "jsdom": "^28.0.0"
+    "jsdom": "^28.0.0",
+    "lighthouse": "^13.4.1"
   },
   "engines": {
     "node": ">=22"
