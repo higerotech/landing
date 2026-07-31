@@ -7,9 +7,33 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Añadido
+- **El botón de WhatsApp se publica**: `CONTACT.whatsapp = '13235543854'`. Cierra la dependencia
+  **D2** y deja **RF05** verificado en sus dos ramas. Requiere **redesplegar**: el contenedor en
+  producción sirve la versión sin botón.
+
+### Corregido
+- **El número llegó como `+13235543854` y la prueba U8.3 lo rechazó.** `wa.me` exige formato
+  internacional **solo con dígitos**: `https://wa.me/+1323…` no es la forma documentada, o sea
+  exactamente el «enlace muerto» que el comentario del código dice querer evitar. Es el primer
+  encuentro de ese test con un número real y su primera captura; se diseñó para esto.
+- **Los tests de U8 dejaban de probar la rama vacía justo al configurarse el número.** U8.1
+  comprobaba «sin número el botón no se publica» solo *si el fuente estaba vacío*, y U8.2
+  sustituía el literal `whatsapp: ''`, que dejó de existir. Un test condicionado al estado del
+  fuente deja de probar cuando ese estado cambia, que es cuando más falta hace. Reescritos para
+  sustituir el valor **en ambos sentidos** con una expresión regular que casa el literal sea cual
+  sea su contenido, más un U8.4 nuevo que verifica el estado real del repositorio. 49 pruebas.
+- **La cobertura de líneas sube de 94,7 % a 100 %** (76/76) como efecto secundario: las cuatro
+  líneas del enlace de WhatsApp ya no dependían de un fixture con el fuente mutado —que el
+  medidor descarta— porque ahora se ejercitan sobre el fuente real.
+
 ### Pendiente de decisión humana
-- Configurar `CONTACT.whatsapp` en `index.html`. Mientras esté vacío el botón de WhatsApp
-  no se publica.
+- **HSTS sigue sin llegar.** Comprobado el 2026-07-31 con `curl -sI` en los tres hostnames
+  (`www`, `web`, `demo`): no aparece `Strict-Transport-Security`. Sí está activo «Always Use
+  HTTPS» —`http://` responde 301 a `https://`—, así que hay configuración del borde hecha, pero
+  no la de HSTS, que en Cloudflare es un interruptor aparte en **SSL/TLS → Edge Certificates →
+  HTTP Strict Transport Security (HSTS)** y exige aceptar un aviso antes de guardar. Nada que
+  este repositorio pueda emitir: desde nginx sigue siendo mala idea (A04 del mapeo OWASP).
 - Enrutar el apex `higerotech.com` (registro DNS + regla de ingress) **o** mover el canonical y
   las URLs absolutas a `www.higerotech.com`. Lo primero mantiene la marca; lo segundo se
   resuelve solo en el repositorio. Cualquiera de las dos, pero no dejarlo como está.

@@ -16,8 +16,8 @@
       vulnerabilidades. Matiz: ninguna viaja en la imagen (verificado; solo contiene los
       archivos del sitio), así que un hallazgo sería riesgo de la cadena de herramientas del CI.
       La imagen base `nginx:1.30-alpine` la cubre Trivy aparte.
-- [x] Cobertura ≥ 80% — **100 % de funciones** (17/17) del script inline, 94,7 % de líneas
-      (72/76, cota inferior). Medida con `tests/cobertura.mjs` y gateada en el CI con umbral
+- [x] Cobertura ≥ 80% — **100 % de funciones** (17/17) del script inline y 100 % de líneas
+      (76/76, desde el 2026-07-31). Medida con `tests/cobertura.mjs` y gateada en el CI con umbral
       100 sobre funciones. Ver más abajo por qué no vale la herramienta incorporada de Node.
 - [x] Dual review completado (humano + IA)
 - [x] Sin secretos en el código — verificado **por herramienta**, ya no solo por lectura:
@@ -43,12 +43,14 @@ Los tres puntos que constaban como bloqueo en la fase 1 están hechos:
 3. ~~Añadir gitleaks al pipeline~~ → en verde, tras resolver la licencia de organización y los
    permisos de la API de PRs.
 
-**El último ítem —cobertura ≥ 80 %— está medido y superado.** El 2026-07-30, con 48 pruebas:
+**El último ítem —cobertura ≥ 80 %— está medido y superado.** Medido el 2026-07-30 con 48
+pruebas; actualizado el 2026-07-31 al configurarse el número de WhatsApp, que llevó las líneas
+al 100 %. Cifras vigentes:
 
 | Métrica | Valor | Umbral que gatea |
 |---|---|---|
 | Funciones del script inline | **100,0 %** (17/17) | 100 %, en el CI |
-| Líneas | 94,7 % (72/76) | — informativa, cota inferior |
+| Líneas | 100 % (76/76) | — informativa; cota inferior por construcción |
 
 **Ojo con cómo se llegó a ese número, porque la herramienta obvia falla en verde.**
 `node --test --experimental-test-coverage` informaba **100 % de líneas midiendo solo el arnés**:
@@ -88,5 +90,5 @@ alguien citará mal dentro de seis meses.
 | Trazabilidad tag ↔ versión ↔ ADR | mismo documento, §Trazabilidad |
 | Verificación funcional manual | `docs/05-deployment/deployment.md` §Verificación |
 | SAST, secretos y SCA en verde | Jobs `SAST`, `Detección de secretos` y `Dependencias (SCA)` de `.github/workflows/security-gates.yml` |
-| Suite unitaria y su diseño | `tests/unit/` (48 pruebas) y `docs/04-testing/unit-tests.md` |
+| Suite unitaria y su diseño | `tests/unit/` (49 pruebas) y `docs/04-testing/unit-tests.md` |
 | Cobertura medida y gateada | `npm run coverage` — `tests/cobertura.mjs`, umbral 100 % de funciones en el CI |

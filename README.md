@@ -1,7 +1,7 @@
 # Higerotech — Landing Page
 
 [![Gates de seguridad](https://img.shields.io/badge/gates_de_seguridad-7%2F7-2d7d46)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
-[![Pruebas](https://img.shields.io/badge/pruebas-48_unitarias_sin_E2E-e08000)](.ai-dlc/gates/gate-3-testing.md)
+[![Pruebas](https://img.shields.io/badge/pruebas-49_unitarias_sin_E2E-e08000)](.ai-dlc/gates/gate-3-testing.md)
 [![Versión](https://img.shields.io/badge/versi%C3%B3n-v0.4.0-333333)](CHANGELOG.md)
 
 <!--
@@ -75,7 +75,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 │   ├── 04-testing/             # Diseño de las unitarias y cobertura (Gate 3)
 │   └── 05-deployment/          # Topología, pipeline, verificación y rollback
 │
-├── tests/                      # 48 unitarias + el medidor de cobertura
+├── tests/                      # 49 unitarias + el medidor de cobertura
 ├── CHANGELOG.md  SECURITY.md  CONTRIBUTING.md
 └── .github/workflows/          # Pipeline: 7 jobs — G1–G7 más unitarias y SCA
 ```
@@ -94,7 +94,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 | 0 | Requisitos | ✅ Superado | [gate-0](.ai-dlc/gates/gate-0-requirements.md) |
 | 1 | Diseño | ✅ Superado | [gate-1](.ai-dlc/gates/gate-1-design.md) |
 | 2 | Implementación | ✅ Superado — cerrado el 2026-07-30 | [gate-2](.ai-dlc/gates/gate-2-implementation.md) |
-| 3 | Pruebas | ❌ Abierto — 48 unitarias; faltan E2E, a11y, rendimiento y DAST | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
+| 3 | Pruebas | ❌ Abierto — 49 unitarias; faltan E2E, a11y, rendimiento y DAST | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
 | 4 | Despliegue | 🟡 Parcial — falta firma, digest y archivar el SBOM | [gate-4](.ai-dlc/gates/gate-4-deployment.md) |
 | 5 | Monitoreo | ❌ Abierto — sin observabilidad | [gate-5](.ai-dlc/gates/gate-5-monitoring.md) |
 

@@ -1,10 +1,10 @@
 # Pruebas unitarias — Landing corporativa Higerotech
 
-* **Estado:** **implementado** — 48 pruebas en verde, cobertura de funciones 100 %
+* **Estado:** **implementado** — 49 pruebas en verde, cobertura 100 % (funciones y líneas)
 * **Fecha:** 2026-07-30
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.6.0
+* **Versión:** 0.7.0
 * **Gate:** 3 — **sigue no superado**: el nivel unitario existe, faltan E2E, accesibilidad,
   rendimiento, DAST y mutation testing
 * **Ejecución:** `npm test` — `node --test` sobre el `index.html` real, ~4 s.
@@ -282,10 +282,11 @@ sea 981px solo lo puede afirmar un navegador real midiendo, y eso es E2E.
 
 | Caso | Aserción |
 |---|---|
-| U8.1 | Con `whatsapp: ''` (estado actual) ⇒ `#wa-cta` sigue `hidden` y sin `href` a `wa.me` |
-| U8.2 | Con `whatsapp: '584121234567'` ⇒ `href` exacto, `target="_blank"`, `rel` con `noopener` y `noreferrer`, `hidden = false` |
+| U8.1 | Sustituyendo el valor a `''` ⇒ `#wa-cta` queda `hidden` y sin `href` a `wa.me` |
+| U8.2 | Sustituyendo a `'584121234567'` ⇒ `href` exacto, `target="_blank"`, `rel` con `noopener` y `noreferrer`, `hidden = false` |
 | U8.3 | El literal del fuente, si no está vacío, debe ser **solo dígitos** |
-| U8.4 | La sustitución del fixture casó de verdad (guarda contra el test vacuo) |
+| U8.4 | El fuente **real** publica el botón: número no vacío, `hidden = false` y `href` coherente |
+| U8.5 | La sustitución del fixture casó de verdad (guarda contra el test vacuo) |
 
 U8.2 es el único caso que necesita tocar el fuente: `CONTACT` es `const` y `initWhatsApp` es una
 IIFE que ya corrió, así que la única costura honesta es sustituir el literal antes de parsear.
@@ -397,7 +398,7 @@ Dos hallazgos que no existían antes de leer el script con intención de probarl
 
 ## Resultado de la implementación *(2026-07-30)*
 
-**48 pruebas, 10 suites, 0 fallos, ~4,5 s.** Estructura:
+**49 pruebas, 10 suites, 0 fallos, ~4,5 s.** Estructura:
 
 ```
 package.json                      node --test "tests/unit/**/*.test.mjs"
@@ -445,7 +446,7 @@ npm run coverage
 | Métrica | Valor | ¿Gatea? |
 |---|---|---|
 | **Funciones** | **100,0 %** (17/17) | ✅ Sí, umbral 100 |
-| Líneas | 94,7 % (72/76 ejecutables) | No — informativa, y es una **cota inferior** |
+| Líneas | **100,0 %** (76/76 ejecutables) | No — informativa, y sigue siendo una **cota inferior** por construcción |
 
 ### La herramienta obvia no sirve, y falla en verde
 
@@ -483,9 +484,16 @@ intento cada uno:
    y el script resultante es más largo, así que sus offsets no casan: fundirlas corrompía el
    mapa. Se detectan comparando la longitud del rango de nivel superior con la del fuente real.
 
-Consecuencia honesta del punto 3: **las cuatro líneas del enlace de WhatsApp (894-897) figuran
-como no cubiertas aunque U8.2 las ejercita.** El número de líneas es por eso una cota inferior,
-y por eso no se gatea sobre él.
+Consecuencia del punto 3: **el porcentaje de líneas es una cota inferior por construcción.** Lo
+que cubran las pruebas que mutan el fuente no cuenta, y el informe avisa de cuántas ejecuciones
+descartó.
+
+Hasta el 2026-07-31 eso se notaba: las cuatro líneas del enlace de WhatsApp (894-897) figuraban
+sin cubrir porque solo las ejercitaba U8.2, con el fuente mutado. Al configurarse el número real,
+U8.4 pasó a cubrirlas sobre el fuente **sin mutar** y la cifra subió a 100 % (76/76). No cambió
+la medición: cambió lo que había que medir. El aviso sigue siendo pertinente —si mañana toda la
+cobertura de una rama dependiera de una sustitución, volvería a aparecer— y por eso se sigue
+gateando sobre funciones.
 
 ### Por qué el umbral es 100 % de funciones y no el 80 % que pide el Gate 2
 
