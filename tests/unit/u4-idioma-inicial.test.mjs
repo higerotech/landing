@@ -72,6 +72,25 @@ describe('U4 · resolución del idioma inicial', () => {
     assert.equal(doc.documentElement.lang, 'es')
   })
 
+  test('U4.8 · un idioma guardado inválido no se devuelve tal cual', () => {
+    /* Lo pidió el mutation testing. Quitar la validación del valor guardado no
+       se notaba, porque `setLang` **valida otra vez** y cae a 'es': el DOM
+       acababa igual y U4.4 pasaba. La defensa en profundidad enmascaraba el
+       fallo, así que aquí se interroga a `idiomaInicial()` directamente.
+
+       Se reescribe localStorage DESPUÉS de la carga a propósito: al arrancar,
+       `setLang(idiomaInicial())` ya guardó un valor válido, y sin este paso la
+       función leería 'es' y la prueba pasaría sin probar nada. */
+    const { win } = cargarDOM()
+
+    win.localStorage.setItem('lang', 'fr')
+
+    assert.equal(
+      win.idiomaInicial(), 'es',
+      'idiomaInicial() debe descartar un idioma guardado que no esté en IDIOMAS'
+    )
+  })
+
   test('U4.7 · ?lang=EN sirve español — comportamiento actual, no deseado', () => {
     /* IDIOMAS.indexOf(q) distingue mayúsculas, así que un enlace compartido en
        mayúsculas pierde el idioma sin ningún síntoma. Este test NO valida un

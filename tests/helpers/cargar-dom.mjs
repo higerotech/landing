@@ -88,6 +88,28 @@ export function cargarDOM ({
     url,
     virtualConsole,
     beforeParse (win) {
+      /* ── Puente de realms para mutation testing ────────────────────────
+         Stryker instrumenta el script con una cabecera que hace:
+
+           var g = globalThis
+           var ns = g.__stryker__ || (g.__stryker__ = {})
+           if (… g.process.env.__STRYKER_ACTIVE_MUTANT__) …
+
+         Pero ese código se ejecuta DENTRO de jsdom, y ahí `globalThis` es la
+         ventana, no el global de Node: `__stryker__` se crearía en la ventana
+         y `process` ni existe. Consecuencia sin este puente: ningún mutante
+         llega a activarse y la cobertura nunca vuelve a Node, así que Stryker
+         marca los 144 mutantes como «sin cobertura» y da un 0 % que no es una
+         medición sino un artefacto.
+
+         Se comparte el MISMO objeto `__stryker__` con la ventana —no una
+         copia— para que lo que el script registre dentro aparezca fuera. */
+      if (HTML.includes('stryMutAct_')) {
+        globalThis.__stryker__ ??= {}
+        win.__stryker__ = globalThis.__stryker__
+        win.process = { env: process.env }
+      }
+
       /* jsdom no implementa matchMedia y la línea 928 de index.html lo llama
          sin guarda. Sin este stub el script muere entero y TODOS los tests
          fallarían por un motivo que no existe en ningún navegador real. */
@@ -140,4 +162,23 @@ export function cargarDOM ({
 /** Texto del fuente sin parsear, para las aserciones de contrato sobre el archivo. */
 export function fuente () {
   return HTML
+}
+
+/* ¿Está el fuente instrumentado por Stryker?
+   Durante una ejecución de mutation testing, Stryker reescribe `index.html`
+   en un sandbox e inserta sus interruptores:
+
+     whatsapp: stryMutAct_9fa48("1") ? "" : (stryCov_9fa48("1"), '13235543854')
+
+   Las pruebas que afirman sobre el TEXTO del fuente —que exista la regla
+   `[hidden]`, que el número sea solo dígitos, que el @font-face inlinado
+   coincida con fonts.css— dejan de encontrar lo que buscan, y hacen bien: bajo
+   instrumentación el fuente ya no es el que se publica. Esas pruebas se saltan
+   en ese contexto, no se relajan.
+
+   Se detecta la instrumentación por su propia huella y no por una variable de
+   entorno de Stryker: así el día que cambie el nombre de la variable esto
+   sigue funcionando, y quien lea el código ve POR QUÉ se salta. */
+export function estaInstrumentado () {
+  return HTML.includes('stryMutAct_')
 }

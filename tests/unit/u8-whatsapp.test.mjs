@@ -11,7 +11,7 @@
 
 import { describe, test } from 'node:test'
 import assert from 'node:assert/strict'
-import { cargarDOM, fuente } from '../helpers/cargar-dom.mjs'
+import { cargarDOM, fuente, estaInstrumentado } from '../helpers/cargar-dom.mjs'
 
 /* Casa el literal sea cual sea su valor actual: si se fijara la forma vacía,
    configurar el número rompería el fixture en vez de probarlo. */
@@ -24,7 +24,7 @@ const conNumero = valor => ({
 })
 
 describe('U8 · botón de WhatsApp (RF05)', () => {
-  test('U8.1 · sin número configurado el botón no se publica', () => {
+  test('U8.1 · sin número configurado el botón no se publica', { skip: estaInstrumentado() && 'afirma sobre el fuente publicado' }, () => {
     const { doc } = cargarDOM({ sustituir: conNumero('') })
     const cta = doc.getElementById('wa-cta')
 
@@ -35,7 +35,7 @@ describe('U8 · botón de WhatsApp (RF05)', () => {
     )
   })
 
-  test('U8.2 · con número configurado el enlace queda completo y seguro', () => {
+  test('U8.2 · con número configurado el enlace queda completo y seguro', { skip: estaInstrumentado() && 'afirma sobre el fuente publicado' }, () => {
     const { doc } = cargarDOM({ sustituir: conNumero(NUMERO_VALIDO) })
     const cta = doc.getElementById('wa-cta')
 
@@ -48,7 +48,7 @@ describe('U8 · botón de WhatsApp (RF05)', () => {
     assert.ok(rel.includes('noreferrer'), 'falta noreferrer')
   })
 
-  test('U8.3 · el número del fuente, si existe, es solo dígitos', () => {
+  test('U8.3 · el número del fuente, si existe, es solo dígitos', { skip: estaInstrumentado() && 'afirma sobre el fuente publicado' }, () => {
     /* El test que se cobró el 2026-07-31, en su primer encuentro con un número
        real: llegó como '+13235543854' y `https://wa.me/+1323...` no es la forma
        documentada —wa.me exige dígitos, sin `+`, espacios ni guiones—, o sea
@@ -80,7 +80,7 @@ describe('U8 · botón de WhatsApp (RF05)', () => {
     assert.equal(doc.getElementById('wa-cta').getAttribute('href'), `https://wa.me/${numero}`)
   })
 
-  test('U8.5 · la sustitución del fixture casa de verdad', () => {
+  test('U8.5 · la sustitución del fixture casa de verdad', { skip: estaInstrumentado() && 'afirma sobre el fuente publicado' }, () => {
     /* Guarda contra el test vacuo: si el fuente se reescribe y el reemplazo
        deja de casar, U8.1 y U8.2 estarían pasando sin probar nada. */
     assert.throws(

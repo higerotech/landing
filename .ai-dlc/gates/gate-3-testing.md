@@ -2,10 +2,10 @@
 
 * **Estado:** review — **no superado**
 * **Fecha:** 2026-07-29
-* **Revisión:** 2026-07-31 — implementados el unitario (51), el E2E + accesibilidad (51) y el presupuesto de rendimiento y el DAST
+* **Revisión:** 2026-07-31 — implementados el unitario (51), el E2E + accesibilidad (51) y el presupuesto de rendimiento, el DAST y el mutation testing
 * **Decisores:** Jeremi Alcalá (owner)
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.5.0
+* **Versión:** 0.6.0
 
 - [ ] Pirámide completa pasando (unit → integration → contract → e2e → security) —
       **unit ✅ (50 pruebas, cobertura 100 %), contract ✅** (invariantes del HTML y cabeceras en
@@ -18,8 +18,10 @@
 - [x] Rendimiento dentro de SLOs — **LCP 1 933 ms** (mediana) contra un presupuesto de 2 500
       en **3G lento real**, y 104 KB contra 350. Gateado en el CI. Ver
       `docs/04-testing/rendimiento.md`
-- [ ] Mutation testing ≥ 60% — descartado a propósito por ahora: añadiría otra dependencia
-      grande y lo primero era que la suite existiera
+- [x] Mutation testing ≥ 60% — **92,36 %** (133 de 144 mutantes muertos), muy por encima del
+      60 % de la plantilla. Umbral propio en **90**, porque con el techo estructural en 92,36 un
+      60 % no podría fallar nunca. Corre **semanal**, no por PR: tarda 6,5 min y doblaría el
+      pipeline. Encontró **cinco huecos reales** que se cerraron. Ver `docs/04-testing/mutacion.md`
 
 ## Estado real
 
@@ -45,11 +47,17 @@ Qué cubren y qué no:
 | Accesibilidad | ✅ axe con **todas las reglas** —incluidas buenas prácticas— y umbral en `moderate`, en ES, EN, menú abierto y 404. Más ocho comprobaciones que axe no hace: skip link, landmarks, foco visible, sin trampa de foco, reflow a 320px, zoom 200 %, `reduced-motion` y el contraste que axe dejaba en «incompleto» |
 | Rendimiento (Lighthouse) | ✅ LCP 1 933 ms y 104 KB en 3G lento, mediana de 3 ejecuciones, gateado |
 | Seguridad dinámica (ZAP) | ✅ baseline pasivo: 0 fallos, 3 aceptados y documentados, gateado |
-| Mutation testing | ❌ — descartado por ahora a propósito |
+| Mutation testing | ✅ 92,36 %, umbral 90, ejecución semanal |
 
-**Todos los niveles de la pirámide propuesta están implementados.** El único checkbox sin marcar
-es **mutation testing ≥ 60 %**, descartado a propósito: añadiría otra dependencia grande y lo
-primero era que existiera algo que mutar.
+**Todos los checkboxes están cumplidos.** El último —mutation testing— se cerró el 2026-07-31, y
+merece una nota: se había descartado con el argumento de que «lo primero era que existiera algo
+que mutar». Ese motivo caducó en cuanto hubo suite, y al revisarlo también resultó falso el
+bloqueo técnico que se suponía: **Stryker sí puede mutar JavaScript incrustado en un HTML**.
+Costó tres obstáculos reales —el formato de salida de `node --test`, el aislamiento de realms de
+jsdom y el proceso hijo por archivo—, todos resueltos.
+
+Y valió la pena: con 100 % de cobertura de líneas y funciones, encontró **cinco huecos reales**
+donde las pruebas no habrían detectado el fallo.
 
 El recorrido merece leerse entero, porque el motivo del bloqueo nunca fue el mismo dos veces:
 

@@ -34,3 +34,6 @@ trivy-report.*
 .env
 .env.*
 !.env.example
+
+# Sandbox temporal de Stryker
+.stryker-tmp/

@@ -5,7 +5,7 @@
 import { describe, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { cargarDOM, fuente } from '../helpers/cargar-dom.mjs'
+import { cargarDOM, fuente, estaInstrumentado } from '../helpers/cargar-dom.mjs'
 
 const IDS_EXIGIDOS = ['wa-cta', 'nav-toggle', 'nav-links', 'btn-es', 'btn-en', 'year']
 
@@ -44,7 +44,7 @@ describe('U2 · contrato entre el script y el DOM', () => {
     }
   })
 
-  test('U2.4 · la hoja de estilos define una regla [hidden]', () => {
+  test('U2.4 · la hoja de estilos define una regla [hidden]', { skip: estaInstrumentado() && 'afirma sobre el fuente publicado' }, () => {
     /* Sin ella, el `display` del navegador para [hidden] lo pisa cualquier
        regla de autor que fije display —`.btn-secondary` usa inline-flex— y el
        atributo deja de ocultar. Le pasaba a #wa-cta: con el número sin
@@ -60,7 +60,7 @@ describe('U2 · contrato entre el script y el DOM', () => {
     )
   })
 
-  test('U2.5 · el @font-face inlinado no se ha desviado de fonts.css', () => {
+  test('U2.5 · el @font-face inlinado no se ha desviado de fonts.css', { skip: estaInstrumentado() && 'afirma sobre el fuente publicado' }, () => {
     /* `index.html` inlina las reglas de `assets/fonts/fonts.css` para ahorrar
        un round trip en la cadena crítica —vale ~645 ms de LCP en 3G lento—,
        pero `404.html` sigue enlazando el archivo, así que las mismas reglas
