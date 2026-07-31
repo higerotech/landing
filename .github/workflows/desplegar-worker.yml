@@ -37,12 +37,29 @@ jobs:
       - name: Preparar dist/
         run: npm run preparar
 
+      # La URL se DERIVA de la salida del despliegue, no de una variable
+      # mantenida a mano. Una variable puede decir una cosa mientras el
+      # despliegue fue a otra, y entonces la verificación da verde sobre algo
+      # que no es lo que acabamos de publicar — el patrón que este repositorio
+      # lleva semanas desmontando.
       - name: wrangler deploy
         id: desplegar
-        run: npx wrangler deploy
+        run: |
+          set -o pipefail
+          npx wrangler deploy 2>&1 | tee salida-despliegue.txt
+          url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' salida-despliegue.txt | head -1)
+          if [ -z "$url" ]; then
+            echo "::error::no se pudo derivar la URL del despliegue; no hay nada que verificar"
+            exit 1
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Desplegado en $url"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Sin telemetría: este repositorio autoaloja las fuentes para no
+          # filtrar la IP de sus visitantes (ADR-0004). El mismo criterio.
+          WRANGLER_SEND_METRICS: 'false'
 
       - name: Instalar Chromium
         run: npm run e2e:install
@@ -54,10 +71,13 @@ jobs:
       # Limitación reconocida: esto corre DESPUÉS de desplegar, así que detecta
       # el problema, no lo previene. El rollback es una edición del ingress del
       # túnel, sin reconstruir nada — ver el plan §Rollback.
+      # Se verifica la URL de workers.dev, que es lo que este despliegue
+      # acaba de publicar. Cuando los dominios propios estén enganchados, el
+      # paso 4 de §Verificar antes de publicar sigue midiendo por el borde.
       - name: Verificar lo publicado
         run: npm run e2e
         env:
-          BASE_URL: ${{ vars.URL_PUBLICA }}
+          BASE_URL: ${{ steps.desplegar.outputs.url }}
 
       - uses: actions/upload-artifact@v7
         if: failure()

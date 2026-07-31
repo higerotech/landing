@@ -59,6 +59,20 @@ el día que aparezca un archivo nuevo —un volcado, un `.env` de pruebas— se 
 nadie se acordó de añadirlo. El `Dockerfile` usa inclusión desde el principio y por eso nunca se
 ha colado nada en la imagen. **U12.3** comprueba que ambas listas digan lo mismo.
 
+### La URL de verificación se deriva, no se configura
+
+La primera versión del workflow leía la URL a verificar de una variable de repositorio. Es un
+error de la misma familia que este repositorio lleva semanas corrigiendo: **la variable puede
+decir una cosa mientras el despliegue fue a otra**, y entonces la verificación da verde sobre
+algo que no es lo que se acaba de publicar.
+
+Ahora se extrae de la salida de `wrangler deploy`, y si no se puede extraer el job falla en vez
+de verificar a ciegas. `workers_dev: true` en `wrangler.jsonc` garantiza que esa URL exista, que
+es lo que hace comprobable el paso 1 **antes de tocar ningún DNS**.
+
+También se desactiva la telemetría de wrangler (`WRANGLER_SEND_METRICS=false`): el mismo criterio
+que llevó a autoalojar las fuentes para no filtrar la IP de los visitantes (ADR-0004).
+
 ### El interruptor
 
 El workflow solo corre si existe la variable de repositorio `DESPLIEGUE_WORKER=activado`.

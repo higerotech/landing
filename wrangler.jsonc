@@ -3,6 +3,10 @@
   "name": "higerotech-landing",
   "compatibility_date": "2026-07-31",
 
+  // Publica en *.workers.dev. Es lo que hace verificable el paso 1 del
+  // cutover: se prueba el sitio real, desplegado, ANTES de tocar un DNS.
+  "workers_dev": true,
+
   // Sitio estático puro: no hay código de Worker, solo assets. Si algún día
   // hiciera falta lógica en el borde, aquí entraría un "main".
   "assets": {
