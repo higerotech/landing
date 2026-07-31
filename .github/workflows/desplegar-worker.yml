@@ -1,0 +1,67 @@
+name: Desplegar en Cloudflare Workers
+
+# ── Interruptor explícito ────────────────────────────────────────────────
+# El job solo corre si existe la variable de repositorio DESPLIEGUE_WORKER con
+# valor "activado". Es deliberado: mientras no exista el token de Cloudflare,
+# este workflow pondría en rojo cada merge a `main` sin que nada esté roto de
+# verdad — y un CI que falla por diseño enseña a ignorar los fallos.
+#
+# Para activarlo: crear el secreto CLOUDFLARE_API_TOKEN y la variable
+# DESPLIEGUE_WORKER=activado. Ver docs/05-deployment/plan-cloudflare-workers.md.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  desplegar:
+    name: Desplegar
+    if: vars.DESPLIEGUE_WORKER == 'activado'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Lista de INCLUSIÓN: copia a dist/ exactamente lo que se publica.
+      # U12.3 comprueba que esa lista y los COPY del Dockerfile coincidan.
+      - name: Preparar dist/
+        run: npm run preparar
+
+      - name: wrangler deploy
+        id: desplegar
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Instalar Chromium
+        run: npm run e2e:install
+
+      # Verificación contra lo PUBLICADO, no contra la imagen. Es la lección
+      # del cutover del 2026-07-30: los gates avalaban el artefacto mientras el
+      # sitio real servía otra cosa.
+      #
+      # Limitación reconocida: esto corre DESPUÉS de desplegar, así que detecta
+      # el problema, no lo previene. El rollback es una edición del ingress del
+      # túnel, sin reconstruir nada — ver el plan §Rollback.
+      - name: Verificar lo publicado
+        run: npm run e2e
+        env:
+          BASE_URL: ${{ vars.URL_PUBLICA }}
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: verificacion-despliegue
+          path: playwright-report/
+          retention-days: 7

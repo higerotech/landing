@@ -14,9 +14,13 @@ docs/
 # contexto de build — `node_modules` son miles de archivos en cada `docker build`.
 node_modules/
 tests/
+scripts/
+cloudflare/
+dist/
 package.json
 package-lock.json
 playwright.config.mjs
+wrangler.jsonc
 coverage/
 test-results/
 playwright-report/

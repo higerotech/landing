@@ -19,6 +19,7 @@ tmp/
 node_modules/
 
 # Artefactos de build / escaneo
+#  lo ensambla `npm run preparar` para el Worker
 dist/
 coverage/
 test-results/
