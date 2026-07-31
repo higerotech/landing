@@ -1,10 +1,10 @@
 # ADR-0006: Servir la landing desde Cloudflare Workers con static assets
 
-* **Estado:** proposed
+* **Estado:** accepted — **implementada y en producción desde el 2026-07-31**
 * **Fecha:** 2026-07-31
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 05-deployment
-* **Versión:** 1.0.0
+* **Versión:** 1.1.0
 * **ID:** ADR-0006
 * **Supersede / Superseded-by:** — (no deroga ADR-0002; ver §Consecuencias)
 * **Controles OWASP afectados:** A02, A03, A04, A08
@@ -109,5 +109,26 @@ que sigue existiendo. Lo que cambia es que deja de ser el único camino a produc
 
 - Reduce **T16** (caída no detectada): el borde de Cloudflare sustituye a un host doméstico.
 - Reduce **T9** (HTTP plano entre borde y nginx): en el camino del Worker ese tramo desaparece.
-- Introduce un **riesgo nuevo**: el token de despliegue en el CI. Pendiente de registrar como
-  amenaza con su DREAD cuando esta decisión pase a `accepted`.
+- Introduce un **riesgo nuevo**: el token de despliegue en el CI. Registrado como **T18** al
+  pasar esta decisión a `accepted` (score 4,8).
+
+## Estado de la implementación *(2026-07-31)*
+
+Ejecutada en cinco pasos, detallados en
+[el plan de despliegue](../../05-deployment/plan-cloudflare-workers.md). El apex y `www` sirven
+desde el Worker; `demo.` y `web.` siguen en el túnel como contingencia, y el suite completo sigue
+corriendo contra el contenedor en cada PR para que ese respaldo no se pudra.
+
+Tres cosas que la decisión no había previsto y conviene tener aquí:
+
+1. **Los dos caminos no responden igual a `/index.html`**: el Worker redirige (307) y nginx
+   devuelve 200. No es un fallo —ambos son correctos— y acabó siendo útil: es el discriminador
+   que permite saber qué origen hay detrás de un hostname, porque proxiados los dos por
+   Cloudflare, ni la IP ni la cabecera `Server` los distinguen.
+2. **La zona inyectaba un beacon de terceros** en el HTML de todos sus hostnames, incluidos los
+   del túnel. La CSP lo bloqueaba, así que nunca llegó a ejecutarse ni a filtrar nada, pero
+   contradecía ADR-0004 y nadie lo había visto: ningún objetivo de prueba estaba dentro de la
+   zona. Desactivado, y cubierto por `scripts/verificar-zona.mjs`.
+3. **`*.workers.dev` quedó detrás de Cloudflare Access.** Está bien que la URL de preview no sea
+   pública, pero dejó al workflow verificando contra una pantalla de login. La verificación pasó
+   a medir el hostname canónico.

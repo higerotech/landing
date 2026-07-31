@@ -5,7 +5,7 @@
 * **Fecha:** 2026-07-31
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 05-deployment
-* **Versión:** 0.1.0
+* **Versión:** 1.0.0
 * **Decisión de referencia:** [ADR-0006](../00-project/adr/0006-servir-desde-cloudflare-workers.md)
 * **Estrategia:** migración por hostname, con el túnel como contingencia inmediata
 

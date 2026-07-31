@@ -5,9 +5,12 @@
 * **Revisión:** 2026-07-30 — añadida **T17** y explicitado el alcance del cierre de T7
   (ver §T17). La aprobación del 2026-07-29 no cubre esa amenaza: quedó abierta y pendiente de
   revisión del owner.
+* **Revisión:** 2026-07-31 — añadida **T18** (token de despliegue en el CI) al pasar ADR-0006 a
+  `accepted`, y acotado el alcance de **T9**, que desde el cutover solo describe el camino de
+  contingencia. Tampoco cubiertas por la aprobación original.
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 02-design
-* **Versión:** 0.3.0
+* **Versión:** 0.4.0
 * **Gate:** 1
 * **Alcance:** Sistema completo — sitio estático, configuración de nginx e imagen de contenedor
 * **Metodología:** STRIDE + DREAD
@@ -137,7 +140,8 @@ Escala 1–10 por criterio; **Score = media**. Umbral de atención obligatoria: 
 | **T2** | Enmarcado del sitio para clickjacking o suplantación | 6 | 4 | 5 | 6 | 5 | **5,2** | ✅ Cerrado | `X-Frame-Options: DENY` + `frame-ancestors 'none'` |
 | **T15** | Soft 404: cualquier ruta devolvía 200 con la landing | 4 | 10 | 8 | 3 | 2 | **5,4** | ✅ Cerrado | `try_files … =404` + página 404 propia |
 | **T13** | Fuga de la IP del visitante a Google al cargar fuentes | 3 | 10 | 1 | 5 | 8 | **5,4** | ✅ Cerrado | Fuentes autoalojadas · ADR-0004 |
-| **T9** | Tráfico en HTTP plano entre el borde y nginx | 5 | 3 | 6 | 4 | 5 | **4,6** | ⚠️ Aceptado | Tráfico interno del host, entre el contenedor `landing-tunnel` (cloudflared) y nginx. El borde queda documentado en `docs/05-deployment/deployment.md` §El borde: TLS lo termina Cloudflare |
+| **T18** | Token de despliegue del CI comprometido: permite publicar contenido arbitrario en el dominio canónico | 8 | 2 | 3 | 9 | 2 | **4,8** | ⚠️ Aceptado | Alcance mínimo (`Workers Scripts: Edit` y nada más) y rotable. **No** se le concede permiso sobre DNS · ADR-0006 |
+| **T9** | Tráfico en HTTP plano entre el borde y nginx | 5 | 3 | 6 | 4 | 5 | **4,6** | ⚠️ Aceptado | **Solo aplica al camino de contingencia** desde el 2026-07-31: en el del Worker ese tramo no existe. Tráfico interno del host entre `landing-tunnel` (cloudflared) y nginx |
 | **T8** | Enumeración de rutas y archivos ocultos (`/.git`, `/.env`) | 7 | 3 | 6 | 2 | 3 | **4,2** | ✅ Cerrado | `location ~ /\.` deniega + `.dockerignore` |
 | **T6** | Versión de nginx expuesta facilitando búsqueda de CVE | 3 | 6 | 8 | 2 | 2 | **4,2** | ✅ Cerrado | `server_tokens off` |
 | **T12** | Parámetro `?lang` manipulado con payload | 6 | 2 | 4 | 3 | 4 | **3,8** | ✅ Cerrado | Allowlist `['es','en']`; nunca interpolado en el DOM |
@@ -241,7 +245,8 @@ El impacto, en cambio, es idéntico, y de ahí que aun así supere el umbral de 
 | T11 | `RUN nginx -t` en build | `Dockerfile` | A08 | Build falla si la config es inválida |
 | T12 | Allowlist de idioma | `index.html` `idiomaInicial()` | A05 | `?lang=<script>` → cae a `es` |
 | T15 | `try_files … =404` + `/404.html` | `nginx.conf` | A10 | Job del pipeline: 2 rutas → 404 |
-| **T16** | **Ninguno** | — | **A09** | **Gate 5 no superado** |
+| **T16** | **Ninguno** | — | **A09** | **Gate 5 no superado**. Servir desde el borde reduce la exposición a la caída de un host doméstico, pero **no es un control**: sin alertas, una caída sigue sin detectarse |
+| T18 | Token de alcance mínimo, sin permiso sobre DNS | Secreto del repositorio | A08 | Revisión manual del alcance en Cloudflare |
 
 ## Riesgos aceptados — registro explícito
 
@@ -250,7 +255,8 @@ Se listan aparte para que no se confundan con controles cumplidos.
 | ID | Riesgo | Razón de aceptación | Disparador de revisión |
 |---|---|---|---|
 | T4 | CSP con `'unsafe-inline'` | No hay entrada de usuario que llegue al DOM | Añadir formulario, buscador o contenido de CMS |
-| T9 | HTTP plano borde→nginx | Tráfico interno del host, no atraviesa red no confiable | Separar el borde a otra máquina |
+| T9 | HTTP plano borde→nginx | Tráfico interno del host, no atraviesa red no confiable. Desde el 2026-07-31 solo alcanza al camino de contingencia | Separar el borde a otra máquina |
+| T18 | Token de despliegue en el CI | Alcance mínimo y rotable; un despliegue automatizado y auditable vale más que el riesgo de la credencial. La alternativa —desplegar a mano— es la que produjo la deriva de dos semanas | Que el token necesite permiso sobre DNS, o que aparezca un segundo consumidor |
 | T10 | Sin rate limiting | Contenido estático cacheable; el coste de saturar supera el beneficio | Evidencia de abuso en los logs |
 | T14 | IPs en logs de acceso | Necesarias para diagnóstico; rotación agresiva y sin envío externo | Decisión de anonimizar el formato de log |
 | — | Correo de contacto recolectable | Es un dato comercial público | — |

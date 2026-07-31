@@ -19,8 +19,13 @@
 -->
 
 Landing page corporativa de **Higerotech**, consultora tecnológica AI-First para el B2B
-venezolano. Sitio estático en modo oscuro, bilingüe (ES/EN), empaquetado para desplegar con
-Docker sobre nginx.
+venezolano. Sitio estático en modo oscuro, bilingüe (ES/EN).
+
+Se sirve desde un **Worker de Cloudflare** con *static assets* ([ADR-0006](docs/00-project/adr/0006-servir-desde-cloudflare-workers.md)),
+desplegado por GitHub Actions. La imagen **Docker sobre nginx** se conserva como **plan de
+contingencia** y sirve `demo.` y `web.`; no es un camino muerto: el suite completo y el DAST
+siguen corriendo contra ella en cada PR, porque un respaldo sin probar es un respaldo que falla
+el día que hace falta.
 
 Este repositorio sigue el estándar **AI-DLC** en su variante polyrepo (ver
 [ADR-0001](docs/00-project/adr/0001-adopcion-estructura-ai-dlc-polyrepo.md)).
@@ -49,7 +54,13 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 │   ├── og-card.png             # Tarjeta social 1200×630
 │   └── logo_white_trans.png    # Logotipo
 │
-├── Dockerfile                  # nginx:1.30-alpine, valida la config en build
+├── wrangler.jsonc              # Worker con static assets — el camino canónico
+├── cloudflare/_headers         # Las mismas cabeceras, para el Worker (U12 vigila que no diverjan)
+├── scripts/
+│   ├── preparar-assets.mjs     # Ensambla dist/ desde una lista de INCLUSIÓN
+│   └── verificar-zona.mjs      # Comprueba los hostnames canónicos como los recibe un visitante
+│
+├── Dockerfile                  # nginx:1.30-alpine, valida la config en build — contingencia
 ├── nginx.conf                  # Rutas, caché y códigos de estado
 ├── security-headers.conf       # Cabeceras — incluido en CADA location (ver ADR-0002)
 ├── docker-compose.yml          # Contenedor endurecido: read-only, cap_drop, límites
@@ -67,7 +78,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 │   ├── 04-testing/             # Unitarias, cobertura, E2E y rendimiento (Gate 3)
 │   └── 05-deployment/          # Topología, pipeline, verificación y rollback
 │
-├── tests/                      # 61 unitarias, 58 E2E, cobertura, perf, DAST y mutación
+├── tests/                      # 64 unitarias, 58 E2E, cobertura, perf, DAST y mutación
 ├── CHANGELOG.md  SECURITY.md  CONTRIBUTING.md
 └── .github/workflows/          # Pipeline: 10 jobs — G1–G7, unit, SCA, E2E, perf y DAST
 ```
@@ -126,7 +137,18 @@ python3 -m http.server 8080
 # http://localhost:8080
 ```
 
-## Despliegue con Docker
+## Despliegue
+
+**El camino canónico es automático**: al mergear en `main`, el workflow prepara `dist/`, ejecuta
+`wrangler deploy` y **verifica contra lo publicado** — las 58 E2E contra `https://higerotech.com`
+y después `verificar:zona`. Nada que hacer a mano.
+
+```bash
+npm run preparar                 # ensambla dist/ (lista de inclusión)
+npm run verificar:zona           # comprueba los hostnames canónicos ya publicados
+```
+
+### Contingencia: Docker
 
 ```bash
 docker compose up -d --build     # http://localhost
@@ -136,9 +158,10 @@ docker compose down
 `docker compose build` ejecuta `nginx -t` dentro de la imagen: una configuración inválida
 rompe el build, no el arranque.
 
-El puerto del host es **80** y no 8080 a propósito: el túnel de Cloudflare que publica el sitio
-tiene su origen fijado ahí. Está explicado junto a la directiva en `docker-compose.yml` y en
-`docs/05-deployment/deployment.md` §El borde.
+El puerto del host es **80** y no 8080 a propósito: el túnel de Cloudflare tiene su origen
+fijado ahí. Está explicado junto a la directiva en `docker-compose.yml` y en
+`docs/05-deployment/deployment.md` §El borde. Desde el cutover del 2026-07-31 ese túnel sirve
+`demo.` y `web.`; los hostnames canónicos salieron de su ingress.
 
 ## Verificar antes de publicar
 
@@ -206,9 +229,20 @@ cargar la página — `setLang()` corre al arrancar. Ver
 
 ## Pendiente
 
-Ver [`CHANGELOG.md`](CHANGELOG.md) §Unreleased. En resumen: confirmar dominio, configurar el
-número de WhatsApp, montar la suite de pruebas (Gate 3), montar un monitor externo de
-disponibilidad y diagnosticar el contenedor de producción en estado `unhealthy`.
+Ver [`CHANGELOG.md`](CHANGELOG.md) §Unreleased. En resumen, y a fecha del 2026-07-31:
+
+| | |
+|---|---|
+| **Observabilidad** (Gate 5, A09, T16) | Abierto. Es el hueco más grande que queda: sin alerta, una caída sigue sin detectarse. Servir desde el borde reduce la exposición, no la ceguera |
+| Gate 3 | Los cinco checkboxes cumplidos; cerrarlo es decisión del owner |
+| Gate 4 | Falta firma de imagen, anclar por digest y archivar el SBOM — los tres aplican a la contingencia |
+| Gate canónico `license` | Sin herramienta asignada. Es el único de los siete que falta |
+| `preload` de HSTS | Los cuatro requisitos se cumplen; **solicitarlo sigue sin hacerse a propósito**, porque entrar en la lista es irreversible en la práctica |
+| E3.6 y E9.2 | Comprueban que no se filtre `nginx/x.y`. Contra el Worker son trivialmente ciertas: hay que reetiquetarlas como específicas del contenedor |
+
+Lo que **sí** se cerró: dominio confirmado, apex enrutado, número de WhatsApp, la suite completa
+(unitarias, E2E, a11y, rendimiento, DAST y mutación), el contenedor `unhealthy` y el cutover al
+Worker.
 
 El pipeline **está conectado y es obligatorio** desde el 2026-07-31. Al hacerse público el
 repositorio desapareció la limitación del plan Free y `main` quedó protegido:

@@ -4,10 +4,10 @@
 * **Fecha:** 2026-07-29
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 02-design
-* **Versión:** 0.2.0
+* **Versión:** 0.3.0
 * **Gate:** 1
-* **Estilo arquitectónico:** Sitio estático servido por proxy inverso — sin capas de aplicación
-* **ADRs relacionadas:** ADR-0001, ADR-0002, ADR-0003, ADR-0004, ADR-0005
+* **Estilo arquitectónico:** Sitio estático servido desde el borde — sin capas de aplicación
+* **ADRs relacionadas:** ADR-0001, ADR-0002, ADR-0003, ADR-0004, ADR-0005, ADR-0006
 
 ## Nota sobre el estilo arquitectónico
 
@@ -66,6 +66,23 @@ C4Container
 ```
 
 *Eje estructura · Fase 02 · Qué piezas existen y con qué protocolo hablan.*
+
+### Qué describe esta vista desde el 2026-07-31
+
+**Los hostnames canónicos ya no pasan por aquí.** Desde el cutover de ADR-0006, `higerotech.com`
+y `www` se sirven desde un Worker de Cloudflare con *static assets*, y esta vista describe el
+**camino de contingencia**: el contenedor nginx tras el túnel, que sigue sirviendo `demo.` y
+`web.`.
+
+No se sustituye el diagrama por el del Worker, y la razón importa: **el contenedor no es un
+camino muerto**. El suite completo y el escaneo DAST siguen corriendo contra él en cada PR, así
+que el respaldo está verificado de forma continua — un respaldo sin probar es un respaldo que
+falla el día que hace falta. La topología de los dos caminos está en
+[el plan de despliegue](../05-deployment/plan-cloudflare-workers.md) §Topología objetivo.
+
+Lo que **no** cambia con el Worker es la frontera de Entrega: las mismas cabeceras, el mismo 404
+real y la misma política de caché, expresadas en `cloudflare/_headers` en vez de en
+`security-headers.conf`. Que las dos definiciones no diverjan lo vigila la prueba **U12**.
 
 ## Vista C4 — Component
 
