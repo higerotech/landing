@@ -158,13 +158,19 @@ curl -s -o /dev/null -w '%{http_code}\n' http://localhost/no-existe             
 Y un cuarto que no es opcional aunque los tres anteriores estén en verde:
 
 ```bash
-# 4. Lo mismo, pero por el borde: comprueba que el túnel apunta a esta imagen
-curl -sI https://www.higerotech.com/ | grep -ci -E 'frame|nosniff|referrer|content-security|strict-transport'  # => 5
+# 4. Y por el borde, que es lo que de verdad recibe el visitante
+npm run verificar:zona
 ```
 
 Los tres primeros validan la **imagen**; el cuarto valida lo **publicado**. El 2026-07-30 los
 tres primeros daban verde mientras el sitio real servía un contenedor de dos semanas antes, sin
 ninguna cabecera. Ver `docs/05-deployment/deployment.md` §Hallazgo operativo.
+
+El paso 4 era un `curl -sI` a las cabeceras hasta el 2026-07-31, y se cambió por una razón
+concreta: **Cloudflare inyecta scripts solo a peticiones de navegador**. Un `curl` normal recibe
+el HTML byte a byte idéntico al desplegado, así que no puede ver una inyección del borde ni
+aunque la tenga delante. `verificar:zona` pide la misma página con dos `Accept` distintos y
+compara — que es como se descubrió el beacon que llevaba meses en producción.
 
 Y los diagramas de la documentación:
 

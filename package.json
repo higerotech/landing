@@ -12,7 +12,8 @@
     "perf": "node tests/rendimiento.mjs",
     "dast": "node tests/dast.mjs",
     "mutacion": "stryker run",
-    "preparar": "node scripts/preparar-assets.mjs"
+    "preparar": "node scripts/preparar-assets.mjs",
+    "verificar:zona": "node scripts/verificar-zona.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
