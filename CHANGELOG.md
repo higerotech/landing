@@ -8,6 +8,18 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **DAST con ZAP baseline, gateado en el CI** (`npm run dast`): 0 fallos, 0 avisos nuevos, 64
+  reglas en verde y 3 hallazgos aceptados con su motivo en `.zap/rules.tsv`. Cierra el último
+  nivel de la pirámide del Gate 3 **y** el gate canónico `DAST` del Gate 4, que pasa de 5 a
+  **6 de 7** — solo queda `license`. Se usa la imagen oficial por **Docker y no la acción de
+  GitHub**, para que el comando sea el mismo en local y en CI: un gate que solo corre en el
+  runner se depura a ciegas. Ventaja secundaria: no añade dependencias npm, así que el gate SCA
+  no se entera; el mismo criterio que descartó `@lhci/cli`.
+- **Verificado que el gate DAST puede ponerse en rojo**, y el primer intento enseñó algo. Quitar
+  `X-Frame-Options` **no** produjo hallazgo: ZAP acepta `frame-ancestors 'none'` de la CSP como
+  equivalente, así que el sitio seguía protegido y el gate tenía razón. Con
+  `X-Content-Type-Options`, que no tiene sustituto, salta `WARN-NEW: 1` y sale con código 2.
+  Comprobarlo con un solo caso habría dado la conclusión contraria y falsa.
 - **Presupuesto de rendimiento con Lighthouse, gateado en el CI** (`npm run perf`). Comprueba las
   dos métricas que el charter declara: **LCP 1 933 ms** de mediana contra un objetivo de 2 500 en
   **3G lento**, y **104 KB** contra 350. Tres decisiones de medición que cambian el resultado y
@@ -95,6 +107,11 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   medidor descarta— porque ahora se ejercitan sobre el fuente real.
 
 ### Seguridad
+- **`Cross-Origin-Embedder-Policy: require-corp`**, detectado como ausente por el escaneo DAST
+  (ZAP 90004). El sitio ya emitía COOP y CORP; faltaba el tercero de la tríada. Es seguro aquí
+  **precisamente** porque no se carga nada de otro origen (ADR-0004): esa directiva rompería
+  cualquier recurso cross-origin sin CORP, y no hay ninguno. Verificado con las E2E de CSP y
+  fuentes.
 - **HSTS activo**, emitido por Cloudflare como correspondía, y a **12 meses**:
   `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`. Verificado el
   2026-07-31 con `curl -sI` en `www`, `web` y `demo`, y en varias rutas incluida una que devuelve

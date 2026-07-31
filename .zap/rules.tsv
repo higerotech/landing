@@ -1,0 +1,33 @@
+# Reglas del escaneo DAST (ZAP baseline) — hallazgos aceptados
+#
+# Formato: <id>	<IGNORE|WARN|FAIL>	<motivo>   (separado por TABULADORES)
+#
+# Lo que NO aparece aquí queda en WARN, y `zap-baseline.py` sale con código 2
+# ante cualquier WARN: un hallazgo nuevo rompe el build. Esta lista es, por
+# tanto, la lista completa y explícita de lo que se ha decidido aceptar.
+#
+# Regla de la casa: nada se silencia sin un motivo escrito y sin un lugar
+# donde ese motivo esté registrado como riesgo. Si una línea de este archivo
+# no puede señalar a un ADR o a una amenaza del threat model, sobra.
+
+# ── Aceptado y registrado como riesgo ────────────────────────────────────
+# T4 del threat model (DREAD 5,6, ⚠️ Aceptado). El CSS y el JS viven dentro
+# de index.html por ADR-0003, así que la CSP necesita 'unsafe-inline' en
+# script-src y style-src. El propio ADR fija el disparador de revisión: se
+# elimina en cuanto se extraigan a archivos propios. Mitigado mientras tanto
+# por no existir ningún vector de entrada de contenido no confiable, cosa que
+# vigila la unitaria U3.5.
+10055	IGNORE	CSP unsafe-inline — T4 aceptado, ver ADR-0003 §Disparador de revisión
+
+# ── Informativo, no es un hallazgo ───────────────────────────────────────
+# ZAP solo hace constar que la página usa JavaScript y que por tanto un
+# escaneo pasivo no ve todo. Es cierto y ya está cubierto: de lo que el
+# escaneo pasivo no alcanza se ocupan las 51 pruebas E2E en navegador real.
+10109	IGNORE	«Modern Web Application» es informativo; el JS lo cubren las E2E
+
+# ── Deliberado ───────────────────────────────────────────────────────────
+# El HTML se sirve con `no-cache, must-revalidate` a propósito: es lo que
+# hace que un despliegue se vea de inmediato. La alerta señala que el
+# contenido es almacenable pero no cacheable, que es exactamente la
+# intención. Los assets sí van con `max-age=2592000, immutable`.
+10049	IGNORE	HTML no cacheable a propósito, para que un despliegue se vea al instante
