@@ -1,7 +1,7 @@
 # Higerotech — Landing Page
 
 [![CI](https://github.com/higerotech/landing/actions/workflows/security-gates.yml/badge.svg)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
-[![Pruebas](https://img.shields.io/badge/pruebas-51_unit_%2B_51_e2e_%2B_perf_%2B_dast-e08000)](.ai-dlc/gates/gate-3-testing.md)
+[![Pruebas](https://img.shields.io/badge/pruebas-54_unit_%2B_51_e2e_%2B_perf_dast_mut-e08000)](.ai-dlc/gates/gate-3-testing.md)
 [![Versión](https://img.shields.io/github/v/tag/higerotech/landing?label=versi%C3%B3n)](CHANGELOG.md)
 
 <!--
@@ -11,7 +11,7 @@
   "AI-DLC Security Gates - passing" y "versión: v0.4.0"). Ya no hay que tocarlos a mano.
 
   El de Pruebas sigue ESTÁTICO porque no existe un endpoint que cuente pruebas: dice
-  "51 unit + 51 e2e + perf + dast" y se actualiza a mano. Sigue en ÁMBAR y no en verde, aunque ahora
+  "54 unit + 51 e2e + perf, dast y mutación" y se actualiza a mano. Sigue en ÁMBAR y no en verde, aunque ahora
   haya E2E y accesibilidad: la pirámide continúa incompleta —faltan rendimiento, DAST y
   mutation testing— y el Gate 3 sigue abierto. Se pondrá verde cuando lo esté el gate, no
   cuando el número parezca suficiente. Si crece la suite y nadie lo toca, el badge miente
@@ -67,7 +67,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 │   ├── 04-testing/             # Unitarias, cobertura, E2E y rendimiento (Gate 3)
 │   └── 05-deployment/          # Topología, pipeline, verificación y rollback
 │
-├── tests/                      # 51 unitarias, 51 E2E, cobertura, rendimiento y DAST
+├── tests/                      # 54 unitarias, 51 E2E, cobertura, perf, DAST y mutación
 ├── CHANGELOG.md  SECURITY.md  CONTRIBUTING.md
 └── .github/workflows/          # Pipeline: 10 jobs — G1–G7, unit, SCA, E2E, perf y DAST
 ```
@@ -86,7 +86,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 | 0 | Requisitos | ✅ Superado | [gate-0](.ai-dlc/gates/gate-0-requirements.md) |
 | 1 | Diseño | ✅ Superado | [gate-1](.ai-dlc/gates/gate-1-design.md) |
 | 2 | Implementación | ✅ Superado — cerrado el 2026-07-30 | [gate-2](.ai-dlc/gates/gate-2-implementation.md) |
-| 3 | Pruebas | 🟡 La pirámide está completa; solo queda mutation testing, descartado a propósito. Cerrarlo es decisión del owner | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
+| 3 | Pruebas | 🟡 **Los cinco checkboxes cumplidos**, mutación incluida (92,36 %). Cerrarlo es decisión del owner | [gate-3](.ai-dlc/gates/gate-3-testing.md) |
 | 4 | Despliegue | 🟡 Parcial — falta firma, digest y archivar el SBOM | [gate-4](.ai-dlc/gates/gate-4-deployment.md) |
 | 5 | Monitoreo | ❌ Abierto — sin observabilidad | [gate-5](.ai-dlc/gates/gate-5-monitoring.md) |
 

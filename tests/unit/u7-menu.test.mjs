@@ -58,14 +58,49 @@ describe('U7 · menú móvil', () => {
     assert.equal(doc.activeElement, toggle, 'el foco no debe perderse al cerrar con teclado')
   })
 
-  test('U7.5 · Escape con el menú cerrado no altera el estado', () => {
+  test('U7.5 · Escape con el menú cerrado no altera el estado ni roba el foco', () => {
+    /* La aserción sobre el foco la pidió el mutation testing: convertir la
+       condición del handler en `true` hacía que Escape llamara a
+       `navToggle.focus()` con el menú ya cerrado, y `aria-expanded` no cambiaba
+       —ya era 'false'—, así que la versión anterior de esta prueba pasaba.
+       Robarle el foco a quien está tecleando en otra parte de la página sí es
+       un defecto observable. */
     const { win, doc } = cargarDOM()
     const toggle = doc.getElementById('nav-toggle')
     const antes = toggle.getAttribute('aria-expanded')
+    const focoAntes = doc.activeElement
 
     doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
 
     assert.equal(toggle.getAttribute('aria-expanded'), antes)
+    assert.equal(doc.activeElement, focoAntes, 'Escape con el menú cerrado no debe mover el foco')
+  })
+
+  test('U7.8 · otra tecla con el menú abierto no lo cierra', () => {
+    /* Cierra el mutante que sustituye `e.key === 'Escape'` por `true`: sin esta
+       prueba, un handler que reaccionara a CUALQUIER tecla pasaba inadvertido, y
+       escribir en la página cerraría el menú. */
+    const { win, doc } = cargarDOM()
+    doc.getElementById('nav-toggle').click()
+    assert.equal(abierto(doc), true)
+
+    for (const key of ['a', 'Enter', 'ArrowDown', 'Shift']) {
+      doc.dispatchEvent(new win.KeyboardEvent('keydown', { key, bubbles: true }))
+      assert.equal(abierto(doc), true, `la tecla ${key} no debe cerrar el menú`)
+    }
+  })
+
+  test('U7.9 · salir del ancho de escritorio no toca el panel', () => {
+    /* Cierra el mutante que sustituye `e.matches` por `true`: el handler solo
+       debe cerrar cuando se ENTRA en escritorio. Antes solo se probaba el caso
+       verdadero, así que un handler que cerrara siempre pasaba igual. */
+    const { doc, mediaQueries } = cargarDOM()
+    doc.getElementById('nav-toggle').click()
+    assert.equal(abierto(doc), true)
+
+    mediaQueries[0].simularCambio(false)
+
+    assert.equal(abierto(doc), true, 'con matches:false el menú debe seguir abierto')
   })
 
   test('U7.6 · volver a ancho de escritorio cierra el panel', () => {

@@ -8,6 +8,14 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **Mutation testing con Stryker: 92,36 %**, umbral propio en **90**, ejecución **semanal** en su
+  propio workflow. Cierra el último checkbox del Gate 3. Con 100 % de cobertura de líneas y
+  funciones, **encontró cinco huecos reales** donde las pruebas no habrían detectado el fallo:
+  `Escape` robaba el foco con el menú cerrado —`aria-expanded` ya era `'false'`, así que la
+  aserción existente no notaba nada—; cualquier tecla cerraba el menú; el handler de breakpoint
+  cerraba también al salir de escritorio; y `idiomaInicial` podía devolver un idioma inválido sin
+  que se notara, **porque `setLang` valida otra vez y el DOM acababa igual**. Cerrados con U7.5
+  ampliada, U7.8, U7.9 y U4.8: el score subió de 88,19 % a 92,36 %. Son 54 unitarias.
 - **DAST con ZAP baseline, gateado en el CI** (`npm run dast`): 0 fallos, 0 avisos nuevos, 64
   reglas en verde y 3 hallazgos aceptados con su motivo en `.zap/rules.tsv`. Cierra el último
   nivel de la pirámide del Gate 3 **y** el gate canónico `DAST` del Gate 4, que pasa de 5 a
@@ -54,6 +62,17 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   producción sirve la versión sin botón.
 
 ### Corregido
+- **La razón por la que se saltaba el mutation testing había caducado, y el bloqueo técnico que
+  se le suponía era falso.** Se había descartado con «lo primero era que existiera algo que
+  mutar» —cierto entonces, obsoleto desde que hubo suite— y con la idea de que Stryker no puede
+  mutar JavaScript incrustado en HTML. **Sí puede**: trae un `html-parser` que extrae los
+  `<script>`, y uno sin `type` ni `src` se trata como JS. Lo que sí costó fueron tres obstáculos
+  reales, cada uno con una causa distinta y ninguno deducible del mensaje de error: `node --test`
+  emite `spec` y no TAP en Node 24; el script corre **dentro de jsdom**, otro *realm*, donde
+  `globalThis` es la ventana y `process` no existe, así que ningún mutante se activaba y la
+  cobertura no volvía a Node; y `node --test` usa **un proceso hijo por archivo**. Resueltos con
+  `--test-reporter=tap`, un puente de realms en el arnés y `--experimental-test-isolation=none`.
+  Los tres primeros intentos daban 0,00 %, que no era un score sino un artefacto.
 - **Todas las acciones del CI pasan a runtime node24.** El job de secretos avisaba de que
   `actions/checkout@v4` y `gitleaks/gitleaks-action@v2` apuntan a Node 20 y se estaban forzando
   sobre Node 24. No es cosmético: GitHub **retira Node 20 de los runners el 2026-09-16** y a

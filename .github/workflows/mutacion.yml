@@ -1,0 +1,50 @@
+name: Mutation testing
+
+# ── Por qué está aquí y no en el pipeline de cada PR ─────────────────────
+# Tarda ~6,5 min, y el pipeline de PR ronda los 7: meterlo ahí lo dobla. Sobre
+# ~100 líneas de lógica que cambian poco, ejecutarlo en cada cambio tiene
+# rendimientos decrecientes — el grueso del valor ya se cobró en la primera
+# medición, que encontró cinco huecos reales de prueba y se cerraron.
+#
+# Semanal captura una regresión en días en vez de en minutos, a coste casi
+# nulo por PR. Si algún día la lógica del sitio crece de verdad, esta decisión
+# es la que hay que releer.
+#
+# Ojo: GitHub desactiva los workflows programados en repositorios sin
+# actividad durante 60 días. Si el repo se queda quieto, esto deja de correr
+# en silencio — por eso también se puede lanzar a mano.
+
+on:
+  schedule:
+    # Lunes 04:00 UTC. Un fallo aquí no bloquea a nadie el viernes por la tarde.
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutacion:
+    name: Mutation testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # No hace falta navegador: muta el script inline y lo prueban las
+      # unitarias, que corren en jsdom.
+      - name: Stryker
+        run: npm run mutacion
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: mutacion
+          path: coverage/mutacion/
+          retention-days: 30
