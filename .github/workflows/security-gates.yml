@@ -249,6 +249,52 @@ jobs:
         run: docker rm -f sitio-e2e
 
   # ── Gate 3 · Rendimiento ─────────────────────────────────────────────
-  # TODO: Lighthouse CI con presupuesto LCP < 2,5 s en 3G lento.
-  #   Y DAST (ZAP baseline), que además cierra uno de los dos gates
+  # Presupuesto del charter: LCP < 2,5 s en 3G lento y < 350 KB de primera
+  # carga. Mide con throttling REAL y no simulado, y toma la mediana de tres
+  # ejecuciones: la varianza medida entre ejecuciones de la misma página llega
+  # a 270 ms, así que un gate sobre una sola medición sería una moneda al aire.
+  perf:
+    name: Presupuesto de rendimiento
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Lighthouse reutiliza este mismo Chromium vía CHROME_PATH.
+      - name: Instalar Chromium
+        run: npm run e2e:install
+
+      - name: Levantar el sitio
+        run: |
+          docker build -t higerotech/landing:perf .
+          docker run -d --name sitio-perf -p 8081:80 higerotech/landing:perf
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:8081/ && break
+            sleep 1
+          done
+          curl -sf -o /dev/null http://localhost:8081/ || { echo "::error::el sitio no levantó"; exit 1; }
+
+      - name: Lighthouse
+        run: npm run perf
+        env:
+          BASE_URL: http://localhost:8081
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse
+          path: coverage/lighthouse/
+          retention-days: 7
+
+      - if: always()
+        run: docker rm -f sitio-perf
+
+  # ── Gate 3 · Seguridad dinámica ──────────────────────────────────────
+  # TODO: DAST (ZAP baseline), que además cierra uno de los dos gates
   #   canónicos ausentes. Ver .ai-dlc/gates/gate-3-testing.md.

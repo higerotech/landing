@@ -8,6 +8,16 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **Presupuesto de rendimiento con Lighthouse, gateado en el CI** (`npm run perf`). Comprueba las
+  dos métricas que el charter declara: **LCP 1 933 ms** de mediana contra un objetivo de 2 500 en
+  **3G lento**, y **104 KB** contra 350. Tres decisiones de medición que cambian el resultado y
+  quedan escritas en `docs/04-testing/rendimiento.md`:
+  **(1)** throttling **real** y no simulado — el simulado daba **5 260 ms** donde el navegador
+  mide 1 608, una diferencia de 3,6 s que estuvo a punto de registrarse como «presupuesto
+  incumplido»; **(2)** 3G lento **de verdad** (400 kbps / 400 ms) y no el preset móvil por
+  defecto, que es Slow 4G y verifica una condición distinta de la declarada; **(3)** **mediana de
+  tres ejecuciones**, porque cuatro medidas de la misma página dieron 2 404 / 2 673 / 2 491 /
+  2 478 ms, un rango de 270 ms que cruza la línea del presupuesto.
 - **Landmarks y skip link.** La página no tenía `<main>`, ni `<header>`, ni forma de saltarse la
   navegación con el teclado. Ejecutando axe **sin el filtro de etiquetas** aparecían **70
   incidencias**: 69 de `region` —contenido fuera de todo landmark— y `landmark-one-main`. Para
@@ -32,6 +42,22 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   producción sirve la versión sin botón.
 
 ### Corregido
+- **Un round trip de más en la cadena crítica: −645 ms de LCP.** En todas las mediciones
+  **FCP == LCP**, o sea que la página no pintaba nada hasta tener el CSS, y
+  `assets/fonts/fonts.css` —2 KB— era una petición externa render-blocking: con 400 ms de RTT,
+  esos 2 KB costaban un viaje completo. Inlinadas sus reglas `@font-face` en `index.html`, que
+  es además lo que ADR-0003 prescribe. LCP baja de 2 404/2 673/2 491 a **1 932/1 898/1 765 ms** y
+  la puntuación de rendimiento de 94 a 98. Sin esto no había gate posible: con la mediana en
+  ~2 510 contra un presupuesto de 2 500, cualquier umbral o bloqueaba merges legítimos o no medía
+  nada. Coste declarado: `404.html` sigue enlazando el archivo, así que las reglas viven en dos
+  sitios sin build que las sincronice — convertido en error detectable con la unitaria **U2.5**—,
+  y esos 2 KB pasan de `immutable` a viajar con cada HTML.
+- **`@lhci/cli` habría puesto el gate SCA en rojo.** El envoltorio de Lighthouse para CI arrastra
+  **323 paquetes** y **7 vulnerabilidades `high`** (`chrome-launcher → rimraf → glob → minimatch
+  → brace-expansion`, más `tmp`) que `npm overrides` no alcanza, porque lhci las fija: npm solo
+  ofrece bajar a `@lhci/cli@0.6.1`. Se usa **`lighthouse` a secas**: 115 paquetes y **cero
+  vulnerabilidades**. Relajar el gate para acomodar la herramienta habría sido peor que el
+  problema que resuelve.
 - **El gate de axe miraba por una rendija doble.** Filtraba por etiquetas WCAG y solo fallaba
   ante `serious`/`critical`, y esas dos restricciones juntas escondían las 70 incidencias de
   arriba. Ahora incluye las reglas de buenas prácticas y falla también ante `moderate`; solo se
