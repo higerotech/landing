@@ -1,21 +1,26 @@
 # Higerotech — Landing Page
 
 [![CI](https://github.com/higerotech/landing/actions/workflows/security-gates.yml/badge.svg)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
-[![Pruebas](https://img.shields.io/badge/pruebas-64_unit_%2B_58_e2e_%2B_perf_dast_mut-e08000)](.ai-dlc/gates/gate-3-testing.md)
+[![Pruebas](https://img.shields.io/badge/pruebas-64_unit_%2B_61_e2e_%2B_perf_dast_mut-e08000)](.ai-dlc/gates/gate-3-testing.md)
 [![Versión](https://img.shields.io/github/v/tag/higerotech/landing?label=versi%C3%B3n)](CHANGELOG.md)
 
 <!--
   CI y Versión pasaron a DINÁMICOS el 2026-07-31, al hacerse público el repositorio.
   Mientras fue privado el proxy de imágenes de GitHub pedía los badges sin autenticar
   y cualquier endpoint dinámico devolvía 404; ahora ambos responden 200 (comprobado:
-  "AI-DLC Security Gates - passing" y "versión: v0.4.0"). Ya no hay que tocarlos a mano.
+  "AI-DLC Security Gates - passing" y la versión vigente, hoy v0.5.0). Ya no hay que
+  tocarlos a mano.
 
   El de Pruebas sigue ESTÁTICO porque no existe un endpoint que cuente pruebas: dice
-  "61 unit + 58 e2e + perf, dast y mutación" y se actualiza a mano. Sigue en ÁMBAR y no en verde, aunque ahora
-  haya E2E y accesibilidad: la pirámide continúa incompleta —faltan rendimiento, DAST y
-  mutation testing— y el Gate 3 sigue abierto. Se pondrá verde cuando lo esté el gate, no
-  cuando el número parezca suficiente. Si crece la suite y nadie lo toca, el badge miente
-  a la baja, que es el sentido menos dañino en que puede mentir.
+  "64 unit + 61 e2e + perf, dast y mutación" y se actualiza a mano.
+
+  Sigue en ÁMBAR, pero el motivo cambió el 2026-07-31 y conviene no arrastrar el viejo: ya
+  NO es que falten niveles de la pirámide —rendimiento, DAST y mutación están los tres— sino
+  que cerrar el Gate 3 es una decisión del owner que aún no se ha tomado. Se pondrá verde
+  cuando lo esté el gate, no cuando el número parezca suficiente.
+
+  Si crece la suite y nadie toca el badge, miente a la baja, que es el sentido menos dañino
+  en que puede mentir.
 -->
 
 Landing page corporativa de **Higerotech**, consultora tecnológica AI-First para el B2B
@@ -78,7 +83,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 │   ├── 04-testing/             # Unitarias, cobertura, E2E y rendimiento (Gate 3)
 │   └── 05-deployment/          # Topología, pipeline, verificación y rollback
 │
-├── tests/                      # 64 unitarias, 58 E2E, cobertura, perf, DAST y mutación
+├── tests/                      # 64 unitarias, 61 E2E, cobertura, perf, DAST y mutación
 ├── CHANGELOG.md  SECURITY.md  CONTRIBUTING.md
 └── .github/workflows/          # Pipeline: 10 jobs — G1–G7, unit, SCA, E2E, perf y DAST
 ```
@@ -140,7 +145,7 @@ python3 -m http.server 8080
 ## Despliegue
 
 **El camino canónico es automático**: al mergear en `main`, el workflow prepara `dist/`, ejecuta
-`wrangler deploy` y **verifica contra lo publicado** — las 58 E2E contra `https://higerotech.com`
+`wrangler deploy` y **verifica contra lo publicado** — las 61 E2E contra `https://higerotech.com`
 y después `verificar:zona`. Nada que hacer a mano.
 
 ```bash
@@ -237,7 +242,7 @@ Ver [`CHANGELOG.md`](CHANGELOG.md) §Unreleased. En resumen, y a fecha del 2026-
 | Gate 3 | Los cinco checkboxes cumplidos; cerrarlo es decisión del owner |
 | Gate 4 | Falta firma de imagen, anclar por digest y archivar el SBOM — los tres aplican a la contingencia |
 | Gate canónico `license` | Sin herramienta asignada. Es el único de los siete que falta |
-| `preload` de HSTS | Los cuatro requisitos se cumplen; **solicitarlo sigue sin hacerse a propósito**, porque entrar en la lista es irreversible en la práctica |
+| `preload` de HSTS | **Solicitado el 2026-07-31** y en estado `pending`. Falta que Chromium incorpore la lista y que cada navegador publique una versión con ella: semanas |
 | E3.6 y E9.2 | Comprueban que no se filtre `nginx/x.y`. Contra el Worker son trivialmente ciertas: hay que reetiquetarlas como específicas del contenedor |
 
 Lo que **sí** se cerró: dominio confirmado, apex enrutado, número de WhatsApp, la suite completa

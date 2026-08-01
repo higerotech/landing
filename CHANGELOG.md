@@ -7,6 +7,31 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Cambiado
+- **Segundo barrido de coherencia, y esta vez el hallazgo principal es una contradicción, no un
+  dato viejo.** El **Gate 3** tenía el primer checkbox **sin marcar**, describiendo como pendiente
+  la seguridad dinámica —mientras el checkbox del DAST, tres líneas más abajo, ya estaba en ✅ y el
+  resumen del mismo documento afirmaba que todos estaban cumplidos—. Un gate que se contradice a
+  sí mismo no se puede leer, así que se marca y se deja escrito por qué se quedó atrás.
+- **Los conteos de pruebas**, desfasados en cinco documentos: el Gate 3 decía **50 unitarias y 51
+  E2E** cuando hay **64 y 61**; `e2e-tests.md`, ADR-0006, `dast.md`, el árbol del `README` y su
+  badge repetían variantes de lo mismo. Añadida además la fila de E1.8/E1.9 a la tabla de «lo que
+  solo un navegador puede decir», que es donde le toca.
+- **La cabecera de `e2e-tests.md`** seguía diciendo «Gate 3 sigue no superado: faltan rendimiento,
+  DAST y mutation testing». Los tres existen desde el 2026-07-31.
+- **El comentario de los badges del `README`** justificaba el ámbar con que «la pirámide continúa
+  incompleta». Ya no lo está: el ámbar es ahora porque **cerrar el gate es una decisión del owner
+  que no se ha tomado**, que es un motivo distinto. Arrastrar el viejo habría hecho parecer que
+  falta trabajo donde lo que falta es una firma.
+- **El `preload` de HSTS** figuraba en el `README` como «solicitarlo sigue sin hacerse a
+  propósito». Se solicitó el 2026-07-31 y está en `pending`.
+- **`SECURITY.md`** recoge ahora el criterio de forzar con `overrides` una dependencia transitiva
+  anclada por un **pin exacto** de su padre: es lo que hizo falta con `qs` y lo que
+  `npm audit fix` no podía resolver solo.
+
+Los conteos de las entradas ya publicadas **no se tocan**: dicen lo que se midió el día que se
+escribieron, y reescribirlos convertiría el registro en una foto del presente.
+
 ### Añadido
 - **El logotipo de la barra se adapta a pantallas estrechas.** Importado del proyecto de Claude
   Design. Por debajo de 560px el logotipo completo cede el sitio al isotipo: pasa de **160px de

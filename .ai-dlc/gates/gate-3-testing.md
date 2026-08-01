@@ -2,15 +2,19 @@
 
 * **Estado:** review — **no superado**
 * **Fecha:** 2026-07-29
-* **Revisión:** 2026-07-31 — implementados el unitario (51), el E2E + accesibilidad (51) y el presupuesto de rendimiento, el DAST y el mutation testing
+* **Revisión:** 2026-07-31 — implementados el unitario (**64**), el E2E + accesibilidad (**61**) y el presupuesto de rendimiento, el DAST y el mutation testing. **Los cinco checkboxes quedan cumplidos**; el primero seguía sin marcar por inercia, describiendo como pendiente la seguridad dinámica que el tercero ya daba por cerrada
 * **Decisores:** Jeremi Alcalá (owner)
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.8.0
+* **Versión:** 0.9.0
 
-- [ ] Pirámide completa pasando (unit → integration → contract → e2e → security) —
-      **unit ✅ (50 pruebas, cobertura 100 %), contract ✅** (invariantes del HTML y cabeceras en
-      cuatro rutas), **e2e ✅ (51 pruebas)**, **accesibilidad ✅ (axe-core)**. Falta el nivel de
-      seguridad dinámica.
+- [x] Pirámide completa pasando (unit → integration → contract → e2e → security) —
+      **unit ✅ (64 pruebas, cobertura 100 %), contract ✅** (invariantes del HTML y cabeceras en
+      cuatro rutas), **e2e ✅ (61 pruebas)**, **accesibilidad ✅ (axe-core)**, **seguridad
+      dinámica ✅** (ZAP, ver más abajo).
+      Este checkbox se quedó sin marcar más tiempo del debido: seguía diciendo «falta el nivel de
+      seguridad dinámica» cuando el checkbox del DAST, tres líneas más abajo, ya estaba en ✅ y el
+      resumen afirmaba que todos estaban cumplidos. Un gate que se contradice a sí mismo no se
+      puede leer.
 - [x] Matriz OWASP Top 10 ejecutada — **nueve de diez categorías con prueba automatizada**, con
       la trazabilidad categoría → prueba en `.ai-dlc/owasp-mapping.md` §Matriz de verificación.
       La única sin cobertura es **A09**, que es la brecha abierta del Gate 5: no hay
@@ -34,9 +38,9 @@
 
 **Hay dos niveles implementados**, ambos en el CI y ambos contra el artefacto real:
 
-- **50 unitarias** (`npm test`, ~4 s) sobre el `index.html` real en jsdom. Diseño en
+- **64 unitarias** (`npm test`, ~4 s) sobre el `index.html` real en jsdom. Diseño en
   `docs/04-testing/unit-tests.md`.
-- **51 E2E + accesibilidad** (`npm run e2e`, ~15 s) con Playwright y axe-core **contra el
+- **61 E2E + accesibilidad** (`npm run e2e`, ~15 s) con Playwright y axe-core **contra el
   contenedor**, no contra un servidor de ficheros. Diseño en `docs/04-testing/e2e-tests.md`.
 
 Las E2E encontraron un bug en su primera ejecución: el atributo `hidden` del botón de WhatsApp
@@ -49,8 +53,8 @@ Qué cubren y qué no:
 
 | Nivel | Estado |
 |---|---|
-| Unit + contrato del HTML | ✅ 50 pruebas, cobertura 100 %: paridad bilingüe (R2), contrato JS↔DOM, i18n, menú, RF05, reveal |
-| E2E en navegador real | ✅ 51 pruebas: breakpoint real, sin JS, CSP aplicándose, 404, cero terceros |
+| Unit + contrato del HTML | ✅ 64 pruebas, cobertura 100 %: paridad bilingüe (R2), contrato JS↔DOM, i18n, menú, RF05, reveal |
+| E2E en navegador real | ✅ 61 pruebas: breakpoint real, sin JS, CSP aplicándose, 404, cero terceros |
 | Accesibilidad | ✅ axe con **todas las reglas** —incluidas buenas prácticas— y umbral en `moderate`, en ES, EN, menú abierto y 404. Más ocho comprobaciones que axe no hace: skip link, landmarks, foco visible, sin trampa de foco, reflow a 320px, zoom 200 %, `reduced-motion` y el contraste que axe dejaba en «incompleto» |
 | Rendimiento (Lighthouse) | ✅ LCP 1 933 ms y 104 KB en 3G lento, mediana de 3 ejecuciones, gateado |
 | Seguridad dinámica (ZAP) | ✅ baseline pasivo: 0 fallos, 3 aceptados y documentados, gateado |
