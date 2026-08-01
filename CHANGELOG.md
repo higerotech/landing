@@ -13,9 +13,11 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   `pending`, con `force-https` e `include_subdomains`. Entrar no es inmediato: hay que esperar a
   que Chromium incorpore la lista y a que cada navegador publique una versión con ella.
 - **Auditados los subdominios antes de enviar**, porque `includeSubDomains` los alcanza a todos.
-  `www`, `web` y `demo` responden 200; **`media`, `encuesta` y `bots` están rotos** — pero **no
-  por HTTPS**: el TLS termina correctamente en 0,15 s con el certificado comodín, y lo que se
-  queda colgado es su origen. Hay que arreglarlos o retirarlos, aparte de esto.
+  `www`, `web` y `demo` responden 200; **`media`, `encuesta` y `bots` devuelven 502** — pero **no
+  por HTTPS**: el TLS termina correctamente en 0,15 s con el certificado comodín, y Cloudflare se
+  rinde a los ~21 s porque el origen no contesta. Son túneles de **otros servicios ajenos a este
+  repositorio**; lo único que había que establecer era si la precarga empeoraba su situación, y
+  no lo hace: su `http://` ya redirigía a `https://` antes del envío.
 - **Corregida una advertencia propia que la medición no sostuvo.** Este repositorio venía
   repitiendo que la precarga «rompería los subdominios que no sirven HTTPS». Medido, ese riesgo
   no existía: Cloudflare termina TLS para todo el comodín, así que cada subdominio tiene HTTPS
