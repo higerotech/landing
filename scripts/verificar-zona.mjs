@@ -154,7 +154,10 @@ async function verificar (host) {
     const r = await fetch(base + ruta, { headers: NAVEGADOR })
     const corp = r.headers.get('cross-origin-resource-policy')
     anota(corp === 'cross-origin', `${ruta} debería abrirse a otros orígenes y trae CORP «${corp}»`)
-    anota(r.headers.get('access-control-allow-origin') === '*', `${ruta} sin Access-Control-Allow-Origin`)
+    /* Y sin `Access-Control-Allow-Origin`: se decidió no emitirlo, porque
+       aceptarlo en el DAST cegaría esa regla para todo el sitio. */
+    anota(r.headers.get('access-control-allow-origin') === null,
+      `${ruta} lleva Access-Control-Allow-Origin y no debería`)
   }
   const control = await fetch(base + CERRADO, { headers: NAVEGADOR })
   anota(control.headers.get('cross-origin-resource-policy') === 'same-origin',

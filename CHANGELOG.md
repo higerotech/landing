@@ -10,8 +10,14 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ### Añadido
 - **Tres assets de marca se pueden incrustar desde otros orígenes**:
   `/assets/isotipo_charcoal.svg`, `/assets/og-card.png` y `/assets/logo_white_trans.png`. Salen
-  con `Cross-Origin-Resource-Policy: cross-origin` y `Access-Control-Allow-Origin: *`; **el resto
-  del sitio sigue en `same-origin`**.
+  con `Cross-Origin-Resource-Policy: cross-origin`; **el resto del sitio sigue en `same-origin`**.
+  **Solo CORP, y no `Access-Control-Allow-Origin: *`.** CORP es lo que permite *incrustar* la
+  imagen; ACAO permitiría además *leerla* con `fetch()` o dibujarla en un `<canvas>`, que no es lo
+  que se pidió. No se añade «por si acaso» porque tiene un precio medido: **el gate DAST lo cazó**
+  —ZAP lo marca como «Cross-Domain Misconfiguration» (10098)— y el formato de `.zap/rules.tsv` no
+  permite aceptar un hallazgo solo para tres rutas: la excepción sería para **todo el sitio** y
+  dejaría de avisar el día que un `ACAO: *` aparezca donde sí importa. Si algún día hace falta
+  leerlas por `fetch()`, se añade entonces y se documenta esa ceguera.
   De las dos cabeceras que se señalaban como culpables, solo una bloqueaba: **`Referrer-Policy:
   strict-origin-when-cross-origin` no impide nada** —únicamente recorta la cabecera `Referer` que
   envía el navegador— así que se queda como está.

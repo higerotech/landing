@@ -23,7 +23,7 @@ se concentra en cuatro puntos:
    `scripts/verificar-zona.mjs` comparando byte a byte lo servido contra el artefacto del build.
    El mismo script vigila una excepción deliberada: **tres imágenes de marca** —isotipo en
    carbón, tarjeta social y logotipo— se sirven con `Cross-Origin-Resource-Policy: cross-origin`
-   para poder incrustarse desde fuera. El resto del sitio sigue en `same-origin`, y hay control
+   para poder incrustarse desde fuera —solo eso: **no** llevan `Access-Control-Allow-Origin`, que permitiría además leerlas con `fetch()`—. El resto del sitio sigue en `same-origin`, y hay control
    negativo: **E10** comprueba que un asset cerrado siga bloqueado desde un tercero, no solo que
    los abiertos carguen. Son imágenes públicas de marca; no hay nada detrás de ese origen que
    proteger.

@@ -56,13 +56,16 @@ test.describe('E10 · assets abiertos a otros orígenes', () => {
     for (const ruta of PUBLICOS) {
       const h = (await request.get(ruta)).headers()
       expect(h['cross-origin-resource-policy'], `${ruta} debería abrirse`).toBe('cross-origin')
-      expect(h['access-control-allow-origin'], `${ruta} sin ACAO`).toBe('*')
+      /* Y NO `Access-Control-Allow-Origin`: se decidió no emitirlo. Va aquí
+         como aserción y no como omisión para que añadirlo sea una decisión
+         consciente y no un descuido — ZAP lo marcaría (10098) y aceptarlo
+         cegaría la regla para todo el sitio. */
+      expect(h['access-control-allow-origin'], `${ruta} no debería llevar ACAO`).toBeUndefined()
     }
 
     /* La otra mitad: lo que NO se abrió. */
     const h = (await request.get(CERRADO)).headers()
     expect(h['cross-origin-resource-policy'], `${CERRADO} no debería abrirse`).toBe('same-origin')
-    expect(h['access-control-allow-origin']).toBeUndefined()
   })
 
   test('E10.2 · un navegador en otro origen los carga de verdad', async ({ page, baseURL }) => {

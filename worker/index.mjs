@@ -31,16 +31,21 @@ export default {
   async fetch (request, env) {
     const respuesta = await env.ASSETS.fetch(request)
 
-    /* Se copian las cabeceras y se sustituyen las dos que cambian; el resto
+    /* Se copian las cabeceras y se sustituye la única que cambia; el resto
        —CSP, COOP, COEP, `Cache-Control`, `Content-Type`— viaja intacto. */
     const cabeceras = new Headers(respuesta.headers)
     cabeceras.set('Cross-Origin-Resource-Policy', 'cross-origin')
 
-    /* `Access-Control-Allow-Origin` no hace falta para un `<img>` —eso lo
-       resuelve CORP— pero sí para `fetch()` y para dibujar en un `<canvas>`
-       sin contaminarlo. Son imágenes públicas de marca: no hay nada que
-       proteger detrás de un origen concreto. */
-    cabeceras.set('Access-Control-Allow-Origin', '*')
+    /* Solo CORP, y NO `Access-Control-Allow-Origin: *`. CORP es lo que hace
+       falta para incrustar la imagen —`<img>`, `url()` en CSS, un favicon—;
+       ACAO añadiría además poder LEERLA con `fetch()` o dibujarla en un
+       `<canvas>` sin contaminarlo, que no es lo que se pidió.
+       No se añade «por si acaso» porque tiene un precio concreto: ZAP lo marca
+       como «Cross-Domain Misconfiguration» (10098), y el formato de
+       `.zap/rules.tsv` no permite aceptar un hallazgo solo para tres rutas —
+       la aceptación sería para TODO el sitio, y dejaría de avisar el día que
+       un `ACAO: *` aparezca donde sí importa. Si algún día hace falta leerlas
+       por `fetch()`, se añade entonces y se documenta esa ceguera. */
 
     return new Response(respuesta.body, {
       status: respuesta.status,
