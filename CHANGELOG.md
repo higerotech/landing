@@ -8,6 +8,17 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Seguridad
+- **Forzada una versión parcheada de `qs`** (GHSA-q8mj-m7cp-5q26, DoS moderado). Dependabot lo
+  avisó y `npm audit fix` **no pudo arreglarlo**: `typed-rest-client` —que llega por
+  `@stryker-mutator/core`— declara `qs` con una **versión exacta**, `6.15.1`, así que npm no
+  tenía margen para subir. Se resuelve con un `overrides` a `^6.15.2`; el árbol queda en 6.15.3 y
+  `npm audit` en **0 vulnerabilidades**. Verificado que Stryker sigue arrancando (dry run en verde).
+  El gate SCA **no estaba fallando y no era un fallo suyo**: corre con `--audit-level=high` a
+  propósito, y esto era moderado y de desarrollo. Pero era arreglable, así que se arregla.
+- **Sincronizada la versión del `package-lock.json`**, que se quedó en `0.4.0` al cortar la
+  v0.5.0. Sin efecto funcional, pero es la clase de desajuste que luego hace dudar de qué se
+  instaló.
+
 - **Solicitada la precarga de HSTS para `higerotech.com`.** El chequeo oficial de
   hstspreload.org devolvió **cero errores y cero avisos**, y tras el envío el dominio figura como
   `pending`, con `force-https` e `include_subdomains`. Entrar no es inmediato: hay que esperar a
