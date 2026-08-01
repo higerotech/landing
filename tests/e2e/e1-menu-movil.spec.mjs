@@ -93,3 +93,48 @@ test.describe('E1 · menú móvil', () => {
     await expect(page.locator('#nav-links')).toBeVisible()
   })
 })
+
+/* ── El logotipo de la barra cambia de imagen en pantallas estrechas ──────
+   El logotipo completo mide 480×120 y a 40px de alto ocupa 160px; en un móvil
+   de 360px eso es casi la mitad de la barra. Por debajo de 560px lo sustituye
+   el isotipo, que ocupa 47px.
+
+   Se comprueba con `currentSrc` y no con el marcado: `<source>` e `<img>`
+   están los dos en el DOM en todos los anchos, así que afirmar sobre el HTML
+   daría verde en ambos lados del umbral —una prueba que no puede fallar—.
+   `currentSrc` es lo que el navegador decidió descargar de verdad. */
+const ESTRECHO = { width: 560, height: 900 }  // último ancho con isotipo
+const ANCHO = { width: 561, height: 900 }     // primero con logotipo completo
+
+test.describe('E1 · logotipo adaptable de la barra', () => {
+  const fuenteDelLogo = page => page.locator('.nav-logo img').evaluate(el => el.currentSrc)
+
+  test('E1.8 · a 560px la barra muestra el isotipo', async ({ page }) => {
+    await page.setViewportSize(ESTRECHO)
+    await page.goto('/')
+
+    expect(await fuenteDelLogo(page)).toMatch(/isotipo\.svg$/)
+  })
+
+  test('E1.9 · a 561px vuelve el logotipo completo', async ({ page }) => {
+    /* El otro lado exacto del umbral, como en E1.1/E1.2: si alguien mueve el
+       media query, uno de los dos cae y dice qué lado se rompió. */
+    await page.setViewportSize(ANCHO)
+    await page.goto('/')
+
+    expect(await fuenteDelLogo(page)).toMatch(/logo_white_trans\.png$/)
+  })
+
+  test('E1.10 · el nombre accesible sobrevive al cambio de imagen', async ({ page }) => {
+    /* Lo que se rompería sin darse cuenta: el `alt` vive en el `<img>` y el
+       `<source>` no lo lleva. Si alguien reescribe esto con dos `<img>` y un
+       `display:none`, el enlace puede quedarse sin nombre en un ancho y no en
+       el otro. Se comprueba en ambos. */
+    for (const viewport of [ESTRECHO, ANCHO]) {
+      await page.setViewportSize(viewport)
+      await page.goto('/')
+
+      await expect(page.getByRole('link', { name: 'Higerotech — inicio' })).toBeVisible()
+    }
+  })
+})

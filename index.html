@@ -222,7 +222,11 @@
       border-bottom: 1px solid var(--border);
     }
     .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; }
-    .nav-logo img { height: 40px; }
+    /* `width: auto` no es decorativo: el reset pone `max-width: 100%` y el
+       <picture> de abajo sirve dos imagenes de proporcion distinta —el
+       logotipo es 4:1 y el isotipo 1,18:1—, asi que sin el se deformaria una
+       de las dos al estrecharse el contenedor. */
+    .nav-logo img { height: 40px; width: auto; }
     .nav-links { display: flex; align-items: center; gap: 30px; }
     .nav-links a { font-size: 14.5px; font-weight: 500; color: var(--text-muted); transition: color .2s; }
     .nav-links a:hover { color: var(--teal); }
@@ -532,7 +536,13 @@
   <header>
   <nav aria-label="Principal">
     <div class="container nav-inner">
-      <a href="#inicio" class="nav-logo"><img src="assets/logo_white_trans.png" alt="Higerotech — inicio" /></a>
+      <!-- Por debajo de 560px el logotipo completo (160px de ancho) se come un
+           tercio de la barra, asi que cede el sitio al isotipo (47px). El
+           <picture> descarga UNA sola de las dos, y el isotipo ya viene en
+           cache: es el favicon y el adorno del hero. En movil, ademas, ahorra
+           los 11 KB del PNG. El alt vive en el <img>, que es donde el lector
+           de pantalla lo busca en ambos casos. -->
+      <a href="#inicio" class="nav-logo"><picture><source media="(max-width: 560px)" srcset="assets/isotipo.svg" /><img src="assets/logo_white_trans.png" alt="Higerotech — inicio" /></picture></a>
       <div class="nav-links" id="nav-links">
         <a href="#servicios" data-es="Servicios" data-en="Services">Servicios</a>
         <a href="#metodologia" data-es="Metodología" data-en="Methodology">Metodología</a>

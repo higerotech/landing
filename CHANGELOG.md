@@ -7,6 +7,25 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Añadido
+- **El logotipo de la barra se adapta a pantallas estrechas.** Importado del proyecto de Claude
+  Design. Por debajo de 560px el logotipo completo cede el sitio al isotipo: pasa de **160px de
+  ancho a 47**, y en un móvil de 360px eso era casi la mitad de la barra. Un `<picture>` descarga
+  **una sola** de las dos imágenes, y el isotipo ya viene en caché —es el favicon y el adorno del
+  hero—, así que en móvil además se ahorran los **11 KB del PNG**.
+  El `width: auto` que acompaña al cambio no es decorativo: el reset aplica `max-width: 100%` y
+  las dos imágenes tienen proporciones distintas (4:1 y 1,18:1), así que sin él una se deformaría
+  al estrecharse el contenedor.
+- **E1.8, E1.9 y E1.10**, porque el cambio llegaba sin una sola prueba que lo viera: ninguna
+  tocaba el logotipo, así que el suite daba verde con él y sin él. Comprueban el umbral por sus
+  **dos lados exactos** —560 y 561px, como ya hacían E1.1 y E1.2 con el menú— y que el nombre
+  accesible del enlace sobreviva en ambos anchos, que es lo que se rompería sin ruido si alguien
+  reescribe esto con dos `<img>` y un `display: none`.
+  Miden sobre **`currentSrc`**, no sobre el marcado: `<source>` e `<img>` están los dos en el DOM
+  en todos los anchos, así que afirmar sobre el HTML habría dado verde a ambos lados del umbral.
+  Verificado moviendo el breakpoint a 400px: **E1.8 cae y E1.9 aguanta**, que es exactamente lo
+  que debe pasar.
+
 ### Seguridad
 - **Forzada una versión parcheada de `qs`** (GHSA-q8mj-m7cp-5q26, DoS moderado). Dependabot lo
   avisó y `npm audit fix` **no pudo arreglarlo**: `typed-rest-client` —que llega por
