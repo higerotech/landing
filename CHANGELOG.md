@@ -7,6 +7,49 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Añadido
+- **Tres assets de marca se pueden incrustar desde otros orígenes**:
+  `/assets/isotipo_charcoal.svg`, `/assets/og-card.png` y `/assets/logo_white_trans.png`. Salen
+  con `Cross-Origin-Resource-Policy: cross-origin` y `Access-Control-Allow-Origin: *`; **el resto
+  del sitio sigue en `same-origin`**.
+  De las dos cabeceras que se señalaban como culpables, solo una bloqueaba: **`Referrer-Policy:
+  strict-origin-when-cross-origin` no impide nada** —únicamente recorta la cabecera `Referer` que
+  envía el navegador— así que se queda como está.
+- **E10.1 y E10.2**, y son dos niveles de evidencia distintos a propósito. E10.1 mira lo que dice
+  la respuesta; **E10.2 abre una página de un tercero y comprueba que el navegador cargue las
+  imágenes de verdad**, con **control negativo**: un asset cerrado tiene que seguir bloqueado. Sin
+  esa última línea, la prueba daría verde aunque CORP no estuviera haciendo nada.
+- **`verificar-zona.mjs` comprueba lo mismo sobre el sitio publicado**, leyendo la lista de
+  `wrangler.jsonc` en vez de copiarla. Hoy **falla contra producción**, que todavía no tiene el
+  cambio, y eso es exactamente lo que debe hacer.
+- **U12.4**: las dos listas de assets abiertos —el `map` de `nginx.conf` y `run_worker_first` de
+  `wrangler.jsonc`— tienen que coincidir. Divergir ahí no rompe nada visible: el asset se
+  incrustaría por un camino y no por el otro según qué hostname sirvió la página.
+
+### Cambiado
+- **El sitio deja de ser «solo assets» en el borde** (enmienda a ADR-0006, que ya contemplaba
+  este caso). Hay ahora un `worker/index.mjs` de quince líneas, y hace falta porque
+  **`cloudflare/_headers` no puede expresar la excepción** — medido con `wrangler dev`, no
+  supuesto: una regla específica **añade** la cabecera en vez de sustituirla, y el asset salía con
+  **dos** `Cross-Origin-Resource-Policy` contradictorios. Prefijarla con `!` para borrarla tampoco
+  surtió efecto.
+  Dos valores contradictorios no son «gana el último»: el navegador no reconoce el resultado
+  combinado, y confiar en que un valor inválido se lea como permisivo es el tipo de cosa que
+  funciona hasta que deja de funcionar.
+  **Alcance mínimo**: `run_worker_first` enumera las tres rutas, así que solo esas ejecutan
+  código; el resto lo sigue sirviendo el Asset Worker sin pasar por el script.
+- **En nginx la excepción se hace con un `map`, no con un `location` aparte**, por la misma razón
+  que existe ADR-0002: `add_header` **acumula**. Un segundo `add_header` habría dejado la
+  respuesta con dos CORP, el mismo defecto por el otro camino. Con un `map` sale una sola cabecera
+  cuyo valor depende de la ruta.
+
+### Corregido
+- **`scripts/preparar-assets.mjs` construía `dist/` por el mero hecho de ser importado.** U12.3 lo
+  importa para leer `PUBLICABLES`, así que **cada `npm test` borraba y rehacía `dist/` de
+  refilón** — sin que se notara, hasta el día que otro proceso tenía el directorio abierto y la
+  prueba cayó con un `EPERM` que no hablaba ni de cabeceras ni de listas. Ahora solo construye si
+  se invoca. Una prueba no debería tener efectos secundarios sobre el árbol de trabajo.
+
 ### Cambiado
 - **Segundo barrido de coherencia, y esta vez el hallazgo principal es una contradicción, no un
   dato viejo.** El **Gate 3** tenía el primer checkbox **sin marcar**, describiendo como pendiente

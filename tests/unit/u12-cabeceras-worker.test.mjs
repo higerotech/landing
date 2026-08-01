@@ -8,7 +8,13 @@
    `@font-face` quedó duplicado, y con más motivo: son cabeceras de seguridad.
    El propio ADR la registra como deuda asumida **con esta prueba como
    mitigación**. Sin ella, la decisión introduce el problema que este
-   repositorio lleva semanas corrigiendo. */
+   repositorio lleva semanas corrigiendo.
+
+   Desde el 2026-07-31 el contrato tiene dos piezas y no una: un valor POR
+   DEFECTO para todo el sitio, y una lista de assets de marca donde CORP se
+   abre a `cross-origin`. Las dos piezas se expresan distinto en cada camino
+   —un `map` en nginx, `run_worker_first` en `wrangler.jsonc`— así que hay dos
+   listas que también pueden divergir. U12.4 las compara. */
 
 import { describe, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -17,12 +23,42 @@ import { estaInstrumentado } from '../helpers/cargar-dom.mjs'
 
 const leer = rel => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8')
 
-/** `add_header Nombre "valor" always;` → { nombre: valor } */
-function cabecerasDeNginx (texto) {
+/** Los bloques `map $entrada $salida { … }` de `nginx.conf`, por variable de salida. */
+function mapasDeNginx (texto) {
+  const mapas = {}
+  for (const [, entrada, salida, cuerpo] of texto.matchAll(/map\s+\$(\w+)\s+\$(\w+)\s*\{([^}]*)\}/g)) {
+    const entradas = {}
+    for (const [, clave, valor] of cuerpo.matchAll(/^\s*"?([^"\s]+)"?\s+"([^"]*)"\s*;/gm)) {
+      entradas[clave] = valor
+    }
+    mapas[salida] = { entrada, entradas }
+  }
+  return mapas
+}
+
+/** Resuelve `$corp` (y `$acao`, que depende de `$corp`) a su valor por defecto. */
+function resolverPorDefecto (valor, mapas) {
+  const m = valor.match(/^\$(\w+)$/)
+  if (!m) return valor
+
+  const mapa = mapas[m[1]]
+  assert.ok(mapa, `el snippet usa $${m[1]} y no hay ningún \`map\` que lo defina`)
+
+  /* `map $uri $x` se resuelve por su rama `default`. `map $corp $y` se
+     encadena: la clave que toca es el valor por defecto de `$corp`. */
+  if (mapa.entrada === 'uri') return mapa.entradas.default
+  return mapa.entradas[resolverPorDefecto(`$${mapa.entrada}`, mapas)]
+}
+
+/** `add_header Nombre "valor" always;` → { nombre: valor }, ya resuelto. */
+function cabecerasDeNginx (snippet, mapas) {
   const mapa = {}
-  const re = /^\s*add_header\s+(\S+)\s+"([^"]*)"/gm
-  let m
-  while ((m = re.exec(texto))) mapa[m[1].toLowerCase()] = m[2].trim()
+  for (const [, nombre, valor] of snippet.matchAll(/^\s*add_header\s+(\S+)\s+"([^"]*)"/gm)) {
+    const resuelto = resolverPorDefecto(valor.trim(), mapas)
+    /* nginx omite la cabecera cuando el valor sale vacío: por defecto no se
+       emite, así que tampoco debe estar en el `/*` del Worker. */
+    if (resuelto !== '') mapa[nombre.toLowerCase()] = resuelto
+  }
   return mapa
 }
 
@@ -41,7 +77,8 @@ function cabecerasDeWorker (texto) {
 }
 
 describe('U12 · las cabeceras de los dos caminos no divergen', () => {
-  const nginx = cabecerasDeNginx(leer('security-headers.conf'))
+  const mapas = mapasDeNginx(leer('nginx.conf'))
+  const nginx = cabecerasDeNginx(leer('security-headers.conf'), mapas)
   const worker = cabecerasDeWorker(leer('cloudflare/_headers'))
 
   test('U12.1 · ambos archivos declaran el mismo conjunto de cabeceras', {
@@ -85,6 +122,31 @@ describe('U12 · las cabeceras de los dos caminos no divergen', () => {
       [...PUBLICABLES].sort(),
       delDockerfile,
       'la lista de publicables y los COPY del Dockerfile ya no coinciden'
+    )
+  })
+
+  test('U12.4 · los assets abiertos a otros orígenes son los mismos en los dos caminos', {
+    skip: estaInstrumentado() && 'afirma sobre archivos del repositorio'
+  }, () => {
+    /* La excepción a CORP se expresa distinto a cada lado —un `map` en nginx,
+       `run_worker_first` en `wrangler.jsonc`— y son dos listas escritas a
+       mano. Divergir aquí no rompe nada visible: el asset simplemente se
+       incrusta desde fuera por un camino y no por el otro, según qué hostname
+       haya servido la página. Es un fallo silencioso, que es el peor. */
+    const deNginx = Object.entries(mapas.corp.entradas)
+      .filter(([clave, valor]) => clave !== 'default' && valor === 'cross-origin')
+      .map(([clave]) => clave)
+      .sort()
+
+    /* `wrangler.jsonc` lleva comentarios, así que no vale `JSON.parse` a secas. */
+    const jsonc = leer('wrangler.jsonc').replace(/^\s*\/\/.*$/gm, '')
+    const delWorker = [...JSON.parse(jsonc).assets.run_worker_first].sort()
+
+    assert.ok(deNginx.length > 0, 'no se parseó el `map $uri $corp` de nginx.conf')
+    assert.deepEqual(
+      deNginx,
+      delWorker,
+      'las rutas abiertas a otros orígenes ya no coinciden entre nginx y el Worker'
     )
   })
 })

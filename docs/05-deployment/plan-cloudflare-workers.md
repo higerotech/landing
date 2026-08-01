@@ -44,6 +44,7 @@ Ya está todo en el repositorio, inerte hasta que se active el interruptor:
 |---|---|---|
 | `wrangler.jsonc` | Directorio de assets, `html_handling` y `not_found_handling: "404-page"` | ✅ |
 | `cloudflare/_headers` | Las cabeceras de seguridad en el camino del Worker | ✅ |
+| `worker/index.mjs` | Abre CORP en tres assets de marca — lo único que `_headers` no puede hacer | ✅ |
 | `scripts/preparar-assets.mjs` | Ensambla `dist/` desde una lista de **inclusión** | ✅ |
 | `.github/workflows/desplegar-worker.yml` | `wrangler deploy` + verificación de lo publicado | ✅ |
 | `tests/unit/u12-cabeceras-worker.test.mjs` | Falla si las dos definiciones de cabeceras divergen | ✅ |

@@ -20,7 +20,7 @@
 
 import { cpSync, mkdirSync, rmSync, existsSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..')
 const DESTINO = join(RAIZ, 'dist')
@@ -35,24 +35,34 @@ export const PUBLICABLES = [
   'sitemap.xml'
 ]
 
-if (existsSync(DESTINO)) rmSync(DESTINO, { recursive: true, force: true })
-mkdirSync(DESTINO, { recursive: true })
+function preparar () {
+  if (existsSync(DESTINO)) rmSync(DESTINO, { recursive: true, force: true })
+  mkdirSync(DESTINO, { recursive: true })
 
-for (const nombre of PUBLICABLES) {
-  const origen = join(RAIZ, nombre)
-  if (!existsSync(origen)) {
-    console.error(`No existe «${nombre}», que la lista dice que se publica.`)
-    process.exit(1)
+  for (const nombre of PUBLICABLES) {
+    const origen = join(RAIZ, nombre)
+    if (!existsSync(origen)) {
+      console.error(`No existe «${nombre}», que la lista dice que se publica.`)
+      process.exit(1)
+    }
+    cpSync(origen, join(DESTINO, nombre), { recursive: true })
   }
-  cpSync(origen, join(DESTINO, nombre), { recursive: true })
+
+  /* `_headers` no se sirve: lo consume el Worker para aplicar las cabeceras. */
+  cpSync(join(RAIZ, 'cloudflare', '_headers'), join(DESTINO, '_headers'))
+
+  const tam = PUBLICABLES.reduce((n, f) => {
+    const p = join(DESTINO, f)
+    return n + (statSync(p).isDirectory() ? 0 : statSync(p).size)
+  }, 0)
+
+  console.log(`dist/ preparado — ${PUBLICABLES.length} entradas + _headers (${Math.round(tam / 1024)} KB sin contar assets/)`)
 }
 
-/* `_headers` no se sirve: lo consume el Worker para aplicar las cabeceras. */
-cpSync(join(RAIZ, 'cloudflare', '_headers'), join(DESTINO, '_headers'))
-
-const tam = PUBLICABLES.reduce((n, f) => {
-  const p = join(DESTINO, f)
-  return n + (statSync(p).isDirectory() ? 0 : statSync(p).size)
-}, 0)
-
-console.log(`dist/ preparado — ${PUBLICABLES.length} entradas + _headers (${Math.round(tam / 1024)} KB sin contar assets/)`)
+/* Solo construye si se INVOCA; importarlo para leer `PUBLICABLES` no debe
+   tocar el disco. U12.3 hace exactamente eso, y hasta ahora cada `npm test`
+   borraba y rehacía `dist/` de refilón — normalmente sin que se notara, salvo
+   el día que otro proceso tenía el directorio abierto y la prueba caía con un
+   `EPERM` que no hablaba de cabeceras ni de listas. Una prueba no debería
+   tener efectos secundarios sobre el árbol de trabajo. */
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) preparar()
