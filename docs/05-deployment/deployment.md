@@ -113,7 +113,7 @@ enumeraron los subdominios y se probó HTTPS en cada uno. Tres responden y **tre
 | Subdominio | HTTPS | Diagnóstico |
 |---|---|---|
 | `www`, `web`, `demo` | ✅ 200 | — |
-| `media`, `encuesta`, `bots` | ❌ | **TLS termina bien** (0,15 s, certificado comodín válido); la petición se queda colgada después. Es el origen, que no contesta |
+| `media`, `encuesta`, `bots` | ⚠️ 502 | Túneles de **otros servicios, ajenos a este repositorio**. TLS termina bien (0,15 s, certificado comodín válido); Cloudflare devuelve 502 a los ~21 s porque el origen no contesta |
 
 Y aquí conviene corregir una advertencia que este repositorio venía repitiendo. El riesgo que se
 señalaba era «hay subdominios que no sirven HTTPS y la precarga los rompería». **Medido, ese
@@ -125,8 +125,11 @@ Lo que la precarga sí cierra de verdad es otra puerta: **la de volver a servir 
 por HTTP plano**. La redirección 301 de la zona ya la tenía prácticamente cerrada; ahora es
 definitiva. Es el precio real, y es distinto del que se venía anunciando.
 
-`media.`, `encuesta.` y `bots.` siguen rotos y hay que arreglarlos o retirarlos — pero eso es un
-problema aparte, no un bloqueo de la precarga.
+`media.`, `encuesta.` y `bots.` son túneles de otros servicios del mismo dominio y **no forman
+parte de este proyecto**. Se auditaron porque `includeSubDomains` los alcanza igual, y lo único
+que había que establecer aquí era si la precarga empeoraba su situación. No lo hace: su `http://`
+ya redirigía a `https://` antes del envío, así que el 502 que devuelven es el mismo con lista de
+precarga y sin ella. Quién los arregla queda fuera del alcance de este repositorio.
 
 Sobre la irreversibilidad, que sigue siendo cierta: **salir de la lista tarda meses en llegar a
 los navegadores** —salir tarda meses en propagarse a los navegadores— y con
