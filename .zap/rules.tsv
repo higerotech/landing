@@ -22,7 +22,7 @@
 # ── Informativo, no es un hallazgo ───────────────────────────────────────
 # ZAP solo hace constar que la página usa JavaScript y que por tanto un
 # escaneo pasivo no ve todo. Es cierto y ya está cubierto: de lo que el
-# escaneo pasivo no alcanza se ocupan las 51 pruebas E2E en navegador real.
+# escaneo pasivo no alcanza se ocupan las 63 pruebas E2E en navegador real.
 10109	IGNORE	«Modern Web Application» es informativo; el JS lo cubren las E2E
 
 # ── Deliberado ───────────────────────────────────────────────────────────

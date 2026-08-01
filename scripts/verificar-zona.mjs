@@ -56,6 +56,21 @@ const CONTRATO = contratoDeCabeceras()
 const DIST = new URL('../dist/index.html', import.meta.url)
 let sinDist = false
 
+/* Los assets de marca que se abren a otros orígenes. Se leen de
+   `wrangler.jsonc` en vez de copiarse aquí, por el mismo motivo que las
+   cabeceras se leen de `_headers`: una lista más escrita a mano es una lista
+   más que puede divergir. U12.4 comprueba que esa misma lista coincida con el
+   `map` de `nginx.conf`. */
+function assetsPublicos () {
+  const jsonc = readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8')
+  return JSON.parse(jsonc.replace(/^\s*\/\/.*$/gm, '')).assets.run_worker_first
+}
+
+const PUBLICOS = assetsPublicos()
+/* Control negativo: un asset que debe seguir cerrado. Sin él, la comprobación
+   no distingue «se abrió lo que tocaba» de «se abrió todo». */
+const CERRADO = '/assets/isotipo.svg'
+
 async function verificar (host) {
   const base = `https://${host}`
   const fallos = []
@@ -127,6 +142,26 @@ async function verificar (host) {
     .map(([, , atributos]) => atributos.match(/\b(?:src|href)="(https?:\/\/[^"]+)"/i)?.[1])
     .filter(u => u && new URL(u).host !== host)
   anota(ajenos.length === 0, `el navegador descargaría de terceros: ${[...new Set(ajenos)].join(', ')}`)
+
+  /* 6b · los assets de marca abiertos, y solo esos.
+     El camino del Worker aplica esta excepción con código (`worker/index.mjs`)
+     y el del contenedor con un `map`; son dos implementaciones distintas de la
+     misma regla, así que conviene mirarla donde de verdad importa: en lo
+     publicado. Se comprueban las dos mitades —lo abierto y lo cerrado—, porque
+     sin la segunda la comprobación no distingue «se abrió lo que tocaba» de
+     «se abrió todo». */
+  for (const ruta of PUBLICOS) {
+    const r = await fetch(base + ruta, { headers: NAVEGADOR })
+    const corp = r.headers.get('cross-origin-resource-policy')
+    anota(corp === 'cross-origin', `${ruta} debería abrirse a otros orígenes y trae CORP «${corp}»`)
+    /* Y sin `Access-Control-Allow-Origin`: se decidió no emitirlo, porque
+       aceptarlo en el DAST cegaría esa regla para todo el sitio. */
+    anota(r.headers.get('access-control-allow-origin') === null,
+      `${ruta} lleva Access-Control-Allow-Origin y no debería`)
+  }
+  const control = await fetch(base + CERRADO, { headers: NAVEGADOR })
+  anota(control.headers.get('cross-origin-resource-policy') === 'same-origin',
+    `${CERRADO} no debería estar abierto y trae CORP «${control.headers.get('cross-origin-resource-policy')}»`)
 
   /* 7 · lo publicado es EL ARTEFACTO QUE ACABAMOS DE CONSTRUIR.
      Esta es la que ata las dos puntas. Todo lo anterior comprueba que el sitio

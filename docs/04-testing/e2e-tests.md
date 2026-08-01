@@ -1,14 +1,14 @@
 # Pruebas E2E y de accesibilidad — Landing corporativa Higerotech
 
-* **Estado:** **implementado** — 61 pruebas en verde
+* **Estado:** **implementado** — 63 pruebas en verde
 * **Fecha:** 2026-07-31
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.3.0
+* **Versión:** 0.4.0
 * **Gate:** 3 — los cinco checkboxes cumplidos desde el 2026-07-31; cerrarlo es decisión del owner
 * **Herramientas:** Playwright (Chromium) + axe-core
 * **Ejecución:** `npm run e2e` — ~15 s contra el contenedor
-* **Revisión:** 2026-07-31 — añadido el grupo E8, endurecido el gate de axe y añadidas E1.8–E1.10 (logotipo adaptable)
+* **Revisión:** 2026-07-31 — añadido el grupo E8, endurecido el gate de axe, añadidas E1.8–E1.10 (logotipo adaptable) y el grupo **E10** (assets abiertos a otros orígenes)
 
 ## Qué añade este nivel que el unitario no puede dar
 
@@ -20,6 +20,7 @@ una familia entera de defectos que estructuralmente no puede ver:
 |---|---|
 | Que el breakpoint real sea 980/981px y no otro | E1.1, E1.2 |
 | Que el navegador **descargue** la imagen correcta del logotipo a cada ancho | E1.8, E1.9 |
+| Que un tercero pueda incrustar tres assets **y no el resto** | E10.1, E10.2 |
 | Que el atributo `hidden` **oculte de verdad** | E6.4 |
 | Que la CSP se aplique y **bloquee** | E5.2, E5.3 |
 | Que la página sin JS siga siendo legible | E4 |

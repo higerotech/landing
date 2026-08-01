@@ -4,7 +4,7 @@
 * **Fecha:** 2026-07-31
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 05-deployment
-* **Versión:** 1.1.0
+* **Versión:** 1.2.0
 * **ID:** ADR-0006
 * **Supersede / Superseded-by:** — (no deroga ADR-0002; ver §Consecuencias)
 * **Controles OWASP afectados:** A02, A03, A04, A08
@@ -59,6 +59,28 @@ Piezas dentro del repositorio:
   un bug y un ADR conseguir.
 - Un archivo **`_headers`** con las cabeceras de seguridad. Soportado por Workers static assets.
 - Workflow de GitHub Actions que despliega con `wrangler deploy` al mergear en `main`.
+
+### Enmienda del 2026-07-31 — deja de ser «solo assets»
+
+La decisión original decía **sitio estático puro, sin código de Worker**, y dejaba escrito que si
+alguna vez hiciera falta lógica en el borde entraría un `main`. Hizo falta, y conviene registrar
+por qué no había alternativa.
+
+Tres imágenes de marca —el isotipo en carbón, la tarjeta social y el logotipo— tienen que poder
+incrustarse desde otros orígenes, y lo impedía `Cross-Origin-Resource-Policy: same-origin`.
+**`cloudflare/_headers` no puede expresar esa excepción**, y está medido con `wrangler dev`, no
+supuesto: una regla específica **añade** la cabecera en vez de sustituirla, así que el asset salía
+con **dos** `Cross-Origin-Resource-Policy` contradictorios. Prefijar la cabecera con `!` para
+borrarla tampoco surtió efecto.
+
+Dos valores contradictorios no son «gana el último»: el navegador no reconoce el resultado
+combinado. Jugarse el comportamiento a que un valor inválido se interprete como permisivo es
+justamente el tipo de cosa que este repositorio lleva semanas desmontando.
+
+**Alcance mínimo, y esa es la parte importante de la enmienda.** `run_worker_first` enumera las
+tres rutas, así que **solo esas tres ejecutan código**; el resto del sitio lo sigue sirviendo el
+Asset Worker sin pasar por el script. La superficie nueva son quince líneas que copian la
+respuesta y reemplazan dos cabeceras.
 
 **Docker y nginx se conservan como plan de contingencia**, no como camino muerto. Y se mantienen
 honestos gratis: las 61 pruebas E2E y el escaneo DAST siguen corriendo contra el contenedor en

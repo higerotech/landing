@@ -1,7 +1,7 @@
 # Higerotech — Landing Page
 
 [![CI](https://github.com/higerotech/landing/actions/workflows/security-gates.yml/badge.svg)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
-[![Pruebas](https://img.shields.io/badge/pruebas-64_unit_%2B_61_e2e_%2B_perf_dast_mut-e08000)](.ai-dlc/gates/gate-3-testing.md)
+[![Pruebas](https://img.shields.io/badge/pruebas-65_unit_%2B_63_e2e_%2B_perf_dast_mut-e08000)](.ai-dlc/gates/gate-3-testing.md)
 [![Versión](https://img.shields.io/github/v/tag/higerotech/landing?label=versi%C3%B3n)](CHANGELOG.md)
 
 <!--
@@ -12,7 +12,7 @@
   tocarlos a mano.
 
   El de Pruebas sigue ESTÁTICO porque no existe un endpoint que cuente pruebas: dice
-  "64 unit + 61 e2e + perf, dast y mutación" y se actualiza a mano.
+  "65 unit + 63 e2e + perf, dast y mutación" y se actualiza a mano.
 
   Sigue en ÁMBAR, pero el motivo cambió el 2026-07-31 y conviene no arrastrar el viejo: ya
   NO es que falten niveles de la pirámide —rendimiento, DAST y mutación están los tres— sino
@@ -60,6 +60,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 │   └── logo_white_trans.png    # Logotipo
 │
 ├── wrangler.jsonc              # Worker con static assets — el camino canónico
+├── worker/index.mjs            # Lo ÚNICO que corre en el borde: abre CORP en 3 assets de marca
 ├── cloudflare/_headers         # Las mismas cabeceras, para el Worker (U12 vigila que no diverjan)
 ├── scripts/
 │   ├── preparar-assets.mjs     # Ensambla dist/ desde una lista de INCLUSIÓN
@@ -83,7 +84,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 │   ├── 04-testing/             # Unitarias, cobertura, E2E y rendimiento (Gate 3)
 │   └── 05-deployment/          # Topología, pipeline, verificación y rollback
 │
-├── tests/                      # 64 unitarias, 61 E2E, cobertura, perf, DAST y mutación
+├── tests/                      # 65 unitarias, 63 E2E, cobertura, perf, DAST y mutación
 ├── CHANGELOG.md  SECURITY.md  CONTRIBUTING.md
 └── .github/workflows/          # Pipeline: 10 jobs — G1–G7, unit, SCA, E2E, perf y DAST
 ```
@@ -145,7 +146,7 @@ python3 -m http.server 8080
 ## Despliegue
 
 **El camino canónico es automático**: al mergear en `main`, el workflow prepara `dist/`, ejecuta
-`wrangler deploy` y **verifica contra lo publicado** — las 61 E2E contra `https://higerotech.com`
+`wrangler deploy` y **verifica contra lo publicado** — las 63 E2E contra `https://higerotech.com`
 y después `verificar:zona`. Nada que hacer a mano.
 
 ```bash

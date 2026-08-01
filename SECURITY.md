@@ -21,6 +21,12 @@ se concentra en cuatro puntos:
    desarrollo del repositorio.
 3. **Integridad del contenido servido** — que lo publicado sea lo revisado. Lo comprueba
    `scripts/verificar-zona.mjs` comparando byte a byte lo servido contra el artefacto del build.
+   El mismo script vigila una excepción deliberada: **tres imágenes de marca** —isotipo en
+   carbón, tarjeta social y logotipo— se sirven con `Cross-Origin-Resource-Policy: cross-origin`
+   para poder incrustarse desde fuera —solo eso: **no** llevan `Access-Control-Allow-Origin`, que permitiría además leerlas con `fetch()`—. El resto del sitio sigue en `same-origin`, y hay control
+   negativo: **E10** comprueba que un asset cerrado siga bloqueado desde un tercero, no solo que
+   los abiertos carguen. Son imágenes públicas de marca; no hay nada detrás de ese origen que
+   proteger.
 4. **El token de despliegue del CI** — una credencial que puede publicar en el dominio
    canónico. Alcance mínimo (`Workers Scripts: Edit`, sin permiso sobre DNS) y rotable. Es la
    amenaza **T18** del threat model.

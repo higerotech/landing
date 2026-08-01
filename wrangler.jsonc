@@ -7,10 +7,29 @@
   // cutover: se prueba el sitio real, desplegado, ANTES de tocar un DNS.
   "workers_dev": true,
 
-  // Sitio estático puro: no hay código de Worker, solo assets. Si algún día
-  // hiciera falta lógica en el borde, aquí entraría un "main".
+  // Casi estático: el único código del borde reescribe CORP en tres assets de
+  // marca que deben poder incrustarse desde fuera. `_headers` no puede hacerlo
+  // —una regla específica AÑADE la cabecera en vez de sustituirla, medido con
+  // `wrangler dev`— y dos CORP contradictorios no valen. Ver worker/index.mjs.
+  "main": "./worker/index.mjs",
+
   "assets": {
     "directory": "./dist",
+
+    // El binding que el Worker usa para pedir el asset antes de retocarlo.
+    "binding": "ASSETS",
+
+    // ESTA LISTA ES LA ALLOWLIST. Solo estas rutas ejecutan el Worker; todo lo
+    // demás lo sirve el Asset Worker directamente, sin pasar por código. Por
+    // eso el script no vuelve a filtrar por ruta: mantener la misma lista dos
+    // veces es la deriva que U12 existe para impedir.
+    //
+    // U12.4 comprueba que coincida con el `map $uri $corp` de `nginx.conf`.
+    "run_worker_first": [
+      "/assets/isotipo_charcoal.svg",
+      "/assets/og-card.png",
+      "/assets/logo_white_trans.png"
+    ],
 
     // Una ruta inexistente devuelve 404 DE VERDAD con nuestra página, no un
     // 200 con la landing. El soft 404 fue un bug real (T15) y costó un ADR

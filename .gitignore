@@ -38,3 +38,6 @@ trivy-report.*
 
 # Sandbox temporal de Stryker
 .stryker-tmp/
+
+# Caché local de wrangler dev (no es artefacto ni fuente)
+.wrangler/

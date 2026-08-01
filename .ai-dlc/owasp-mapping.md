@@ -36,7 +36,7 @@ dos descansaban en una premisa que nadie vigilaba.
 | | Categoría | Verificado por | Estado |
 |---|---|---|---|
 | **A01** | Broken Access Control | **U11.1**, **U11.2** (la premisa de «No aplica»), E3.5 (dotfiles denegados) | ✅ |
-| **A02** | Security Misconfiguration | E3.7 + **E9.3** (cabeceras en rutas y en 404), E3.6 + **E9.2** (versión de nginx), **E9.1** (directivas de la CSP), **E9.4** (COOP/COEP/CORP), E5.1–E5.3 (la CSP bloquea), **U11.7** (endurecimiento del compose), `nginx -t` y Trivy en el CI | ✅ |
+| **A02** | Security Misconfiguration | E3.7 + **E9.3** (cabeceras en rutas y en 404), E3.6 + **E9.2** (versión de nginx), **E9.1** (directivas de la CSP), **E9.4** (COOP/COEP/CORP), **E10.1–E10.2** (los tres assets abiertos a otros orígenes, con control negativo), E5.1–E5.3 (la CSP bloquea), **U11.7** (endurecimiento del compose), `nginx -t` y Trivy en el CI | ✅ |
 | **A03** | Software Supply Chain | E5.4 (cero terceros), E5.5 (fuentes autoalojadas), **U11.5** (nada externo en el marcado), Trivy + `npm audit` en el CI | 🟡 falta digest y archivar el SBOM |
 | **A04** | Cryptographic Failures | **E9.1** (`upgrade-insecure-requests`). HSTS lo emite el borde: paso 4 de verificación, **manual** | 🟡 el borde no se automatiza |
 | **A05** | Injection | U3.5 (nada ejecutable en `data-*`), **U11.3**, **U11.4**, **E9.5**, E5.2–E5.3 | ✅ |
