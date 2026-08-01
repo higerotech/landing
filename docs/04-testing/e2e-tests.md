@@ -1,24 +1,25 @@
 # Pruebas E2E y de accesibilidad — Landing corporativa Higerotech
 
-* **Estado:** **implementado** — 51 pruebas en verde
+* **Estado:** **implementado** — 61 pruebas en verde
 * **Fecha:** 2026-07-31
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 04-testing
-* **Versión:** 0.2.0
-* **Gate:** 3 — **sigue no superado**: faltan rendimiento (Lighthouse), DAST y mutation testing
+* **Versión:** 0.3.0
+* **Gate:** 3 — los cinco checkboxes cumplidos desde el 2026-07-31; cerrarlo es decisión del owner
 * **Herramientas:** Playwright (Chromium) + axe-core
 * **Ejecución:** `npm run e2e` — ~15 s contra el contenedor
-* **Revisión:** 2026-07-31 — añadido el grupo E8 y endurecido el gate de axe
+* **Revisión:** 2026-07-31 — añadido el grupo E8, endurecido el gate de axe y añadidas E1.8–E1.10 (logotipo adaptable)
 
 ## Qué añade este nivel que el unitario no puede dar
 
-Las 50 unitarias cargan el `index.html` real en jsdom, y eso cubre la lógica. Pero jsdom **no
+Las 64 unitarias cargan el `index.html` real en jsdom, y eso cubre la lógica. Pero jsdom **no
 tiene motor de layout, ni cascada CSS completa, ni aplica la CSP, ni sirve nada por HTTP**. Hay
 una familia entera de defectos que estructuralmente no puede ver:
 
 | Lo que solo un navegador contra nginx puede decir | Prueba |
 |---|---|
 | Que el breakpoint real sea 980/981px y no otro | E1.1, E1.2 |
+| Que el navegador **descargue** la imagen correcta del logotipo a cada ancho | E1.8, E1.9 |
 | Que el atributo `hidden` **oculte de verdad** | E6.4 |
 | Que la CSP se aplique y **bloquee** | E5.2, E5.3 |
 | Que la página sin JS siga siendo legible | E4 |

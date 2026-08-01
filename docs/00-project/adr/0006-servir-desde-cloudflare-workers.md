@@ -61,7 +61,7 @@ Piezas dentro del repositorio:
 - Workflow de GitHub Actions que despliega con `wrangler deploy` al mergear en `main`.
 
 **Docker y nginx se conservan como plan de contingencia**, no como camino muerto. Y se mantienen
-honestos gratis: las 58 pruebas E2E y el escaneo DAST siguen corriendo contra el contenedor en
+honestos gratis: las 61 pruebas E2E y el escaneo DAST siguen corriendo contra el contenedor en
 cada PR, así que el respaldo está verificado de forma continua. Un respaldo sin probar es un
 respaldo que falla el día que hace falta.
 

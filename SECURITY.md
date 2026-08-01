@@ -57,6 +57,10 @@ El gate de detección de secretos **ya existe** y cubre lo que entra por PR.
 - **El sitio que se publica no tiene ninguna dependencia**: ni `npm`, ni CDNs, ni nada que se
   descargue en tiempo de ejecución. Es una propiedad deliberada de la arquitectura (ADR-0003) y
   sigue intacta — `index.html` es autocontenido.
+- Cuando una dependencia transitiva queda anclada a una versión vulnerable por un **pin exacto**
+  de su padre, se fuerza con `overrides` en `package.json` en vez de esperar al upstream. Ocurrió
+  con `qs`: `typed-rest-client` lo declara como `6.15.1` exacto, así que `npm audit fix` no tenía
+  margen para subir y el aviso habría quedado abierto indefinidamente.
 - El **repositorio** sí tiene dependencias desde que existen las pruebas y el despliegue
   (Playwright, jsdom, Stryker, Lighthouse, `wrangler`), todas de desarrollo y ancladas en
   `package-lock.json`. Ninguna llega al visitante, pero **sí forman parte de la superficie de
