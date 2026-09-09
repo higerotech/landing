@@ -1,6 +1,12 @@
 # ── Higerotech landing — imagen estática con nginx ──────────────
 FROM nginx:1.30-alpine
 
+# Actualiza los paquetes de Alpine en cada construcción. El tag de nginx se
+# repuntea cada pocas semanas, así que entre repuntes la imagen arrastra CVEs
+# de expat y openssl que Alpine ya tiene corregidos y que Trivy bloquea en el
+# gate de contenedor. Con esto la imagen publicada sale siempre parcheada.
+RUN apk upgrade --no-cache
+
 LABEL org.opencontainers.image.title="Higerotech Landing" \
       org.opencontainers.image.description="Landing page AI-First de Higerotech" \
       org.opencontainers.image.vendor="Higerotech" \

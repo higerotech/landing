@@ -7,6 +7,23 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Corregido
+- **Los tres gates de seguridad que estaban en rojo vuelven a verde**, y uno de ellos no estaba
+  midiendo nada. **Detección de secretos**: `gitleaks-action` exige licencia de pago en repositorios
+  de organización y sin ella abortaba antes de leer un solo commit, así que el gate aparentaba cubrir
+  los secretos sin haber mirado. Se ejecuta la imagen oficial de gitleaks, como en yggdrasil: ahora
+  escanea los 54 commits de verdad. Al no publicar review comments, el job deja de necesitar
+  `pull-requests: write`.
+- **Container scan**: la imagen arrastraba CVEs de `expat` y `openssl` que Alpine ya tenía
+  corregidos, porque el tag de nginx se repuntea cada pocas semanas y entre repuntes queda atrás.
+  El Dockerfile actualiza los paquetes en cada construcción y Trivy ya no encuentra nada.
+- **Dependencias (SCA)**: `undici` (alta, vía `miniflare` y `wrangler`), `qs` (moderada, vía
+  `typed-rest-client`) y `sharp` (alta, vía `miniflare`). Se fijan las versiones corregidas con
+  `overrides` en vez de aceptar el `npm audit fix --force`, que **degradaba wrangler** a una versión
+  anterior. `qs` pasa de `^6.15.2` a `^6.15.4` porque el aviso llega hasta la 6.15.3 y el rango
+  anterior aún permitía instalar una versión vulnerable. La auditoría queda en cero hallazgos y las
+  65 pruebas unitarias siguen pasando.
+
 ### Añadido
 - **Tres assets de marca se pueden incrustar desde otros orígenes**:
   `/assets/isotipo_charcoal.svg`, `/assets/og-card.png` y `/assets/logo_white_trans.png`. Salen
