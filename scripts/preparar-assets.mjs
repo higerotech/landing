@@ -21,6 +21,7 @@
 import { cpSync, mkdirSync, rmSync, existsSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join, resolve } from 'node:path'
+import { buscarPendientes, archivosPublicables } from './verificar-publicable.mjs'
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..')
 const DESTINO = join(RAIZ, 'dist')
@@ -44,6 +45,29 @@ export const PUBLICABLES = [
 ]
 
 function preparar () {
+  /* Antes de copiar nada: si un archivo publicable lleva un marcador
+     `<TODO: …>` sin resolver, esto no se empaqueta. El porqué está en
+     `verificar-publicable.mjs`; en una frase: una política de privacidad cuyo
+     responsable es «<TODO: razón social>» no identifica a nadie, y este es el
+     único punto por el que pasa obligatoriamente el camino canónico a
+     producción — el workflow de despliegue ejecuta `npm run preparar` justo
+     antes de `wrangler deploy`.
+
+     El verificador no importa `PUBLICABLES` de este archivo —lo recibe— para
+     que no haya ciclo entre los dos módulos y esta función pueda seguir siendo
+     sincrónica. Y U12.3 sigue pudiendo importar `PUBLICABLES` sin disparar
+     ninguna verificación, porque esto corre dentro de `preparar()`. */
+  const pendientes = buscarPendientes({ archivos: archivosPublicables(PUBLICABLES) })
+
+  if (pendientes.length > 0) {
+    console.error(
+      `\nNo se empaqueta: ${pendientes.length} marcador(es) sin resolver en archivos publicables.\n` +
+      pendientes.map(p => `  ${p.archivo}:${p.linea}  ${p.texto}`).join('\n') +
+      '\n\nDetalle y motivo:  npm run verificar:publicable\n'
+    )
+    process.exit(1)
+  }
+
   if (existsSync(DESTINO)) rmSync(DESTINO, { recursive: true, force: true })
   mkdirSync(DESTINO, { recursive: true })
 

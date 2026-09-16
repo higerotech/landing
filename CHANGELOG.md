@@ -81,6 +81,33 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   lo prepara como script y la CSP no lo evalúa. E5.1 lo confirma contra un navegador real.
 
 ### Añadido
+- **`scripts/verificar-publicable.mjs`: el sitio no se empaqueta con marcadores `<TODO: …>` sin
+  resolver.** Hoy hay veinte, todos en la política de privacidad y los términos de uso, y son la
+  identificación de la entidad —razón social, RIF, domicilio— más la institución arbitral. El
+  motivo del bloqueo es directo: **una política de privacidad cuyo responsable es «&lt;TODO: razón
+  social&gt;» no identifica a nadie**, y unos términos sin titular no obligan a nada. La
+  diferencia entre un documento y un borrador con estilo.
+  **Dónde muerde:** `npm run preparar` lo invoca antes de copiar nada, y ese comando es el paso
+  previo a `wrangler deploy` en el workflow de despliegue, así que el camino canónico queda
+  cerrado por construcción. El de contingencia se levanta a mano, así que no hay CI que lo
+  intercepte: para eso está `npm run verificar:publicable`, ahora el paso 0 del despliegue manual
+  en `deployment.md`.
+  **Y dónde NO muerde, que es una decisión:** no está en `npm test`. El propio workflow de
+  despliegue tiene escrita la razón — «un CI que falla por diseño enseña a ignorar los fallos» —
+  y unas unitarias en rojo hasta que alguien rellene un RIF dejarían de significar algo en una
+  semana. El bloqueo va donde el fallo es accionable y no se puede rodear.
+  **Detecta las dos formas del marcador**, y la segunda es la que importa: `<TODO: …>` tal cual
+  —en un comentario, en el CSS, en el JS— y `&lt;TODO: …&gt;` escapado, que es como viaja cuando
+  el marcador es **texto visible** de la página. Un `grep '<TODO'` a secas no encuentra esa
+  segunda forma, que es precisamente la de las páginas legales.
+- **U14, seis pruebas que comprueban que el guardia funciona — no que hoy pase.** La distinción
+  importa: un guardia que nadie ha visto detener nada es indistinguible de uno roto. U14.6 lanza
+  `preparar-assets.mjs` de verdad y exige que salga con código 1 y diga por qué; **se salta
+  cuando no quede ningún marcador**, porque ese día el comando debe pasar y exigir que «falle»
+  sería exigir que el repositorio siga incompleto. U14.3 cuida el falso positivo que ya mordió dos
+  veces hoy —la palabra castellana «todo» y los *design tokens*— y U14.5 no exige que haya
+  marcadores, sino que **no aparezcan en ninguna otra página publicada**: si el owner rellena los
+  datos, la lista se vacía y la prueba sigue pasando.
 - **Cuatro documentos legales, ocho archivos** (**ADR-0008**): política de privacidad, términos
   de uso, aviso de cookies y política de IA responsable, con un archivo por idioma —
   `privacidad.html` ↔ `privacy.html` y sus tres hermanos—. **La versión castellana es la única

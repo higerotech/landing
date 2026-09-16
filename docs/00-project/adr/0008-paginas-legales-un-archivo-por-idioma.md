@@ -138,3 +138,15 @@ Esta decisión es de arquitectura. El contenido de los cuatro documentos sale de
 venezolano** antes de considerarse definitivo, especialmente en lo que toca a clientes regulados
 por SUDEBAN. Los campos de identificación de la entidad están como `<TODO>` a propósito: no se
 inventa una razón social.
+
+**Y esos `<TODO>` bloquean la publicación, no la esperan.** `scripts/verificar-publicable.mjs`
+falla si un archivo publicable lleva un marcador sin resolver, y `npm run preparar` lo invoca
+antes de copiar nada — que es el paso previo a `wrangler deploy` en el workflow de despliegue.
+El motivo es directo: una política de privacidad cuyo responsable es «<TODO: razón social>» no
+identifica a nadie, y unos términos de uso sin titular no obligan a nada.
+
+El guardia está en el punto de publicación y **no en `npm test`** a propósito. El propio
+workflow de despliegue tiene escrita la razón: «un CI que falla por diseño enseña a ignorar los
+fallos». Unas unitarias en rojo hasta que alguien rellene un RIF dejarían de significar algo en
+una semana; un empaquetado que se niega es un fallo accionable y no se puede rodear. U14
+comprueba que el verificador funcione, no que hoy pase.

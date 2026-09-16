@@ -259,6 +259,9 @@ se ejecutó de verdad. Queda como candidata a prueba E2E real (Gate 3).
 ## Procedimiento de despliegue
 
 ```bash
+# 0. ¿Es esto publicable? Falla si queda un marcador <TODO: ...> sin resolver
+npm run verificar:publicable
+
 # 1. Construir y verificar la configuracion (nginx -t corre dentro del build)
 docker compose build
 
@@ -277,6 +280,21 @@ npm run verificar:zona
 El puerto es 80, no 8080: ver §El borde. Y la comprobación 4 no es redundante —el paso 3
 valida la imagen, el 4 valida que el túnel apunte a ella. El 2026-07-30 el paso 3 daba verde
 contra la imagen mientras el borde servía otra cosa (ver §Hallazgo operativo).
+
+**Sobre el paso 0** (añadido el 2026-09-16, con las páginas legales). El camino canónico —el
+Worker— ya está cerrado por construcción: su workflow ejecuta `npm run preparar`, y ese comando
+se niega a ensamblar `dist/` mientras un archivo publicable lleve un marcador `<TODO: …>` sin
+resolver. Este camino, el de contingencia, se levanta **a mano**, así que no hay CI que lo
+intercepte: el paso 0 es esa misma comprobación invocada directamente.
+
+No es celo metodológico. Lo que hoy está sin resolver es la identificación de la entidad en la
+política de privacidad y en los términos de uso, y **una política de privacidad cuyo responsable
+es «&lt;TODO: razón social&gt;» no identifica a nadie**. Publicarla por el camino de contingencia
+sería publicar un borrador con efectos jurídicos pretendidos.
+
+U14 comprueba que el verificador detecta de verdad —incluido el marcador escapado, que es como
+aparece cuando es texto visible de la página y que un `grep '<TODO'` no encuentra— y que
+`preparar` se niega. Ver `scripts/verificar-publicable.mjs`.
 
 La comprobación 4 fue un `curl -sI` a las cabeceras hasta el 2026-07-31. Se sustituyó porque
 **un `curl` no puede ver lo que Cloudflare inyecta**: el borde solo reescribe el HTML para

@@ -71,6 +71,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 ├── cloudflare/_headers         # Las mismas cabeceras, para el Worker (U12 vigila que no diverjan)
 ├── scripts/
 │   ├── preparar-assets.mjs     # Ensambla dist/ desde una lista de INCLUSIÓN
+│   ├── verificar-publicable.mjs # Impide empaquetar con marcadores <TODO: …> sin resolver
 │   └── verificar-zona.mjs      # Comprueba los hostnames canónicos como los recibe un visitante
 │
 ├── Dockerfile                  # nginx:1.30-alpine, valida la config en build — contingencia

@@ -13,6 +13,7 @@
     "dast": "node tests/dast.mjs",
     "mutacion": "stryker run",
     "preparar": "node scripts/preparar-assets.mjs",
+    "verificar:publicable": "node scripts/verificar-publicable.mjs",
     "verificar:zona": "node scripts/verificar-zona.mjs"
   },
   "devDependencies": {
