@@ -50,24 +50,20 @@ jobs:
   secrets:
     name: Detección de secretos
     runs-on: ubuntu-latest
-    # `contents: read` del bloque global no basta: el action lee los commits y
-    # los comentarios de la PR y publica los hallazgos como review comments.
-    # Sin esto falla con «Resource not accessible by integration». Se declara
-    # por job para que los otros cuatro sigan sin tocar la API de PRs.
-    permissions:
-      contents: read
-      pull-requests: write
+    # Se ejecuta la imagen oficial de gitleaks en vez de `gitleaks-action`: el
+    # action exige una licencia de pago en repositorios de organización y sin
+    # ella aborta antes de escanear un solo commit, así que el gate aparentaba
+    # cubrir los secretos sin haber mirado nada. Es la misma forma que usa
+    # yggdrasil. Como ya no publica review comments, tampoco hace falta
+    # `pull-requests: write`: basta el `contents: read` del bloque global.
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # `gitleaks-action` exige licencia en repos de organización. Sin esta
-          # variable el job aborta antes de escanear un solo commit, y el gate
-          # aparenta cubrir los secretos sin haber mirado nada.
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+      # Anclado por versión: al subirla, cambiar también el comentario del PR.
+      - name: gitleaks detect
+        run: |
+          docker run --rm -v "$PWD:/repo:ro" zricethezav/gitleaks:v8.28.0             detect --source /repo --no-banner --redact --exit-code 1
 
   # ── Gate 2 · SAST ────────────────────────────────────────────────────
   sast:
