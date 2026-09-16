@@ -35,9 +35,26 @@ test.describe('E8 · estructura y navegación por teclado', () => {
   test('E8.2 · los landmarks estructuran la página', async ({ page }) => {
     await page.goto('/')
 
-    for (const sel of ['header', 'nav', 'main#contenido', 'footer']) {
+    for (const sel of ['header', 'main#contenido', 'footer']) {
       await expect(page.locator(sel), `falta el landmark ${sel}`).toHaveCount(1)
     }
+
+    /* `nav` dejó de ser uno solo el 2026-09-16, al añadir los enlaces legales
+       al pie (ADR-0008). Varios landmarks de navegación son correctos —y en las
+       páginas legales son tres: la barra, el índice del documento y el pie— con
+       una condición: que cada uno tenga nombre accesible, o un lector de
+       pantalla anuncia "navegación" tres veces sin decir cuál es cuál.
+
+       Así que la aserción cambia de «hay exactamente uno» a «hay al menos uno y
+       todos tienen nombre», que es lo que la pauta pide de verdad. */
+    const navs = page.locator('nav')
+    await expect(navs, 'falta el landmark nav').not.toHaveCount(0)
+
+    const sinNombre = await navs.evaluateAll(els => els
+      .filter(el => !el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby'))
+      .map(el => el.outerHTML.slice(0, 60)))
+
+    expect(sinNombre, 'hay landmarks de navegación sin nombre accesible').toEqual([])
 
     // Nada de contenido con texto debe quedar fuera de un landmark.
     const huerfanos = await page.evaluate(() => {

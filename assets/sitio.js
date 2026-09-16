@@ -76,11 +76,37 @@ const alCambiarAncho = e => { if (e.matches) setMenu(false); };
 if (mqEscritorio.addEventListener) mqEscritorio.addEventListener('change', alCambiarAncho);
 else if (mqEscritorio.addListener) mqEscritorio.addListener(alCambiarAncho);
 
-/* ── Idioma ───────────────────────────────────────────────────── */
+/* ── Idioma ───────────────────────────────────────────────────────
+   Dos modos, y la diferencia no es cosmética:
+
+   **Landing** — un solo archivo con las dos versiones en atributos
+   `data-es`/`data-en`. El conmutador reescribe el DOM y no recarga.
+
+   **Páginas de idioma fijo** (las legales) — un archivo por idioma, marcado con
+   `data-idioma-fijo` en el <html> y enlazado a su par con
+   `<link rel="alternate" hreflang>`. Aquí el conmutador NAVEGA.
+
+   Por qué no se hizo con `data-es`/`data-en` también en las legales: son miles
+   de palabras de texto legal, y meterlas en atributos HTML multiplica por tres
+   cada párrafo y convierte el riesgo R2 —editar el texto visible y olvidar el
+   atributo— en la forma normal de romper un documento que tiene efectos
+   jurídicos. Con un archivo por idioma, las dos versiones se comparan lado a
+   lado y la castellana se declara prevalente, que es lo que la investigación de
+   marco legal pide. */
 const IDIOMAS = ['es', 'en'];
 let currentLang = 'es';
 
-function setLang(lang) {
+/* La página declara que su contenido NO se traduce en caliente. */
+const IDIOMA_FIJO = document.documentElement.hasAttribute('data-idioma-fijo');
+
+/**
+ * @param {string}  lang
+ * @param {object}  [opciones]
+ * @param {boolean} [opciones.persistir] `false` aplica el idioma sin guardarlo.
+ *   Lo usan las páginas de idioma fijo al cargar: mostrar la versión castellana
+ *   no debe borrar la preferencia de quien tenía elegido el inglés.
+ */
+function setLang(lang, opciones) {
   if (IDIOMAS.indexOf(lang) === -1) lang = 'es';
   currentLang = lang;
   document.documentElement.lang = lang;
@@ -100,8 +126,20 @@ function setLang(lang) {
     el.innerHTML = el.getAttribute('data-' + lang);
   });
 
+  /* Enlaces cuyo DESTINO depende del idioma, no solo su texto: las páginas
+     legales son un archivo por idioma, así que el pie tiene que apuntar a
+     privacidad.html o a privacy.html según toque. Traducir la etiqueta y dejar
+     el href quieto mandaría a un visitante inglés a un documento en castellano
+     con efectos jurídicos, que es peor que no traducir nada. */
+  document.querySelectorAll('a[data-href-es][data-href-en]').forEach(el => {
+    if (!el.isConnected) return;
+    el.setAttribute('href', el.getAttribute('data-href-' + lang));
+  });
+
   syncToggleLabel();
-  try { localStorage.setItem('lang', lang); } catch (e) { /* modo privado */ }
+  if (!opciones || opciones.persistir !== false) {
+    try { localStorage.setItem('lang', lang); } catch (e) { /* modo privado */ }
+  }
 }
 
 // Prioridad: ?lang= (compartible e indexable) > preferencia guardada > es
@@ -115,8 +153,28 @@ function idiomaInicial() {
   return 'es';
 }
 
-document.getElementById('btn-es').addEventListener('click', () => setLang('es'));
-document.getElementById('btn-en').addEventListener('click', () => setLang('en'));
+/* Lo que hace el conmutador depende del modo de la página. En una de idioma
+   fijo se guarda la preferencia ANTES de navegar: la página de destino la
+   necesita para su propio cromo, y después de `location.assign` ya no hay
+   ocasión de escribirla. */
+function pedirIdioma(lang) {
+  if (IDIOMA_FIJO && lang !== document.documentElement.lang) {
+    const destino = document.documentElement.getAttribute('data-href-' + lang);
+
+    if (destino) {
+      try { localStorage.setItem('lang', lang); } catch (e) { /* modo privado */ }
+      location.assign(destino);
+      return;
+    }
+    /* Sin par declarado no hay a dónde ir. Se cae a traducir el cromo: deja la
+       página mezclada pero alcanzable, que es mejor que un botón muerto. */
+  }
+
+  setLang(lang);
+}
+
+document.getElementById('btn-es').addEventListener('click', () => pedirIdioma('es'));
+document.getElementById('btn-en').addEventListener('click', () => pedirIdioma('en'));
 
 /* ── Scroll reveal ────────────────────────────────────────────────
    Con .reveal en opacity:0, si el observer no existe el contenido nunca
@@ -134,4 +192,10 @@ if ('IntersectionObserver' in window) {
 
 document.getElementById('year').textContent = new Date().getFullYear();
 
-setLang(idiomaInicial());
+/* En una página de idioma fijo manda el idioma del documento, no la
+   preferencia guardada: el cuerpo está escrito en un solo idioma y aplicar el
+   otro dejaría el cromo en inglés sobre un texto legal en castellano, con un
+   `<html lang>` que miente. Y se aplica SIN persistir, para no pisar la
+   preferencia de quien llegó aquí desde un enlace directo. */
+if (IDIOMA_FIJO) setLang(document.documentElement.lang, { persistir: false });
+else setLang(idiomaInicial());

@@ -25,10 +25,23 @@
 import { readFileSync } from 'node:fs'
 import { JSDOM, VirtualConsole } from 'jsdom'
 
-const RUTA_HTML = new URL('../../index.html', import.meta.url)
 const RUTA_JS = new URL('../../assets/sitio.js', import.meta.url)
-const HTML = readFileSync(RUTA_HTML, 'utf8')
 const JS = readFileSync(RUTA_JS, 'utf8')
+
+/* Las páginas legales son ocho archivos que comparten el mismo script y el
+   mismo cromo (ADR-0008), así que el arnés tiene que poder cargar cualquiera de
+   ellas y no solo la landing. Se leen a demanda y se memorizan: un mismo test
+   puede cargar la misma página varias veces. */
+const cache = new Map()
+
+function leerPagina (archivo) {
+  if (!cache.has(archivo)) {
+    cache.set(archivo, readFileSync(new URL(`../../${archivo}`, import.meta.url), 'utf8'))
+  }
+  return cache.get(archivo)
+}
+
+const HTML = leerPagina('index.html')
 
 /* La etiqueta que se sustituye por el script ya inlinado. Es una constante y
    no una expresión regular a propósito: si alguien cambia la forma de cargar
@@ -68,18 +81,21 @@ export function crearIOFalso () {
 
 /**
  * @param {object}   [opciones]
+ * @param {string}   [opciones.archivo]    Página a cargar. Por defecto `index.html`;
+ *   las pruebas de las páginas legales pasan `privacidad.html` y compañía.
  * @param {string}   [opciones.url]        URL del documento; controla `location.search`.
  * @param {boolean}  [opciones.conIO]      Inyecta el doble de IntersectionObserver.
  * @param {object}   [opciones.sustituir]  `{de, a}` aplicado al HTML antes de parsear.
  * @param {Function} [opciones.alPreparar] Recibe `window` antes de que el script corra.
  */
 export function cargarDOM ({
+  archivo = 'index.html',
   url = 'https://higerotech.com/',
   conIO = false,
   sustituir = null,
   alPreparar = () => {}
 } = {}) {
-  let html = HTML
+  let html = leerPagina(archivo)
   let js = JS
 
   if (sustituir) {
@@ -106,7 +122,7 @@ export function cargarDOM ({
   /* El JS entra donde estaba su etiqueta: mismo momento de ejecución que en el
      navegador —DOM ya parseado— y mismo texto que el archivo publicado. */
   if (!html.includes(ETIQUETA)) {
-    throw new Error(`index.html ya no carga el script con «${ETIQUETA}»: el arnés no sabe dónde insertarlo`)
+    throw new Error(`${archivo} ya no carga el script con «${ETIQUETA}»: el arnés no sabe dónde insertarlo`)
   }
   html = html.replace(ETIQUETA, `<script>${js}</script>`)
 
@@ -206,6 +222,12 @@ export function fuente () {
  *  una prueba que afirma sobre el script debe decir que mira el script. */
 export function fuenteJS () {
   return JS
+}
+
+/** Texto sin parsear de cualquier página publicada. Para las aserciones de
+ *  contrato sobre las ocho páginas legales. */
+export function fuenteDe (archivo) {
+  return leerPagina(archivo)
 }
 
 /* ¿Está el fuente instrumentado por Stryker?

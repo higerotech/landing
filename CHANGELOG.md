@@ -23,6 +23,45 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   lo prepara como script y la CSP no lo evalúa. E5.1 lo confirma contra un navegador real.
 
 ### Añadido
+- **Cuatro documentos legales, ocho archivos** (**ADR-0008**): política de privacidad, términos
+  de uso, aviso de cookies y política de IA responsable, con un archivo por idioma —
+  `privacidad.html` ↔ `privacy.html` y sus tres hermanos—. **La versión castellana es la única
+  que produce efectos** y lo dice en su propio texto; la inglesa es traducción de cortesía.
+  **Por qué no con `data-es`/`data-en` como la landing**, que era la decisión inicial: la
+  investigación de marco legal cambió una premisa —si se publica en inglés, la versión castellana
+  debe declararse prevalente— y con 9.000 palabras por idioma ese patrón pone cada párrafo legal
+  tres veces en el archivo. El riesgo **R2** del charter, «editar el texto visible y olvidar el
+  atributo», estropea un titular en la landing; en una política de privacidad deja publicados dos
+  textos distintos de los cuales uno tiene efectos jurídicos. Y con un solo archivo que conmuta en
+  caliente no hay forma de declarar cuál de las dos versiones vale.
+  **El contenido sale de la investigación y necesita revisión de un abogado venezolano** antes de
+  considerarse definitivo, sobre todo para clientes regulados por SUDEBAN. Los campos de
+  identificación de la entidad están como `<TODO>`: no se inventa una razón social.
+- **El conmutador ES/EN navega en las páginas de idioma fijo**, en vez de reescribir el DOM. La
+  página lo declara con `data-idioma-fijo` y `data-href-*` en el `<html>`, y `setLang()` aprendió
+  a cambiar el **destino** de un enlace y no solo su etiqueta, que es lo que necesita el pie para
+  llevar a un visitante inglés a `privacy.html` y no a un documento en castellano con efectos
+  jurídicos. Dos detalles con motivo:
+  **al cargar manda el idioma del documento y no la preferencia guardada** —aplicar el inglés
+  dejaría el cromo traducido sobre un texto legal en español y un `<html lang>` que miente— y
+  **esa carga no pisa la preferencia** de quien llegó por un enlace directo.
+  El destino sale del `<html>` y **no del `hreflang`**: ese lleva la URL canónica, sin extensión,
+  que es la del Worker y da 404 por el camino de nginx. Son dos necesidades distintas y forzarlas
+  en el mismo atributo obliga a romper una.
+- **`assets/legal.css`**, una hoja para las ocho páginas. Los tokens de `:root` sí se duplican
+  desde `index.html` —la landing no puede depender de un archivo externo para pintar su primera
+  vista— y **U2.8** compara los dos bloques. Esa prueba encontró un bug en su primera ejecución:
+  el comentario sobre contraste del `:root` de la landing menciona `--dark-3` y `--text-dim`, y el
+  parser los leía como declaraciones.
+- **U13, con 38 aserciones sobre las ocho páginas**, más **U2.8**, **U12.6** y las nueve **E11**.
+  La tabla `DOCUMENTOS` de `u13-paginas-legales.test.mjs` es la especificación: añadir un quinto
+  documento legal son dos archivos y una fila. U13.9 encontró un hueco real al primer intento —al
+  aviso de cookies en castellano le faltaba la nota de versión prevalente que sí llevaban los
+  otros tres—.
+- **`docs/00-project/legal/`**: la investigación de marco legal (893 líneas, 78 fuentes con fecha
+  de consulta) y la **plantilla de DPA** firmable para cuando Higerotech trate datos por cuenta de
+  un cliente. El DPA trae su propio tope de responsabilidad en vez de remitir a un contrato marco
+  que todavía no existe: un anexo sin tope y sin contrato al que remitir es un anexo sin tope.
 - **`assets/sitio.js`**: todo el JavaScript del sitio, fuera del HTML (**ADR-0007**). El
   disparador no fue el que ADR-0003 había previsto —no ha aparecido ninguna entrada de usuario—
   sino que **el sitio deja de ser una sola página**: las cuatro páginas legales en camino
@@ -114,6 +153,39 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   cuyo valor depende de la ruta.
 
 ### Corregido
+- **La clasificación de datos afirmaba algo que no era cierto.** `data-classification.md` decía
+  en su portada que «este sistema no recolecta, procesa ni almacena datos personales», y a la vez
+  reconocía en sus notas que una dirección IP es dato personal y clasificaba los logs como
+  Confidencial. La contradicción estaba dentro del mismo archivo, y había dos huecos más:
+  **Cloudflare no figuraba en ninguna fila** del inventario, siendo el encargado que ve la IP de
+  cada visitante, y el charter había convertido «no hay formulario» en «no hay tratamiento», que
+  es un salto inválido mientras se publique un `mailto:`. Corregido: el documento sube a 0.2.0,
+  entra Cloudflare con su transferencia internacional, entra la correspondencia de prospectos con
+  su base de licitud y su plazo, y queda **pendiente de re-aprobación del owner** — era un
+  artefacto aprobado en Gate 0 y que la corrección sea correcta no la convierte en aprobada.
+- **Se citaba una norma que no existe.** El mismo documento decía que «no aplican GDPR, LOPD ni
+  normativa de protección de datos». **No hay ninguna «LOPD» venezolana**, ni ley general de
+  protección de datos, ni autoridad de control: lo que aplica son los artículos 28 y 60 de la
+  Constitución y la jurisprudencia vinculante de la Sala Constitucional. Citar una norma
+  inexistente en un documento aprobado es peor que no citar ninguna.
+- **El registro de IP en nginx, desactivado** — el `<TODO>` que llevaba abierto desde julio. Hay
+  un `log_format sin_ip` propio, porque el `combined` de serie empieza por `$remote_addr`, y omite
+  también `$http_x_forwarded_for`. Los logs bajan de **Confidencial a Interno**: sin IP no
+  identifican a nadie.
+  Lo que desatascó la decisión no fue un argumento técnico nuevo, fue tener que escribir en un
+  documento público qué se registra: la versión honesta de «guardamos la IP unos días» es peor
+  producto que «no la guardamos». **U12.6** la vigila, y no por pulcritud — la política publicada
+  afirma que no se conservan IPs, así que volver al formato de serie deja de ser una regresión de
+  configuración y pasa a ser una declaración falsa.
+  El precio se asume y queda escrito: sin IP no se distingue un rastreo abusivo de tráfico
+  legítimo repartido, ni se correlacionan las peticiones de un mismo visitante.
+- **E8.2 exigía un único landmark `nav`** y el pie legal de la landing añade un segundo. Varios
+  landmarks de navegación son correctos —en las páginas legales son tres— con una condición: que
+  cada uno tenga nombre accesible, o un lector de pantalla anuncia «navegación» tres veces sin
+  decir cuál es cuál. La aserción pasa de «hay exactamente uno» a «hay al menos uno y todos tienen
+  nombre», que es lo que la pauta pide de verdad.
+- **El charter decía «página única»** y el sitio tiene nueve. Corregido, junto con la
+  justificación del no-scope del formulario.
 - **`scripts/preparar-assets.mjs` construía `dist/` por el mero hecho de ser importado.** U12.3 lo
   importa para leer `PUBLICABLES`, así que **cada `npm test` borraba y rehacía `dist/` de
   refilón** — sin que se notara, hasta el día que otro proceso tenía el directorio abierto y la

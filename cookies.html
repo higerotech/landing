@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<!-- Página de idioma fijo: el cuerpo está escrito solo en castellano y su par
+     inglés es `cookie-notice.html`. `data-idioma-fijo` le dice a assets/sitio.js que el
+     conmutador ES/EN debe NAVEGAR en vez de reescribir el DOM, y `data-href-*`
+     le dice a dónde. El `hreflang` lleva las URL canónicas —sin extensión, las
+     del Worker— y no sirve para navegar: por el camino de nginx dan 404. -->
+<html lang="es" data-idioma-fijo data-href-es="cookies.html" data-href-en="cookie-notice.html">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aviso de cookies — Higerotech</title>
+  <meta name="description" content="Este sitio no usa cookies: ninguna, ni propias ni de terceros. Qué hay en su lugar, y cómo comprobarlo tú mismo en treinta segundos." />
+  <meta name="theme-color" content="#15181B" />
+
+  <link rel="canonical" href="https://higerotech.com/cookies" />
+  <link rel="alternate" hreflang="es" href="https://higerotech.com/cookies" />
+  <link rel="alternate" hreflang="en" href="https://higerotech.com/cookie-notice" />
+  <link rel="alternate" hreflang="x-default" href="https://higerotech.com/cookies" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Higerotech" />
+  <meta property="og:locale" content="es_VE" />
+  <meta property="og:url" content="https://higerotech.com/cookies" />
+  <meta property="og:title" content="Aviso de cookies — Higerotech" />
+  <meta property="og:description" content="Sin cookies, sin analítica, sin banner. Y cómo verificarlo tú mismo." />
+  <meta property="og:image" content="https://higerotech.com/assets/og-card.png" />
+
+  <link rel="icon" type="image/svg+xml" href="assets/isotipo.svg" />
+  <link rel="apple-touch-icon" href="assets/isotipo_charcoal_lg.png" />
+
+  <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/sitio.js" as="script" />
+
+  <link rel="stylesheet" href="assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="assets/legal.css" />
+</head>
+<body>
+
+  <a href="#contenido" class="skip-link" data-es="Saltar al contenido" data-en="Skip to content">Saltar al contenido</a>
+
+  <header>
+  <nav aria-label="Principal">
+    <div class="container nav-inner">
+      <a href="/" class="nav-logo"><picture><source media="(max-width: 560px)" srcset="assets/isotipo.svg" /><img src="assets/logo_white_trans.png" alt="Higerotech — inicio" /></picture></a>
+      <div class="nav-links" id="nav-links">
+        <a href="/" data-es="Inicio" data-en="Home">Inicio</a>
+        <a href="privacidad.html"
+           data-es="Privacidad" data-en="Privacy"
+           data-href-es="privacidad.html" data-href-en="privacy.html">Privacidad</a>
+        <a href="terminos.html"
+           data-es="Términos" data-en="Terms"
+           data-href-es="terminos.html" data-href-en="terms.html">Términos</a>
+        <a href="cookies.html" aria-current="page"
+           data-es="Cookies" data-en="Cookies"
+           data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookies</a>
+        <a href="ia-responsable.html"
+           data-es="IA responsable" data-en="Responsible AI"
+           data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">IA responsable</a>
+      </div>
+      <div class="nav-right">
+        <div class="lang-toggle" role="group" aria-label="Idioma / Language">
+          <button type="button" class="lang-btn active" id="btn-es" aria-pressed="true" lang="es">ES</button>
+          <button type="button" class="lang-btn" id="btn-en" aria-pressed="false" lang="en">EN</button>
+        </div>
+        <button type="button" class="nav-toggle" id="nav-toggle"
+                aria-expanded="false" aria-controls="nav-links"
+                aria-label="Abrir menú" data-label-open="Abrir menú" data-label-close="Cerrar menú"
+                data-label-open-en="Open menu" data-label-close-en="Close menu">
+          <svg class="ic-open" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="ic-close" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+  </header>
+
+  <main id="contenido">
+
+  <div class="doc-head">
+    <div class="container">
+      <span class="tag">Documento legal</span>
+      <h1 class="doc-title">Aviso de <span class="accent">cookies</span></h1>
+      <p class="doc-meta">
+        <span><strong>Vigente desde:</strong> 16 de septiembre de 2026</span>
+        <span><strong>Versión:</strong> 1.0</span>
+        <span><strong>Ámbito:</strong> higerotech.com</span>
+      </p>
+    </div>
+  </div>
+
+  <article class="doc">
+
+    <div class="nota">
+      <p><strong>Este sitio no usa cookies.</strong> Ninguna: ni propias, ni de terceros, ni
+      técnicas, ni analíticas, ni publicitarias. Por eso no verás un banner de consentimiento —
+      no habría nada que consentir.</p>
+      <p>Esta página existe para explicar qué hay en su lugar y para que puedas comprobarlo tú
+      mismo en treinta segundos.</p>
+    </div>
+
+    <h2 id="por-que">1. Por qué no hay cookies</h2>
+
+    <p>No es una hazaña técnica: es una consecuencia de cómo está construido el sitio. No hay
+    sesiones que mantener porque no hay cuentas; no hay analítica que alimentar porque decidimos
+    no medir el tráfico; y no hay recursos de terceros que puedan poner las suyas, porque todo
+    —tipografías, imágenes, código— se sirve desde nuestro propio dominio.</p>
+
+    <p>La decisión tiene un coste real y lo asumimos: <strong>no sabemos cuánta gente visita este
+    sitio</strong>, ni desde dónde llega, ni qué sección lee más. Renunciamos a ese dato a cambio
+    de no recogerlo.</p>
+
+    <h2 id="en-su-lugar">2. Qué hay en su lugar</h2>
+
+    <p>Una sola cosa: si eliges ES o EN en el conmutador de la barra superior, guardamos esa
+    preferencia en el <strong>almacenamiento local de tu navegador</strong>
+    (<code>localStorage</code>), bajo la clave <code>lang</code>, con el valor
+    <code>es</code> o <code>en</code>.</p>
+
+    <p>Diferencias con una cookie, que son las que importan:</p>
+
+    <div class="doc-tabla">
+      <table>
+        <thead>
+          <tr><th></th><th>Una cookie</th><th>Esta preferencia</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>¿Viaja al servidor?</td>
+            <td>Sí, en cada petición, automáticamente</td>
+            <td><strong>No, nunca.</strong> Se queda en tu dispositivo</td>
+          </tr>
+          <tr>
+            <td>¿La ve Higerotech?</td>
+            <td>Sí</td>
+            <td><strong>No.</strong> Nuestro servidor no tiene forma de leerla</td>
+          </tr>
+          <tr>
+            <td>¿Sirve para identificarte?</td>
+            <td>Habitualmente sí</td>
+            <td>No. Es una de dos palabras posibles, igual para todo el mundo que elija ese idioma</td>
+          </tr>
+          <tr>
+            <td>¿Cómo la borras?</td>
+            <td>Borrando las cookies del sitio</td>
+            <td>Limpiando los datos del sitio en tu navegador. También puedes bloquear el
+            almacenamiento local: el sitio seguirá funcionando y simplemente volverá a empezar en
+            castellano</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Por eso no requiere consentimiento: el régimen de consentimiento previo existe para el
+    almacenamiento que permite seguir o identificar a una persona, y esto ni sale del dispositivo
+    ni distingue a nadie.</p>
+
+    <h2 id="comprobar">3. Cómo comprobarlo tú mismo</h2>
+
+    <p>No hace falta que nos creas. En cualquier navegador de escritorio:</p>
+
+    <ol>
+      <li>Abre las herramientas de desarrollo (<code>F12</code>, o
+      <code>Ctrl</code>+<code>Shift</code>+<code>I</code>).</li>
+      <li>Ve a la pestaña <strong>Aplicación</strong> (<em>Application</em> en inglés) y mira
+      <strong>Cookies</strong>: verás la lista vacía.</li>
+      <li>En la misma pestaña, entra en <strong>Almacenamiento local</strong> y verás la única
+      clave que guardamos, <code>lang</code>, si ya elegiste idioma.</li>
+      <li>En la pestaña <strong>Red</strong>, recarga la página: todas las peticiones van a
+      <code>higerotech.com</code>. Ninguna sale hacia un tercero.</li>
+    </ol>
+
+    <p>Ese último punto es el más difícil de fingir, y es el que más protege tu privacidad: si
+    ningún recurso de terceros se carga, ningún tercero recibe tu dirección IP al visitarnos.</p>
+
+    <h2 id="cloudflare">4. La única excepción: quien entrega la página</h2>
+
+    <p>Para ser completos: los bytes de esta página los entrega <strong>Cloudflare</strong>, que
+    como cualquier servidor ve la dirección IP a la que responde. No coloca cookies de seguimiento
+    en este sitio, y no hemos habilitado la retención de sus registros. El detalle completo está
+    en la <a href="privacidad.html" data-href-es="privacidad.html" data-href-en="privacy.html">Política
+    de Privacidad</a>, §4.</p>
+
+    <h2 id="si-cambia">5. Qué pasaría si esto cambiara</h2>
+
+    <p>Si algún día añadimos analítica, un formulario o cualquier tecnología que requiera
+    consentimiento, haremos tres cosas <strong>antes</strong> de activarla: publicar aquí qué es y
+    para qué sirve, pedir tu consentimiento de forma expresa y revocable, y dejar constancia del
+    cambio en el histórico público del repositorio.</p>
+
+    <p>Mientras esta página siga diciendo lo que dice, es que no ha pasado.</p>
+
+    <div class="nota aviso">
+      <p><strong>Versión prevalente.</strong> La versión en castellano de este aviso es la única
+      que produce efectos. La traducción al inglés se ofrece por comodidad del lector y, en caso
+      de discrepancia, prevalece este texto.</p>
+    </div>
+
+    <div class="doc-pie">
+      <p>Higerotech · Aviso de cookies · versión 1.0, vigente desde el 16 de septiembre de 2026.</p>
+      <p class="otros">
+        <a href="privacidad.html" data-href-es="privacidad.html" data-href-en="privacy.html">Política de Privacidad</a>
+        <a href="terminos.html" data-href-es="terminos.html" data-href-en="terms.html">Términos de Uso</a>
+        <a href="ia-responsable.html" data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">IA responsable</a>
+      </p>
+    </div>
+
+  </article>
+
+
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <p class="copy">© <span id="year">2026</span> Higerotech.
+        <span data-es="Todos los derechos reservados." data-en="All rights reserved.">Todos los derechos reservados.</span>
+      </p>
+      <nav class="footer-nav" aria-label="Legal">
+        <a href="/" data-es="Inicio" data-en="Home">Inicio</a>
+        <a href="privacidad.html" data-es="Privacidad" data-en="Privacy"
+           data-href-es="privacidad.html" data-href-en="privacy.html">Privacidad</a>
+        <a href="terminos.html" data-es="Términos" data-en="Terms"
+           data-href-es="terminos.html" data-href-en="terms.html">Términos</a>
+        <a href="cookies.html" data-es="Cookies" data-en="Cookies"
+           data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookies</a>
+        <a href="ia-responsable.html" data-es="IA responsable" data-en="Responsible AI"
+           data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">IA responsable</a>
+        <a href="mailto:contacto@higerotech.com">contacto@higerotech.com</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="assets/sitio.js"></script>
+
+</body>
+</html>

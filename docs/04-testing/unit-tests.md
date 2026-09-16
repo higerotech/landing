@@ -1,6 +1,8 @@
 # Pruebas unitarias — Landing corporativa Higerotech
 
-* **Estado:** **implementado** — 49 pruebas en verde, cobertura 100 % (funciones y líneas)
+* **Estado:** **implementado** — 109 pruebas en verde, cobertura 100 % (19 funciones, 136
+  líneas). Eran 49 al escribirse este documento; las últimas en llegar fueron **U13** (las ocho
+  páginas legales, ADR-0008), **U2.8**, **U12.5** y **U12.6**
 * **Fecha:** 2026-07-30
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 04-testing

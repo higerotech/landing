@@ -19,6 +19,18 @@ COPY robots.txt   /usr/share/nginx/html/robots.txt
 COPY sitemap.xml  /usr/share/nginx/html/sitemap.xml
 COPY assets/      /usr/share/nginx/html/assets/
 
+# Páginas legales, un archivo por idioma. La versión castellana es la que
+# produce efectos; la inglesa es traducción de cortesía. U12.3 comprueba que
+# esta lista y `PUBLICABLES` de scripts/preparar-assets.mjs no divergan.
+COPY privacidad.html     /usr/share/nginx/html/privacidad.html
+COPY privacy.html        /usr/share/nginx/html/privacy.html
+COPY terminos.html       /usr/share/nginx/html/terminos.html
+COPY terms.html          /usr/share/nginx/html/terms.html
+COPY cookies.html        /usr/share/nginx/html/cookies.html
+COPY cookie-notice.html  /usr/share/nginx/html/cookie-notice.html
+COPY ia-responsable.html /usr/share/nginx/html/ia-responsable.html
+COPY responsible-ai.html /usr/share/nginx/html/responsible-ai.html
+
 # Falla el build si la configuración no es válida, en vez de descubrirlo al arrancar.
 RUN nginx -t
 

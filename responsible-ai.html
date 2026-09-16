@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<!-- Fixed-language page. The Spanish version (`ia-responsable.html`) is the one that
+     produces legal effects; this is a courtesy translation. `data-idioma-fijo`
+     tells assets/sitio.js the ES/EN switch must NAVIGATE rather than rewrite the
+     DOM. See the Spanish page for the full rationale. -->
+<html lang="en" data-idioma-fijo data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Responsible AI Policy — Higerotech</title>
+  <meta name="description" content="We do not train models on client data, nor on anonymised derivatives. Every AI output is support for a human decision, never the decision itself." />
+  <meta name="theme-color" content="#15181B" />
+
+  <link rel="canonical" href="https://higerotech.com/responsible-ai" />
+  <link rel="alternate" hreflang="es" href="https://higerotech.com/ia-responsable" />
+  <link rel="alternate" hreflang="en" href="https://higerotech.com/responsible-ai" />
+  <link rel="alternate" hreflang="x-default" href="https://higerotech.com/ia-responsable" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Higerotech" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:url" content="https://higerotech.com/responsible-ai" />
+  <meta property="og:title" content="Responsible AI Policy — Higerotech" />
+  <meta property="og:description" content="No training on client data, mandatory human review, and an explicit split of responsibilities in AML/CFT models." />
+  <meta property="og:image" content="https://higerotech.com/assets/og-card.png" />
+
+  <link rel="icon" type="image/svg+xml" href="assets/isotipo.svg" />
+  <link rel="apple-touch-icon" href="assets/isotipo_charcoal_lg.png" />
+
+  <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/sitio.js" as="script" />
+
+  <link rel="stylesheet" href="assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="assets/legal.css" />
+</head>
+<body>
+
+  <a href="#contenido" class="skip-link" data-es="Saltar al contenido" data-en="Skip to content">Skip to content</a>
+
+  <header>
+  <nav aria-label="Principal">
+    <div class="container nav-inner">
+      <a href="/" class="nav-logo"><picture><source media="(max-width: 560px)" srcset="assets/isotipo.svg" /><img src="assets/logo_white_trans.png" alt="Higerotech — home" /></picture></a>
+      <div class="nav-links" id="nav-links">
+        <a href="/" data-es="Inicio" data-en="Home">Home</a>
+        <a href="privacy.html"
+           data-es="Privacidad" data-en="Privacy"
+           data-href-es="privacidad.html" data-href-en="privacy.html">Privacy</a>
+        <a href="terms.html"
+           data-es="Términos" data-en="Terms"
+           data-href-es="terminos.html" data-href-en="terms.html">Terms</a>
+        <a href="cookie-notice.html"
+           data-es="Cookies" data-en="Cookies"
+           data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookies</a>
+        <a href="responsible-ai.html" aria-current="page"
+           data-es="IA responsable" data-en="Responsible AI"
+           data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">Responsible AI</a>
+      </div>
+      <div class="nav-right">
+        <div class="lang-toggle" role="group" aria-label="Idioma / Language">
+          <button type="button" class="lang-btn" id="btn-es" aria-pressed="false" lang="es">ES</button>
+          <button type="button" class="lang-btn active" id="btn-en" aria-pressed="true" lang="en">EN</button>
+        </div>
+        <button type="button" class="nav-toggle" id="nav-toggle"
+                aria-expanded="false" aria-controls="nav-links"
+                aria-label="Open menu" data-label-open="Abrir menú" data-label-close="Cerrar menú"
+                data-label-open-en="Open menu" data-label-close-en="Close menu">
+          <svg class="ic-open" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="ic-close" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+  </header>
+
+  <main id="contenido">
+
+  <div class="doc-head">
+    <div class="container">
+      <span class="tag">Legal document</span>
+      <h1 class="doc-title">Responsible <span class="accent">AI Policy</span></h1>
+      <p class="doc-meta">
+        <span><strong>Effective from:</strong> 16 September 2026</span>
+        <span><strong>Version:</strong> 1.0</span>
+        <span><strong>Scope:</strong> Higerotech and its projects</span>
+      </p>
+    </div>
+  </div>
+
+  <article class="doc">
+
+    <div class="nota">
+      <p><strong>The two commitments that sum up this document:</strong> we do not use a client's
+      data to train, fine-tune or develop models — and that prohibition extends to anonymised or
+      aggregated derivatives — and every output of an AI system is <strong>support for a human
+      decision</strong>, never the decision itself.</p>
+    </div>
+
+    <nav class="indice" aria-label="Document contents">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#principles">Principles</a></li>
+        <li><a href="#where">Where we use AI</a></li>
+        <li><a href="#data">What we do not do with a client's data</a></li>
+        <li><a href="#human">Mandatory human review</a></li>
+        <li><a href="#aml">Profiling and AML/CFT models</a></li>
+        <li><a href="#traceability">Traceability</a></li>
+        <li><a href="#providers">Model providers</a></li>
+        <li><a href="#limits">Limitations and what we do not guarantee</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="principles">1. Principles</h2>
+
+    <p>Higerotech presents itself as an AI-First consultancy. That label carries an obligation to
+    state precisely what we do with artificial intelligence and, above all, what we do not do with
+    the data entrusted to us.</p>
+
+    <p>The principles we apply: <strong>human oversight</strong> of every output with effects;
+    <strong>minimisation</strong> — the model receives the minimum data necessary;
+    <strong>traceability</strong> of what produced each result; <strong>transparency</strong> about
+    where an automated system is involved; and <strong>accountability</strong>, in the concrete
+    sense that there is always an identifiable person answering for the decision.</p>
+
+    <p>We adopt them as a <strong>voluntary framework</strong>. We do not claim compliance with any
+    AI regulation: the European AI Act does not apply to us today, and in Venezuela the national
+    instrument on artificial intelligence does not have the force of an enacted statute. Saying
+    otherwise would be convenient and false.</p>
+
+    <h2 id="where">2. Where we use AI</h2>
+
+    <p>In two distinct places, which should not be conflated:</p>
+
+    <ul>
+      <li><strong>In our own development process</strong>, as an assistive tool for writing,
+      reviewing and documenting code. The result goes through human review and the same automated
+      checks as any other change.</li>
+      <li><strong>In the systems we build for clients</strong>, where the project calls for it:
+      process automation, document classification, anomaly detection, transaction profiling
+      models. There, AI is part of the product, and its governance is agreed in the project
+      contract.</li>
+    </ul>
+
+    <h2 id="data">3. What we do not do with a client's data</h2>
+
+    <div class="nota aviso">
+      <p><strong>We do not use a client's data to train, fine-tune, evaluate or develop artificial
+      intelligence models</strong>, whether our own or third parties'. The prohibition extends to
+      the data <strong>in any derived form</strong>: anonymised, pseudonymised or aggregated sets,
+      synthetic data derived from real data, and vector representations.</p>
+    </div>
+
+    <p>Closing the loop on derivatives is not rhetorical. Without it, "we anonymise it and train on
+    that" would be compatible with the letter of the commitment, and that is exactly the practice
+    the commitment exists to prevent.</p>
+
+    <p>Nor do we put a client's production data into third-party AI tools. Where work on real data
+    is necessary, it is done in the client's environment, with named access and activity logging;
+    development and test environments use synthetic or irreversibly anonymised data.</p>
+
+    <p>That last point is also why an equivalent clause exists in our data processing agreement: in
+    Venezuela, the misappropriation and improper disclosure of personal data are <strong>criminal
+    offences carrying prison sentences</strong>, and the typical conduct is precisely copying
+    production data to a laptop or pasting it into an outside tool. The rule protects the client
+    and protects whoever holds the credentials.</p>
+
+    <h2 id="human">4. Mandatory human review</h2>
+
+    <p>The outputs of the AI systems we deliver are <strong>advisory and non-binding</strong>. The
+    client retains the final decision and undertakes not to act on them without human review where
+    the decision has legal or economic effects on a person: declining a transaction, blocking an
+    account, rejecting an application, classifying someone as a risk.</p>
+
+    <p>We design systems so that such review is genuinely possible: with the data in view, the
+    reason for the result, and traceability of who decided what and when. A human review that can
+    only press "approve" is not a review.</p>
+
+    <h2 id="aml">5. Profiling and AML/CFT models</h2>
+
+    <p>We build models that profile transactions for anti-money-laundering and
+    counter-terrorist-financing purposes. The allocation of responsibilities is explicit, because
+    that is where regulatory risk concentrates:</p>
+
+    <div class="doc-tabla">
+      <table>
+        <thead>
+          <tr><th>Responsibility</th><th>Whose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Building the engine, documenting it and making it auditable</td><td>Higerotech</td></tr>
+          <tr><td>Setting thresholds, rules and risk parameters</td><td>The client</td></tr>
+          <tr><td>Deciding on each alert and acting on it</td><td>The client</td></tr>
+          <tr><td>Reporting to the supervisor and answering its requests</td><td>The client</td></tr>
+          <tr><td>Explaining the decision to the affected person</td><td>The client</td></tr>
+          <tr><td>Obtaining any authorisation or no-objection from the supervisor</td><td>The client</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The reason is legal and not negotiable: the party bound by prevention regulation is
+    <strong>the regulated institution</strong>, not its technology provider. Higerotech is not
+    authorised as a banking-sector institution and does not provide financial services on its own
+    account, and it <strong>does not guarantee regulatory approval</strong> of any development.
+    Anyone promising otherwise is selling something they cannot deliver.</p>
+
+    <h2 id="traceability">6. Traceability</h2>
+
+    <p>The AI systems we deliver record which input produced which output, with which version of
+    the model or rules, and at what time. Without that there is no possible audit, no way to
+    explain a decision six months later, and no way to demonstrate that the system did what it
+    said it did.</p>
+
+    <h2 id="providers">7. Model providers</h2>
+
+    <p>Where a development uses third-party models, we select only providers whose contractual
+    terms <strong>exclude the use of inputs for training</strong>, and we declare them as
+    sub-processors in the project's data processing agreement, with their purpose and location.</p>
+
+    <p>We verify that exclusion before promising it. A no-training commitment that depends on a
+    tool which does train on what it receives is not a commitment: it is a breach with good
+    intentions.</p>
+
+    <h2 id="limits">8. Limitations and what we do not guarantee</h2>
+
+    <ul>
+      <li><strong>We do not guarantee results.</strong> Neither accuracy, nor completeness, nor
+      that a model will detect every case it should. Statistical systems err in both directions:
+      false positives and false negatives.</li>
+      <li><strong>We do not guarantee the absence of bias.</strong> We work to detect and reduce
+      it, with the data and metrics the project allows, and we document it. That is not the same as
+      eliminating it.</li>
+      <li><strong>Models decay.</strong> Their quality depends on data that changes; without
+      monitoring and retraining, they degrade. If the client does not contract that maintenance,
+      the degradation is foreseeable and is not a defect in the deliverable.</li>
+      <li><strong>We hold no AI certifications</strong> and will not claim any until we do.</li>
+    </ul>
+
+    <div class="nota aviso">
+      <p><strong>Prevailing version.</strong> The Spanish version of this policy is the only one
+      that produces legal effects. This English translation is offered for the reader's
+      convenience and, in case of discrepancy, the Spanish text prevails.</p>
+    </div>
+
+    <div class="doc-pie">
+      <p>Higerotech · Responsible AI Policy · version 1.0, effective from 16 September 2026.</p>
+      <p class="otros">
+        <a href="privacy.html" data-href-es="privacidad.html" data-href-en="privacy.html">Privacy Policy</a>
+        <a href="terms.html" data-href-es="terminos.html" data-href-en="terms.html">Terms of Use</a>
+        <a href="cookie-notice.html" data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookie notice</a>
+      </p>
+    </div>
+
+  </article>
+
+
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <p class="copy">© <span id="year">2026</span> Higerotech.
+        <span data-es="Todos los derechos reservados." data-en="All rights reserved.">All rights reserved.</span>
+      </p>
+      <nav class="footer-nav" aria-label="Legal">
+        <a href="/" data-es="Inicio" data-en="Home">Home</a>
+        <a href="privacy.html" data-es="Privacidad" data-en="Privacy"
+           data-href-es="privacidad.html" data-href-en="privacy.html">Privacy</a>
+        <a href="terms.html" data-es="Términos" data-en="Terms"
+           data-href-es="terminos.html" data-href-en="terms.html">Terms</a>
+        <a href="cookie-notice.html" data-es="Cookies" data-en="Cookies"
+           data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookies</a>
+        <a href="responsible-ai.html" data-es="IA responsable" data-en="Responsible AI"
+           data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">Responsible AI</a>
+        <a href="mailto:contacto@higerotech.com">contacto@higerotech.com</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="assets/sitio.js"></script>
+
+</body>
+</html>

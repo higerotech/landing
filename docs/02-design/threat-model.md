@@ -237,6 +237,8 @@ El impacto, en cambio, es idéntico, y de ahí que aun así supere el umbral de 
 | T2 | `X-Frame-Options: DENY`, `frame-ancestors 'none'` | `security-headers.conf` | A02 | Intento de iframe bloqueado (comprobado) |
 | T3 | Constante única + ocultación del botón sin número + regla `[hidden]` en la hoja de estilos | `index.html` `CONTACT` y su CSS | — | **E6.4** de las E2E, con cascada real. La verificación anterior —`wa-cta.hidden === true`— no servía: ver §T3 |
 | T4 | CSP cerrada salvo `'unsafe-inline'` en `style-src`; `script-src 'self'` desde ADR-0007 | `security-headers.conf`, `cloudflare/_headers` | A05 | **U11.8** comprueba que no quede script inline ni manejador `on*=` en el marcado; E5.1 lo confirma en navegador |
+| T17 | Las ocho páginas legales comparten el script, que desreferencia cinco `id` sin guarda | `privacidad.html` y sus siete hermanas | — | **U13.1** exige los cinco `id` en cada una; **U13.2** carga cada página y comprueba que el script llega al final; **E11.8** las lee sin JavaScript |
+| Nuevo · registro de IP | `log_format sin_ip` en `nginx.conf`: el registro no incluye la dirección IP ni `X-Forwarded-For` | `nginx.conf` | — | **U12.6**. Sostiene una afirmación de la política de privacidad publicada, así que su regresión es una declaración falsa, no solo un cambio de configuración |
 | T5, T13 | Fuentes autoalojadas; cero terceros | `assets/fonts/` | A03, A08 | Sin peticiones cross-origin en la pestaña de red |
 | T6 | `server_tokens off` | `nginx.conf` | A02 | Job del pipeline verifica la cabecera `Server` |
 | T7 | `<noscript>` + rama sin observer + `prefers-reduced-motion` | `index.html` | A10 | Pendiente prueba E2E · Gate 3 |

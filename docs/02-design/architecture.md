@@ -44,7 +44,8 @@ C4Container
 
     System_Boundary(sitio, "Landing corporativa") {
         Container(nginx, "Servidor web", "nginx 1.30-alpine", "Sirve archivos estaticos, aplica cabeceras de seguridad y politica de cache")
-        Container(pagina, "Documento de la pagina", "HTML + CSS inline", "Contenido y estilos en un archivo; el comportamiento salio a assets/sitio.js (ADR-0007)")
+        Container(pagina, "Pagina de inicio", "HTML + CSS inline", "Contenido y estilos en un archivo; el comportamiento salio a assets/sitio.js (ADR-0007)")
+        Container(legales, "Documentos legales", "8 HTML + legal.css", "Privacidad, terminos, cookies e IA responsable; un archivo por idioma (ADR-0008)")
         Container(estaticos, "Recursos estaticos", "woff2, svg, png", "Fuentes autoalojadas, isotipo, logotipo, tarjeta social")
         Container(indexacion, "Archivos de indexacion", "robots.txt, sitemap.xml", "Directivas para rastreadores")
     }

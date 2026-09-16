@@ -30,9 +30,17 @@ const DESTINO = join(RAIZ, 'dist')
 export const PUBLICABLES = [
   '404.html',
   'assets',
+  'cookie-notice.html',
+  'cookies.html',
+  'ia-responsable.html',
   'index.html',
+  'privacidad.html',
+  'privacy.html',
+  'responsible-ai.html',
   'robots.txt',
-  'sitemap.xml'
+  'sitemap.xml',
+  'terminos.html',
+  'terms.html'
 ]
 
 function preparar () {

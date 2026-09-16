@@ -160,6 +160,47 @@ describe('U2 · contrato entre el script y el DOM', () => {
     )
   })
 
+  test('U2.8 · los tokens de legal.css no se han desviado de los de index.html', {
+    skip: estaInstrumentado() && 'afirma sobre el fuente publicado'
+  }, () => {
+    /* ADR-0008 duplica el bloque `:root` de index.html en `assets/legal.css`, y
+       lo hace a propósito: la landing no puede depender de un archivo externo
+       para pintar su primera vista, y la hoja de las páginas legales no puede
+       depender del CSS de la landing.
+
+       Es la misma clase de duplicación que U2.5 vigila para el `@font-face`, y
+       con el mismo modo de fallo: nadie nota que el coral de las páginas legales
+       dejó de ser el coral de la marca. Si divergen, esto lo dice.
+
+       Se comparan solo los tokens que existen en AMBOS lados: `legal.css` añade
+       los suyos —`--maxw-prosa`— en un segundo bloque `:root`, y no tiene por
+       qué llevar todos los de la landing. */
+    const raiz = texto => {
+      /* Sin quitar los comentarios, el propio bloque `:root` de index.html
+         rompe el parseo: su comentario sobre el contraste MENCIONA --dark-3 y
+         --text-dim, y el regex los leía como declaraciones. Lo encontró esta
+         misma prueba en su primera ejecución. */
+      texto = texto.replace(/\/\*[\s\S]*?\*\//g, '')
+      const bloque = texto.match(/:root\s*\{([^}]*)\}/)
+      assert.ok(bloque, 'no se encontró un bloque :root')
+      return Object.fromEntries(
+        [...bloque[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)]
+          .map(([, nombre, valor]) => [nombre, valor.trim().replace(/\s+/g, ' ')])
+      )
+    }
+
+    const deLanding = raiz(fuente())
+    const deLegal = raiz(readFileSync(new URL('../../assets/legal.css', import.meta.url), 'utf8'))
+
+    assert.ok(Object.keys(deLegal).length >= 15, 'no se parsearon los tokens de legal.css')
+
+    const distintos = Object.keys(deLegal)
+      .filter(k => k in deLanding && deLanding[k] !== deLegal[k])
+      .map(k => `${k}\n      index.html: ${deLanding[k]}\n      legal.css:  ${deLegal[k]}`)
+
+    assert.deepEqual(distintos, [], 'los tokens de marca divergen entre index.html y legal.css')
+  })
+
   test('U2.3 · #wa-cta sale del HTML oculto', () => {
     /* Protege la decisión de RF05: mientras CONTACT.whatsapp esté vacío el
        botón no debe publicarse. Si el atributo `hidden` se cae del HTML, el

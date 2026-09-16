@@ -125,7 +125,7 @@ describe('U12 · las cabeceras de los dos caminos no divergen', () => {
     )
   })
 
-  test('U12.5 · el JS extraído no hereda el \`immutable\` de /assets/', {
+  test('U12.5 · lo que /assets/ sirve junto al HTML no hereda su immutable', {
     skip: estaInstrumentado() && 'afirma sobre archivos del repositorio'
   }, () => {
     /* ADR-0007 sacó el JS de index.html a `assets/sitio.js`, y ese directorio
@@ -148,30 +148,78 @@ describe('U12 · las cabeceras de los dos caminos no divergen', () => {
        `script[src]` que leer. Se quitan los comentarios antes de buscarlo
        porque los de index.html hablan de `<script src>` al explicar por qué
        está donde está. */
-    const html = leer('index.html').replace(/<!--[\s\S]*?-->/g, '')
-    const src = (html.match(/<script\s+src="([^"]+)"/) ?? [])[1]
+    /* Los dos archivos salen del marcado, no de una lista escrita a mano: el
+       script de la landing y la hoja que comparten las ocho páginas legales. Se
+       quitan los comentarios antes de buscarlos porque los de index.html hablan
+       de <script src> al explicar por qué está donde está. */
+    const sinComentarios = t => t.replace(/<!--[\s\S]*?-->/g, '')
+
+    const src = (sinComentarios(leer('index.html')).match(/<script\s+src="([^"]+)"/) ?? [])[1]
     assert.ok(src, 'index.html ya no carga un script externo: ¿volvió a estar inline?')
 
-    const bloque = leer('nginx.conf').match(
-      new RegExp(`location\\s*=\\s*/${src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`)
-    )
+    const hoja = (sinComentarios(leer('privacidad.html'))
+      .match(/<link rel="stylesheet" href="(assets\/legal[^"]*)"/) ?? [])[1]
+    assert.ok(hoja, 'privacidad.html ya no carga la hoja compartida de las páginas legales')
 
-    assert.ok(
-      bloque,
-      `nginx.conf no tiene un \`location = /${src}\`: el script heredaría el immutable de /assets/`
-    )
-    assert.match(
-      bloque[1], /Cache-Control\s+"no-cache, must-revalidate"/,
-      'el JS debe revalidarse como el HTML, no cachearse como un asset'
-    )
-    assert.match(
-      bloque[1], /include\s+\S*security-headers\.conf/,
-      'add_header no se hereda: sin el include el JS sale sin cabeceras de seguridad (ADR-0002)'
-    )
+    const nginxConf = leer('nginx.conf')
+
+    for (const archivo of [src, hoja]) {
+      const escapado = archivo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const bloque = nginxConf.match(
+        new RegExp(`location\\s*=\\s*/${escapado}\\s*\\{([^}]*)\\}`)
+      )
+
+      assert.ok(
+        bloque,
+        `nginx.conf no tiene un \`location = /${archivo}\`: heredaría el immutable de /assets/`
+      )
+      assert.match(
+        bloque[1], /Cache-Control\s+"no-cache, must-revalidate"/,
+        `${archivo} debe revalidarse como el HTML, no cachearse como un asset`
+      )
+      assert.match(
+        bloque[1], /include\s+\S*security-headers\.conf/,
+        `add_header no se hereda: sin el include, ${archivo} sale sin cabeceras de seguridad (ADR-0002)`
+      )
+    }
 
     assert.ok(
       !/Cache-Control/i.test(leer('cloudflare/_headers')),
       'el Worker empezó a fijar Cache-Control: revisa que el HTML y el JS sigan con la misma política'
+    )
+  })
+
+  test('U12.6 · el formato de log no registra la dirección IP', {
+    skip: estaInstrumentado() && 'afirma sobre archivos del repositorio'
+  }, () => {
+    /* La política de privacidad publicada afirma que el sitio no conserva
+       direcciones IP. Eso es cierto solo mientras `nginx.conf` use un
+       `log_format` propio: el `combined` de serie empieza por `$remote_addr`.
+
+       Esta prueba es la que convierte esa afirmación en algo que se rompe
+       ruidosamente. Si alguien vuelve al formato por defecto, el sitio empieza a
+       registrar un dato personal mientras la política dice que no, y eso deja de
+       ser una regresión técnica para ser una declaración falsa. */
+    const nginxConf = leer('nginx.conf')
+
+    const formato = nginxConf.match(/log_format\s+(\w+)\s+([\s\S]*?);/)
+    assert.ok(
+      formato,
+      'nginx.conf no define un log_format propio: usaría el de serie, que empieza por $remote_addr'
+    )
+
+    const [, nombre, plantilla] = formato
+
+    for (const variable of ['$remote_addr', '$http_x_forwarded_for', '$http_x_real_ip', '$binary_remote_addr']) {
+      assert.ok(
+        !plantilla.includes(variable),
+        `el log_format incluye ${variable}: la política de privacidad dice que no se conservan IPs`
+      )
+    }
+
+    assert.match(
+      nginxConf, new RegExp(`access_log\\s+\\S+\\s+${nombre}\\s*;`),
+      `el log_format «${nombre}» está definido pero no se usa: nginx seguiría escribiendo en el de serie`
     )
   })
 

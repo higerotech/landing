@@ -1,7 +1,7 @@
 # Higerotech — Landing Page
 
 [![CI](https://github.com/higerotech/landing/actions/workflows/security-gates.yml/badge.svg)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
-[![Pruebas](https://img.shields.io/badge/pruebas-65_unit_%2B_63_e2e_%2B_perf_dast_mut-e08000)](.ai-dlc/gates/gate-3-testing.md)
+[![Pruebas](https://img.shields.io/badge/pruebas-109_unit_%2B_72_e2e_%2B_perf_dast_mut-e08000)](.ai-dlc/gates/gate-3-testing.md)
 [![Versión](https://img.shields.io/github/v/tag/higerotech/landing?label=versi%C3%B3n)](CHANGELOG.md)
 
 <!--
@@ -12,7 +12,8 @@
   tocarlos a mano.
 
   El de Pruebas sigue ESTÁTICO porque no existe un endpoint que cuente pruebas: dice
-  "65 unit + 63 e2e + perf, dast y mutación" y se actualiza a mano.
+  "109 unit + 72 e2e + perf, dast y mutación" y se actualiza a mano. Subió de 65 y 63 el
+  2026-09-16, con las páginas legales (U13, U2.8, U12.5, U12.6 y E11).
 
   Sigue en ÁMBAR, pero el motivo cambió el 2026-07-31 y conviene no arrastrar el viejo: ya
   NO es que falten niveles de la pirámide —rendimiento, DAST y mutación están los tres— sino
@@ -50,11 +51,16 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 
 ```
 .
-├── index.html                  # Landing completa (HTML + CSS + JS en un archivo)
+├── index.html                  # Página de inicio (HTML + CSS en un archivo; el JS, aparte)
+├── privacidad.html  privacy.html       # Política de privacidad (ES prevalente / EN cortesía)
+├── terminos.html    terms.html         # Términos de uso
+├── cookies.html     cookie-notice.html # Aviso de cookies: no hay ninguna, y se puede comprobar
+├── ia-responsable.html  responsible-ai.html  # Política de IA responsable
 ├── 404.html                    # Página de error con la identidad del sitio
 ├── robots.txt  sitemap.xml     # Indexación
 ├── assets/
 │   ├── sitio.js                # Todo el JS (ADR-0007) — el HTML solo trae CSS
+│   ├── legal.css               # Hoja de las ocho páginas legales (ADR-0008)
 │   ├── fonts/                  # Inter y Space Grotesk autoalojadas (SIL OFL 1.1)
 │   ├── isotipo.svg             # Isotipo (3 hexágonos, nodo coral)
 │   ├── og-card.png             # Tarjeta social 1200×630

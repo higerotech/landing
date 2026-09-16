@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<!-- Página de idioma fijo: el cuerpo está escrito solo en castellano y su par
+     inglés es `terms.html`. `data-idioma-fijo` le dice a assets/sitio.js que el
+     conmutador ES/EN debe NAVEGAR en vez de reescribir el DOM, y `data-href-*`
+     le dice a dónde. El `hreflang` lleva las URL canónicas —sin extensión, las
+     del Worker— y no sirve para navegar: por el camino de nginx dan 404. -->
+<html lang="es" data-idioma-fijo data-href-es="terminos.html" data-href-en="terms.html">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Términos de Uso — Higerotech</title>
+  <meta name="description" content="Términos de uso de higerotech.com: qué puedes hacer con el contenido, qué significan las cifras que publicamos y por qué navegar el sitio no crea una relación de consultoría." />
+  <meta name="theme-color" content="#15181B" />
+
+  <link rel="canonical" href="https://higerotech.com/terminos" />
+  <link rel="alternate" hreflang="es" href="https://higerotech.com/terminos" />
+  <link rel="alternate" hreflang="en" href="https://higerotech.com/terms" />
+  <link rel="alternate" hreflang="x-default" href="https://higerotech.com/terminos" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Higerotech" />
+  <meta property="og:locale" content="es_VE" />
+  <meta property="og:url" content="https://higerotech.com/terminos" />
+  <meta property="og:title" content="Términos de Uso — Higerotech" />
+  <meta property="og:description" content="Lo que el sitio sí es y lo que no: navegar no crea relación profesional, y las cifras de SLA son niveles contractuales por proyecto." />
+  <meta property="og:image" content="https://higerotech.com/assets/og-card.png" />
+
+  <link rel="icon" type="image/svg+xml" href="assets/isotipo.svg" />
+  <link rel="apple-touch-icon" href="assets/isotipo_charcoal_lg.png" />
+
+  <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/sitio.js" as="script" />
+
+  <link rel="stylesheet" href="assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="assets/legal.css" />
+</head>
+<body>
+
+  <a href="#contenido" class="skip-link" data-es="Saltar al contenido" data-en="Skip to content">Saltar al contenido</a>
+
+  <header>
+  <nav aria-label="Principal">
+    <div class="container nav-inner">
+      <a href="/" class="nav-logo"><picture><source media="(max-width: 560px)" srcset="assets/isotipo.svg" /><img src="assets/logo_white_trans.png" alt="Higerotech — inicio" /></picture></a>
+      <div class="nav-links" id="nav-links">
+        <a href="/" data-es="Inicio" data-en="Home">Inicio</a>
+        <a href="privacidad.html"
+           data-es="Privacidad" data-en="Privacy"
+           data-href-es="privacidad.html" data-href-en="privacy.html">Privacidad</a>
+        <a href="terminos.html" aria-current="page"
+           data-es="Términos" data-en="Terms"
+           data-href-es="terminos.html" data-href-en="terms.html">Términos</a>
+        <a href="cookies.html"
+           data-es="Cookies" data-en="Cookies"
+           data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookies</a>
+        <a href="ia-responsable.html"
+           data-es="IA responsable" data-en="Responsible AI"
+           data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">IA responsable</a>
+      </div>
+      <div class="nav-right">
+        <div class="lang-toggle" role="group" aria-label="Idioma / Language">
+          <button type="button" class="lang-btn active" id="btn-es" aria-pressed="true" lang="es">ES</button>
+          <button type="button" class="lang-btn" id="btn-en" aria-pressed="false" lang="en">EN</button>
+        </div>
+        <button type="button" class="nav-toggle" id="nav-toggle"
+                aria-expanded="false" aria-controls="nav-links"
+                aria-label="Abrir menú" data-label-open="Abrir menú" data-label-close="Cerrar menú"
+                data-label-open-en="Open menu" data-label-close-en="Close menu">
+          <svg class="ic-open" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="ic-close" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+  </header>
+
+  <main id="contenido">
+
+  <div class="doc-head">
+    <div class="container">
+      <span class="tag">Documento legal</span>
+      <h1 class="doc-title">Términos de <span class="accent">Uso</span></h1>
+      <p class="doc-meta">
+        <span><strong>Vigente desde:</strong> 16 de septiembre de 2026</span>
+        <span><strong>Versión:</strong> 1.0</span>
+        <span><strong>Ámbito:</strong> higerotech.com</span>
+      </p>
+    </div>
+  </div>
+
+  <article class="doc">
+
+    <div class="nota">
+      <p><strong>Lo que más importa de este documento, por si no lo lees entero:</strong> navegar
+      este sitio, leer su contenido o intercambiar correos con nosotros <strong>no crea una
+      relación de consultoría</strong>. Esa relación nace únicamente de un contrato escrito y
+      firmado. Y las cifras de disponibilidad que aparecen en la página de inicio describen
+      niveles de servicio que ofrecemos <strong>por contrato en cada proyecto</strong>: no son un
+      compromiso sobre este sitio web ni una garantía general.</p>
+    </div>
+
+    <nav class="indice" aria-label="Contenido del documento">
+      <h2>Contenido</h2>
+      <ol>
+        <li><a href="#aceptacion">Aceptación y alcance</a></li>
+        <li><a href="#quienes">Quién presta este sitio</a></li>
+        <li><a href="#uso">Uso permitido y uso prohibido</a></li>
+        <li><a href="#pi">Propiedad intelectual del contenido</a></li>
+        <li><a href="#sin-relacion">El sitio no crea una relación profesional</a></li>
+        <li><a href="#informativo">Contenido informativo, no asesoramiento</a></li>
+        <li><a href="#cifras">Qué significan las cifras que publicamos</a></li>
+        <li><a href="#garantias">El sitio se ofrece «tal cual»</a></li>
+        <li><a href="#responsabilidad">Limitación de responsabilidad</a></li>
+        <li><a href="#terceros">Enlaces y canales de terceros</a></li>
+        <li><a href="#contratacion">Si contratas nuestros servicios</a></li>
+        <li><a href="#electronica">Aceptación por medios electrónicos</a></li>
+        <li><a href="#ley">Ley aplicable y resolución de disputas</a></li>
+        <li><a href="#cambios">Modificaciones</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="aceptacion">1. Aceptación y alcance</h2>
+
+    <p>Estos términos regulan el uso del sitio web <strong>higerotech.com</strong>. Al acceder a
+    él los aceptas. Si no estás de acuerdo con alguno, la consecuencia es sencilla: no uses el
+    sitio.</p>
+
+    <p>Estos términos <strong>no regulan la prestación de servicios profesionales</strong>. Eso lo
+    hace el contrato que se firme en cada caso (ver §11).</p>
+
+    <h2 id="quienes">2. Quién presta este sitio</h2>
+
+    <p>El titular del sitio es <strong>&lt;TODO: razón social&gt;</strong>, RIF
+    <strong>&lt;TODO&gt;</strong>, con domicilio en <strong>&lt;TODO&gt;</strong>, República
+    Bolivariana de Venezuela, que opera comercialmente como <strong>Higerotech</strong>. Contacto:
+    <a href="mailto:contacto@higerotech.com">contacto@higerotech.com</a>.</p>
+
+    <h2 id="uso">3. Uso permitido y uso prohibido</h2>
+
+    <p>Puedes leer, consultar, imprimir y compartir el contenido de este sitio, y citarlo
+    indicando la fuente. No hace falta pedirnos permiso para enlazarnos.</p>
+
+    <p>No está permitido:</p>
+
+    <ul>
+      <li><strong>Suplantar la marca.</strong> Usar el nombre Higerotech, su isotipo o su
+      identidad visual de forma que sugiera que un tercero es Higerotech, que actúa en su nombre o
+      que tiene con ella una relación que no existe.</li>
+      <li><strong>Extraer contenido de forma masiva o automatizada</strong> con fines
+      comerciales, o de manera que degrade el servicio para otras personas.</li>
+      <li><strong>Interferir con el funcionamiento del sitio</strong>: intentar acceder a partes
+      no públicas, sobrecargarlo, introducir código o eludir sus medidas de seguridad.</li>
+      <li><strong>Reutilizar el contenido para entrenar sistemas de inteligencia
+      artificial</strong> con fines comerciales, sin autorización previa por escrito.</li>
+    </ul>
+
+    <p>La investigación de seguridad de buena fe no está prohibida: tiene su cauce en nuestra
+    política de divulgación responsable, publicada en el archivo <code>SECURITY.md</code> del
+    repositorio del sitio. Avísanos antes y no rompas nada de terceros.</p>
+
+    <h2 id="pi">4. Propiedad intelectual del contenido</h2>
+
+    <p>Los textos, el diseño, la identidad visual y el código de este sitio pertenecen a
+    Higerotech o se usan con licencia. Las tipografías Inter y Space Grotesk se distribuyen bajo
+    la <em>SIL Open Font License 1.1</em> y conservan su propia licencia.</p>
+
+    <p>Hay una excepción deliberada y verificable: <strong>tres imágenes de marca</strong> —el
+    isotipo en carbón, la tarjeta social y el logotipo— se sirven abiertas a otros orígenes
+    precisamente para que puedas incrustarlas al mencionarnos: en un artículo, una nota de prensa
+    o un directorio. Esa apertura es una autorización técnica para <em>mostrar</em> la marca en
+    ese contexto, no una licencia para usarla como propia ni para sugerir respaldo o
+    colaboración.</p>
+
+    <h2 id="sin-relacion">5. El sitio no crea una relación profesional</h2>
+
+    <p>Esta es la cláusula más importante del documento, y por eso está en el medio y no
+    escondida al final:</p>
+
+    <div class="nota aviso">
+      <p><strong>El uso de este sitio, la lectura de su contenido, la descarga de materiales o el
+      intercambio de correos, mensajes o llamadas previas no crean una relación
+      consultor-cliente</strong> entre tú y Higerotech, ni generan obligación alguna de prestar
+      servicios. Esa relación nace <strong>exclusivamente</strong> de un contrato escrito firmado
+      por un representante autorizado de Higerotech.</p>
+    </div>
+
+    <p>Dicho de otro modo: una sesión de diagnóstico gratuita es una conversación, no un encargo
+    aceptado. Y nada de lo que nos cuentes antes de firmar nos convierte en tus asesores — aunque
+    sí nos obliga a la confidencialidad sobre lo que nos cuentes.</p>
+
+    <h2 id="informativo">6. Contenido informativo, no asesoramiento</h2>
+
+    <p>Lo que publicamos sobre normativa venezolana, tributación, requisitos de supervisión
+    bancaria, arquitectura de sistemas o inteligencia artificial tiene <strong>carácter
+    informativo y divulgativo</strong>. No es asesoramiento jurídico, contable, fiscal, financiero
+    ni regulatorio, y no debe usarse como base para tomar una decisión sin consultar a un
+    profesional de la materia.</p>
+
+    <p>La normativa cambia. Un texto correcto el día que se publicó puede dejar de serlo sin que
+    nadie lo actualice, y no asumimos la obligación de mantenerlo al día.</p>
+
+    <h2 id="cifras">7. Qué significan las cifras que publicamos</h2>
+
+    <p>En la página de inicio aparecen cifras de disponibilidad —99,9 %, 99,99 %, 99,999 %— y
+    otras métricas de resultado. Conviene precisar qué son y qué no son, porque la diferencia es
+    material:</p>
+
+    <ul>
+      <li>Describen <strong>niveles de servicio que Higerotech puede ofrecer y comprometer por
+      contrato en un proyecto concreto</strong>, según la arquitectura, la infraestructura y el
+      presupuesto que ese proyecto tenga.</li>
+      <li><strong>No son un compromiso de disponibilidad de este sitio web.</strong></li>
+      <li><strong>No son una garantía general</strong> ni una promesa aplicable a cualquier
+      proyecto con independencia de sus condiciones.</li>
+      <li>Cualquier compromiso de nivel de servicio exigible <strong>consta por escrito en el
+      contrato</strong> correspondiente, con su método de medición, sus exclusiones y sus
+      consecuencias. Lo que no está en ese contrato, no es un compromiso.</li>
+    </ul>
+
+    <p>Lo mismo aplica a los ejemplos de resultados obtenidos con inteligencia artificial: son
+    ilustraciones de lo que la tecnología permite, no una predicción de lo que ocurrirá en tu
+    caso.</p>
+
+    <h2 id="garantias">8. El sitio se ofrece «tal cual»</h2>
+
+    <p>Este sitio se ofrece <strong>«tal cual» y «según disponibilidad»</strong>. Hacemos un
+    esfuerzo razonable por mantenerlo disponible, correcto y actualizado, pero no garantizamos que
+    esté libre de errores, que su contenido sea exacto o completo en todo momento, ni que su
+    funcionamiento sea ininterrumpido.</p>
+
+    <p>Podemos modificar, suspender o retirar cualquier parte del sitio sin aviso previo.</p>
+
+    <h2 id="responsabilidad">9. Limitación de responsabilidad</h2>
+
+    <p>En la medida en que lo permita la ley, Higerotech no responde de los daños indirectos, el
+    lucro cesante, la pérdida de datos o la pérdida de oportunidad derivados del uso o la
+    imposibilidad de uso de este sitio, ni de las decisiones que alguien tome basándose en su
+    contenido informativo.</p>
+
+    <p>Estas limitaciones se refieren <strong>al sitio web</strong>. La responsabilidad derivada
+    de servicios contratados se rige por el contrato correspondiente, que fija su propio régimen y
+    su propio tope. Y nada de lo anterior excluye la responsabilidad por dolo.</p>
+
+    <h2 id="terceros">10. Enlaces y canales de terceros</h2>
+
+    <p>El sitio enlaza a servicios de terceros —notablemente WhatsApp para el contacto y GitHub
+    para el repositorio público—. No controlamos esos servicios ni respondemos de su contenido,
+    su disponibilidad ni sus prácticas de privacidad: al usarlos quedas sujeto a sus propias
+    condiciones.</p>
+
+    <p>Qué datos tratamos cuando nos escribes por esos canales está en nuestra
+    <a href="privacidad.html" data-href-es="privacidad.html" data-href-en="privacy.html">Política
+    de Privacidad</a>.</p>
+
+    <h2 id="contratacion">11. Si contratas nuestros servicios</h2>
+
+    <p>La prestación de servicios profesionales se rige por el contrato que se firme, sus órdenes
+    de servicio y sus anexos. Ese conjunto incluye, cuando Higerotech trate datos personales por
+    cuenta del cliente, un <strong>acuerdo de tratamiento de datos</strong> que regula esa parte.</p>
+
+    <p><strong>Orden de prelación:</strong> si hay contradicción entre estos términos de uso y el
+    contrato de servicios, <strong>prevalece el contrato</strong>. Estos términos no lo amplían,
+    no lo recortan y no crean obligaciones que él no recoja.</p>
+
+    <h2 id="electronica">12. Aceptación por medios electrónicos</h2>
+
+    <p>Reconocemos plena validez y eficacia probatoria a la aceptación de estos términos y a la
+    firma de documentos por medios electrónicos, conforme a la Ley sobre Mensajes de Datos y
+    Firmas Electrónicas.</p>
+
+    <h2 id="ley">13. Ley aplicable y resolución de disputas</h2>
+
+    <p>Estos términos se rigen por las <strong>leyes de la República Bolivariana de
+    Venezuela</strong>.</p>
+
+    <p>Cualquier controversia se intentará resolver de buena fe mediante conversación directa
+    durante <strong>treinta (30) días continuos</strong>. Si no se resuelve así, se someterá a
+    <strong>arbitraje</strong> conforme a &lt;TODO: reglamento e institución arbitral&gt;, con sede
+    en &lt;TODO&gt;, en idioma castellano y con &lt;TODO: uno o tres&gt; árbitro(s). El laudo será
+    definitivo y vinculante.</p>
+
+    <p>Elegimos el arbitraje porque es un foro neutral y previsible también para clientes fuera de
+    Venezuela. Si la controversia es de cuantía menor a &lt;TODO&gt;, cualquiera de las partes
+    podrá optar por los tribunales ordinarios del domicilio de Higerotech, para que el coste del
+    procedimiento no supere el del asunto discutido.</p>
+
+    <h2 id="cambios">14. Modificaciones</h2>
+
+    <p>Podemos actualizar estos términos. La versión vigente es siempre la publicada en esta
+    página, con su fecha y su número de versión en la cabecera. El sitio se desarrolla en un
+    repositorio público, así que el <strong>histórico de cambios de este documento es
+    auditable</strong>, con su fecha y su motivo.</p>
+
+    <p>El uso del sitio después de una actualización implica la aceptación de la versión vigente.</p>
+
+    <div class="nota aviso">
+      <p><strong>Versión prevalente.</strong> La versión en castellano de estos términos es la
+      única que produce efectos. La traducción al inglés se ofrece por comodidad del lector y, en
+      caso de discrepancia, prevalece este texto.</p>
+    </div>
+
+    <div class="doc-pie">
+      <p>Higerotech · Términos de Uso · versión 1.0, vigente desde el 16 de septiembre de 2026.</p>
+      <p class="otros">
+        <a href="privacidad.html" data-href-es="privacidad.html" data-href-en="privacy.html">Política de Privacidad</a>
+        <a href="cookies.html" data-href-es="cookies.html" data-href-en="cookie-notice.html">Aviso de cookies</a>
+        <a href="ia-responsable.html" data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">IA responsable</a>
+      </p>
+    </div>
+
+  </article>
+
+
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <p class="copy">© <span id="year">2026</span> Higerotech.
+        <span data-es="Todos los derechos reservados." data-en="All rights reserved.">Todos los derechos reservados.</span>
+      </p>
+      <nav class="footer-nav" aria-label="Legal">
+        <a href="/" data-es="Inicio" data-en="Home">Inicio</a>
+        <a href="privacidad.html" data-es="Privacidad" data-en="Privacy"
+           data-href-es="privacidad.html" data-href-en="privacy.html">Privacidad</a>
+        <a href="terminos.html" data-es="Términos" data-en="Terms"
+           data-href-es="terminos.html" data-href-en="terms.html">Términos</a>
+        <a href="cookies.html" data-es="Cookies" data-en="Cookies"
+           data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookies</a>
+        <a href="ia-responsable.html" data-es="IA responsable" data-en="Responsible AI"
+           data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">IA responsable</a>
+        <a href="mailto:contacto@higerotech.com">contacto@higerotech.com</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="assets/sitio.js"></script>
+
+</body>
+</html>

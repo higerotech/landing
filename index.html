@@ -489,6 +489,9 @@
     .footer-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; padding-top: 26px; border-top: 1px solid var(--border); }
     .footer-bottom p { font-size: 13px; color: var(--text-dim); }
     .footer-bottom .madein { font-size: 13px; color: var(--text-dim); display:flex; align-items:center; gap:7px; }
+    .footer-legal { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; }
+    .footer-legal a { color: var(--text-dim); }
+    .footer-legal a:hover { color: var(--teal); }
     .footer-bottom .madein b { color: var(--coral); }
 
     /* ─── Responsive ────────────────────────────────── */
@@ -966,6 +969,21 @@
       </div>
       <div class="footer-bottom">
         <p>© <span id="year">2026</span> Higerotech. <span data-es="Todos los derechos reservados." data-en="All rights reserved.">Todos los derechos reservados.</span></p>
+        <!-- Los documentos legales son un archivo por idioma, así que aquí el
+             DESTINO también cambia con el idioma, no solo la etiqueta: de eso se
+             encargan los `data-href-*` que lee setLang(). Traducir el texto y
+             dejar el href quieto mandaría a un visitante inglés a un documento
+             en castellano con efectos jurídicos. U3.6 lo vigila. -->
+        <nav class="footer-legal" aria-label="Legal">
+          <a href="privacidad.html" data-es="Privacidad" data-en="Privacy"
+             data-href-es="privacidad.html" data-href-en="privacy.html">Privacidad</a>
+          <a href="terminos.html" data-es="Términos" data-en="Terms"
+             data-href-es="terminos.html" data-href-en="terms.html">Términos</a>
+          <a href="cookies.html" data-es="Cookies" data-en="Cookies"
+             data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookies</a>
+          <a href="ia-responsable.html" data-es="IA responsable" data-en="Responsible AI"
+             data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">IA responsable</a>
+        </nav>
         <span class="madein" data-es="Hecho con <b>♥</b> en Venezuela" data-en="Made with <b>♥</b> in Venezuela">Hecho con <b>♥</b> en Venezuela</span>
       </div>
     </div>
