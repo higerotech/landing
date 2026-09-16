@@ -8,6 +8,64 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Seguridad
+- **Siete vulnerabilidades de dependencias a cero**, cuatro de ellas *high*, que dejaban el gate
+  SCA (`npm audit --audit-level=high`) en rojo. Todas transitivas y todas de desarrollo:
+
+  | Paquete | Severidad | Cadena | Arreglo |
+  |---|---|---|---|
+  | `fast-uri` | high ×5 | `@stryker-mutator/core` → `ajv` | 3.1.4 → **3.1.8** |
+  | `qs` | moderate ×2 | `@stryker-mutator/core` → `typed-rest-client` | 6.15.3 → **6.16.0** |
+  | `sharp` | high | `wrangler` → `miniflare` | 0.35.2 → **0.35.4** |
+  | `undici` | high, +4 moderate | `wrangler` → `miniflare` | 7.28.0 → **7.29.0** |
+
+  **Ninguna necesitó forzar un major ni un `override` nuevo**, y eso es el hallazgo que conviene
+  recordar: el rango vulnerable de `fast-uri` acaba en 3.1.5 y `ajv` acepta `^3.0.1`, así que
+  bastaba refrescar el lockfile. Con `qs` pasó algo parecido y más sutil — el `override` de
+  `^6.15.2` que ya existía **permitía** 6.16.0; lo que lo mantenía en la versión vulnerable era un
+  lockfile resuelto cuando 6.16.0 todavía no existía. Un `override` no protege por sí solo: hay
+  que volver a resolver.
+  `sharp` y `undici` salen los dos de la misma `miniflare`, así que subir **wrangler a 4.132.0**
+  cierra ambas. Detalle que evitó trabajo de más: el `undici` que arrastra jsdom (7.29.0) ya
+  estaba fuera del rango vulnerable — el vulnerable era solo el de miniflare.
+  Verificado que la cadena de herramientas sigue entera: 112 unitarias en verde y
+  `wrangler deploy --dry-run` leyendo los 29 archivos de `dist/` con el binding `ASSETS`
+  correcto, que es el riesgo real de subir la herramienta de despliegue.
+- **El escaneo de imagen sigue limpio**: Trivy sobre `nginx:1.30-alpine` (alpine 3.24.1) no
+  reporta ninguna vulnerabilidad, ni siquiera de las que el gate ignora por no tener arreglo.
+  Comprobado a mano, no supuesto.
+- **El DAST tenía un punto ciego con las páginas legales, y estaba MEDIDO, no supuesto.** El
+  primer escaneo con los ocho documentos alcanzó las cuatro versiones castellanas y **ninguna de
+  las cuatro inglesas**: el spider de ZAP no ejecuta JavaScript, y las URL inglesas viven en
+  `data-href-en` hasta que `setLang()` las convierte en `href`. Es la misma clase de ceguera que
+  este archivo ya había corregido para `/404.html` —«el spider solo sigue enlaces»— así que se
+  arregla igual, con un objetivo más. Bastó **uno y no cuatro**: entrando por `/privacy.html`, sus
+  enlaces estáticos ya son los ingleses (ADR-0008) y el spider llega a las otras tres desde ahí.
+  Verificado: el objetivo inglés alcanza las ocho páginas.
+  Dar las inglesas por buenas «porque son iguales que las castellanas» era exactamente la
+  suposición que `tests/dast.mjs` se negó a hacer con el 404.
+- **Aceptada la regla 10027 de ZAP** («Suspicious Comments»), que apareció con ADR-0007: al
+  servirse el JS como archivo propio, ZAP lee sus comentarios —dentro del HTML no los miraba— y
+  salta con la palabra castellana **«todo»**, porque su lista de marcadores incluye el inglés
+  `TODO` y compara sin distinguir mayúsculas. La frase que lo dispara es «Todo el JavaScript de
+  index.html…».
+  No se arregla reescribiendo: «todo» es una de las palabras más comunes del idioma y volvería en
+  el siguiente comentario. Y el sitio publica sus comentarios **a propósito** —sin minificado ni
+  build, ADR-0003 y ADR-0007—, así que la premisa de la regla choca con una decisión de
+  arquitectura.
+  **La ceguera la cubre U11.9**, que es más afilada que la regla: exige `TODO` en mayúsculas
+  seguido de `:` o `>` —la forma que este repositorio usa para una decisión pendiente— y busca
+  **secretos literales** (una clave seguida de una asignación a un valor no trivial, o un prefijo
+  de credencial reconocible) en vez de palabras sueltas.
+  Su primera versión buscaba palabras y **repitió el error que venía a corregir**: «token» casó
+  con los *design tokens* de `legal.css`. Queda escrito junto a la lista, porque el fallo es más
+  instructivo que la regla.
+- **El gate de cabeceras comprueba tres tipos de ruta más**: `/privacidad.html`,
+  `/assets/sitio.js` y `/assets/legal.css`. Es un hueco que abrieron ADR-0007 y ADR-0008: ese job
+  existe porque `add_header` no se hereda (ADR-0002) y enumera **un tipo de ruta por cada
+  `location` de nginx.conf**, y los dos `location =` nuevos —los que evitan que el JS y el CSS
+  hereden el `immutable` de `/assets/`— son justo donde se puede caer el `include` del snippet sin
+  que nada más falle. U12.5 comprueba que esté escrito; esto comprueba que llegue a la respuesta.
+  Verificado sobre el contenedor: las siete rutas salen con las cinco cabeceras.
 - **La CSP ya no lleva `'unsafe-inline'` en `script-src`** (**ADR-0007**). Es la mitad de la
   deuda **T4** que ADR-0003 dejó registrada, y se paga porque el JS salió de `index.html` a
   `assets/sitio.js`: con el marcado sin JavaScript, la directiva puede cerrarse a `'self'` y la

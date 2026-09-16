@@ -15,7 +15,7 @@
 import { describe, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { cargarDOM, fuente, estaInstrumentado } from '../helpers/cargar-dom.mjs'
+import { cargarDOM, fuente, fuenteJS, estaInstrumentado } from '../helpers/cargar-dom.mjs'
 
 const leer = rel => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8')
 
@@ -184,6 +184,96 @@ describe('U11 · A10 — degradación declarada', () => {
         `la pila incluye serif como respaldo: ${pila}`
       )
     }
+  })
+})
+
+describe('U11 · A01 — los comentarios que se publican', () => {
+  test('U11.9 · ningún comentario del código servido filtra un marcador sensible', {
+    skip: estaInstrumentado() && 'afirma sobre el fuente publicado'
+  }, () => {
+    /* Esta prueba existe porque el DAST tuvo que aceptar la regla 10027 de ZAP
+       («Information Disclosure - Suspicious Comments») y hay que cubrir esa
+       ceguera desde aquí.
+
+       POR QUÉ SE ACEPTÓ ESA REGLA. Desde ADR-0007 el JS se sirve como archivo
+       propio, así que ZAP lee sus comentarios — antes, dentro del HTML, no los
+       miraba—. Y salta con la palabra castellana «todo»: su lista de marcadores
+       sospechosos incluye el inglés `TODO`, y la comparación es insensible a
+       mayúsculas. «Todo el JavaScript de index.html» es una frase normal en
+       español, no un marcador pendiente.
+
+       No se arregla reescribiendo la frase: «todo» es una de las palabras más
+       comunes del idioma y volvería a colarse en el siguiente comentario. Y el
+       sitio publica sus comentarios A PROPÓSITO —no hay minificado ni build,
+       ADR-0003 y ADR-0007—, así que la premisa de la regla choca con una
+       decisión de arquitectura.
+
+       QUÉ HACE ESTA PRUEBA EN SU LUGAR: busca marcadores de trabajo pendiente en
+       la forma inequívoca en que este repositorio los escribe, y secretos
+       literales — no palabras sueltas. El detalle, y el error que cometió su
+       primera versión, están junto a la lista. */
+    /* La lista busca DOS cosas, y ninguna es «una palabra»:
+
+       1. **Marcadores de trabajo pendiente**, en la forma inequívoca en que este
+          repositorio los escribe. `TODO` exige mayúsculas y `:` o `>` detrás,
+          para no confundirlo con el «todo» castellano — que es justo el error
+          de la regla 10027 de ZAP.
+       2. **Secretos literales**: una palabra clave seguida de una ASIGNACIÓN a
+          un valor no trivial, y los prefijos de credencial que se reconocen a
+          simple vista.
+
+       La primera versión de esta prueba buscaba las palabras sueltas y repitió
+       exactamente el error que venía a corregir: «token» casó con los **design
+       tokens** de `legal.css`. Buscar «la palabra token» en comentarios escritos
+       por personas produce ruido; buscar `token = "…"` produce hallazgos.
+
+       Tampoco entra «bug»: en los comentarios de este repositorio describe casi
+       siempre un fallo YA ARREGLADO —«el soft 404 fue un bug real»—, que es
+       documentación y no una fuga. */
+    const CLAVES = '(?:contrase(?:ñ|n)a|password|passwd|secret[oa]?|token|api[_\\- ]?key|credencial|credential|private[_\\- ]?key)'
+
+    const SOSPECHOSOS = [
+      { nombre: 'marcador TODO sin resolver', re: /\bTODO\s*[:>]/ },
+      { nombre: 'FIXME', re: /\bFIXME\b/i },
+      { nombre: 'XXX', re: /\bXXX\b/ },
+      { nombre: 'HACK', re: /\bHACK\b/i },
+      { nombre: 'secreto asignado a un literal', re: new RegExp(`${CLAVES}\\s*[:=]\\s*['"\`][^'"\`]{6,}`, 'i') },
+      { nombre: 'credencial con prefijo reconocible', re: /\b(?:sk|pk|rk)_[A-Za-z0-9]{16,}\b|\bAKIA[0-9A-Z]{16}\b|\bghp_[A-Za-z0-9]{20,}\b|\beyJ[A-Za-z0-9_-]{20,}\./ }
+    ]
+
+    /** Comentarios de bloque y de línea de un archivo JS o CSS. */
+    const comentariosDe = texto => [
+      ...texto.matchAll(/\/\*[\s\S]*?\*\//g),
+      ...texto.matchAll(/(?:^|[^:'"\\])\/\/.*$/gm)
+    ].map(m => m[0])
+
+    /** Comentarios HTML. */
+    const comentariosHTML = texto => [...texto.matchAll(/<!--[\s\S]*?-->/g)].map(m => m[0])
+
+    const objetivos = [
+      ['assets/sitio.js', comentariosDe(fuenteJS())],
+      ['index.html', comentariosHTML(fuente())],
+      ['assets/legal.css', comentariosDe(leer('assets/legal.css'))]
+    ]
+
+    const hallazgos = []
+
+    for (const [archivo, comentarios] of objetivos) {
+      for (const comentario of comentarios) {
+        for (const { nombre, re } of SOSPECHOSOS) {
+          const m = comentario.match(re)
+          if (m) {
+            const contexto = comentario.slice(Math.max(0, m.index - 40), m.index + 40).replace(/\s+/g, ' ')
+            hallazgos.push(`${archivo}: ${nombre} → «…${contexto}…»`)
+          }
+        }
+      }
+    }
+
+    assert.deepEqual(
+      hallazgos, [],
+      'hay un marcador sensible en un comentario que se publica tal cual, sin minificar'
+    )
   })
 })
 

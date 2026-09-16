@@ -28,6 +28,28 @@
 # escaneo pasivo no alcanza se ocupan las 63 pruebas E2E en navegador real.
 10109	IGNORE	«Modern Web Application» es informativo; el JS lo cubren las E2E
 
+# ── Falso positivo por idioma ────────────────────────────────────────────
+# «Suspicious Comments» salta desde ADR-0007: al servirse el JS como archivo
+# propio, ZAP lee sus comentarios — dentro del HTML no los miraba—. Y lo que
+# encuentra es la palabra castellana «todo»:
+#
+#   Todo el JavaScript de `index.html`, extraído a un archivo propio el …
+#
+# Su lista de marcadores sospechosos incluye el inglés TODO y compara sin
+# distinguir mayúsculas. No se arregla reescribiendo la frase: «todo» es una de
+# las palabras más comunes del idioma y volvería en el siguiente comentario.
+#
+# Además, el sitio publica sus comentarios A PROPÓSITO: no hay minificado ni
+# build (ADR-0003, ADR-0007), así que la premisa de la regla —que un comentario
+# en producción es un descuido— choca con una decisión de arquitectura.
+#
+# La ceguera que esto deja la cubre la unitaria U11.9, que es más afilada que la
+# regla: exige TODO en mayúsculas y seguido de `:` o `>` —la forma que este
+# repositorio usa— y busca secretos literales (una clave seguida de una
+# asignación a un valor no trivial, o un prefijo de credencial reconocible) en
+# vez de palabras sueltas. Falla en la unitaria, antes de que ZAP corra.
+10027	IGNORE	Comentarios sospechosos — falso positivo por el «todo» castellano; ver U11.9
+
 # ── Deliberado ───────────────────────────────────────────────────────────
 # El HTML se sirve con `no-cache, must-revalidate` a propósito: es lo que
 # hace que un despliegue se vea de inmediato. La alerta señala que el
