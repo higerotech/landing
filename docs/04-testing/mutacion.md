@@ -27,6 +27,7 @@ dos preguntas distintas.
 | Muertos | **133** |
 | Supervivientes | 11 |
 | Score | **92,36 %** |
+| Archivo mutado | `assets/sitio.js` — era `index.html` hasta **ADR-0007** (2026-09-16). El score no se movió: mismos 144 mutantes, mismos 133 muertos |
 | Umbral que rompe | **90** |
 
 ## Lo que encontró: cinco huecos reales
@@ -73,9 +74,10 @@ era distinta y ninguna se adivinaba desde el mensaje de error:
 
 ### Las pruebas que se saltan bajo instrumentación
 
-Seis pruebas afirman sobre el **texto del fuente** —que exista la regla `[hidden]`, que el
+Varias pruebas afirman sobre el **texto del fuente** —que exista la regla `[hidden]`, que el
 `@font-face` inlinado coincida con `fonts.css`, que el número sea solo dígitos—. Stryker reescribe
-`index.html` insertando sus interruptores:
+`assets/sitio.js` —`index.html` hasta ADR-0007, ver `stryker.config.json`— insertando sus
+interruptores:
 
 ```js
 whatsapp: stryMutAct_9fa48("1") ? "" : (stryCov_9fa48("1"), '13235543854')

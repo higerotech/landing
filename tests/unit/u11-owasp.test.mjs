@@ -46,7 +46,7 @@ describe('U11 · A01 y A07 — la premisa de «No aplica»', () => {
     /* Refuerza A01/A07 y también la clasificación de datos: el sitio no
        identifica a nadie. `localStorage` sí se usa, para el idioma, y eso está
        documentado y es dato no personal. */
-    for (const archivo of ['index.html', '404.html']) {
+    for (const archivo of ['index.html', '404.html', 'assets/sitio.js']) {
       assert.ok(
         !/document\.cookie/.test(leer(archivo)),
         `${archivo} manipula cookies: revisar la clasificación de datos y A01/A07`
@@ -83,6 +83,59 @@ describe('U11 · A05 — inyección por el único parámetro que se lee', () => 
       assert.ok(
         permitidos.includes(doc.documentElement.lang),
         `setLang(${JSON.stringify(intento)}) dejó lang fuera de la lista permitida`
+      )
+    }
+  })
+})
+
+describe('U11 · A05 — la CSP ya no lleva `unsafe-inline` en script-src', () => {
+  test('U11.8 · no queda ni un script inline ejecutable ni un manejador on*=', {
+    skip: estaInstrumentado() && 'afirma sobre el fuente publicado'
+  }, () => {
+    /* ADR-0007 quitó `'unsafe-inline'` de `script-src`, y eso convierte en
+       contrato lo que antes era una preferencia: en el marcado no puede quedar
+       JavaScript.
+
+       Importa porque el fallo es SILENCIOSO y total. El navegador bloquea el
+       bloque inline sin romper nada más, deja un aviso en una consola que nadie
+       mira, y como `.reveal` está en `opacity: 0` esperando que el JS le añada
+       `.in`, el resultado es una página en blanco. Es T17 otra vez, con la CSP
+       como causa en lugar de una excepción.
+
+       E5.1 también lo vería, pero en un navegador y en el nivel E2E. Esto falla
+       en la unitaria, que es donde se mira primero.
+
+       El `<script type="application/ld+json">` NO cuenta, y por eso se filtra
+       por `type`: es un bloque de datos, el parser no lo prepara como script y
+       la CSP no lo evalúa. */
+    const TIPOS_DE_DATOS = ['application/ld+json', 'application/json', 'text/template']
+
+    /* Sin quitar los comentarios, esta prueba se dispara con la prosa que
+       explica la decisión: los comentarios de index.html mencionan `<script>`
+       y un falso positivo aquí acabaría con alguien borrando la explicación
+       para poner el test en verde. */
+    const sinComentarios = texto => texto.replace(/<!--[\s\S]*?-->/g, '')
+
+    for (const archivo of ['index.html', '404.html']) {
+      const texto = sinComentarios(leer(archivo))
+
+      for (const [etiqueta, atributos] of texto.matchAll(/<script([^>]*)>/gi)) {
+        if (/\bsrc\s*=/i.test(atributos)) continue // externo: lo cubre 'self'
+
+        const tipo = (atributos.match(/type\s*=\s*["']([^"']+)["']/i) ?? [])[1]
+        assert.ok(
+          tipo && TIPOS_DE_DATOS.includes(tipo.toLowerCase()),
+          `${archivo} tiene un <script> inline ejecutable (${etiqueta.trim()}): la CSP lo ` +
+          'bloqueará y la página se queda en blanco. Muévelo a assets/sitio.js'
+        )
+      }
+
+      /* Los manejadores del marcado también son script inline para la CSP, y ni
+         `'unsafe-inline'` sin `'unsafe-hashes'` los habría salvado. */
+      const manejadores = [...texto.matchAll(/\s(on[a-z]+)\s*=\s*["']/gi)].map(m => m[1])
+      assert.deepEqual(
+        manejadores, [],
+        `${archivo} tiene manejadores de evento en el marcado: la CSP los bloquea`
       )
     }
   })

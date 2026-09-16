@@ -1,14 +1,19 @@
 #!/usr/bin/env node
-/* ── Cobertura del script inline de index.html ───────────────────────────
-   `node --test --experimental-test-coverage` NO sirve aquí: su reporter solo
-   incluye rutas de archivo, y el JS del sitio vive dentro de un <script> que
-   jsdom compila bajo la URL del documento. El resultado es un informe que dice
-   «100 % de líneas» midiendo únicamente el arnés — verde y vacío, que es la
-   peor combinación posible.
+/* ── Cobertura de assets/sitio.js ────────────────────────────────────────
+   `node --test --experimental-test-coverage` NO sirve aquí, y desde ADR-0007
+   sigue sin servir aunque el JS ya tenga archivo propio: el arnés lo INSERTA
+   en el `index.html` real para ejecutarlo (ver `tests/helpers/cargar-dom.mjs`),
+   así que jsdom lo compila bajo la URL del documento y no bajo una ruta de
+   archivo. El reporter de Node seguiría informando «100 % de líneas» midiendo
+   únicamente el arnés — verde y vacío, la peor combinación posible.
 
-   Los datos crudos SÍ existen: V8 registra el script inline con contadores por
-   rango. Este script los recoge, los mapea al texto del <script> —los offsets
-   coinciden byte a byte con él— y traduce a números de línea de `index.html`.
+   Los datos crudos SÍ existen: V8 registra ese script con contadores por
+   rango. Este script los recoge y los mapea al texto de `assets/sitio.js`, con
+   el que coinciden byte a byte porque el arnés lo inserta verbatim.
+
+   Lo que la extracción SÍ simplificó: ya no hay que localizar el bloque dentro
+   del HTML ni desplazar los números de línea. El archivo es el fuente y la
+   línea 1 es la línea 1.
 
    Uso:  npm run coverage
    Ver:  docs/04-testing/unit-tests.md §Cobertura */
@@ -56,19 +61,16 @@ if (ejecucion.status !== 0) {
   process.exit(ejecucion.status ?? 1)
 }
 
-// ── 2. Localizar el <script> inline y su desplazamiento de líneas ────────
-const html = readFileSync(join(RAIZ, 'index.html'), 'utf8')
-const enScript = html.match(/<script>([\s\S]*?)<\/script>/)
-if (!enScript) throw new Error('no se encontró el <script> inline en index.html')
-
+// ── 2. El fuente medido ──────────────────────────────────────────────────
 /* Normalizado a LF a propósito: en un clon de Windows el archivo puede tener
    CRLF, y el parser de HTML convierte los saltos a LF antes de compilar el
-   script. Sin esto, el fuente medido es un carácter más largo por línea que el
-   que V8 registró, ningún rango casa con `fuente.length` y el informe sale
-   vacío: «no se registró cobertura». Pasó de verdad el 2026-07-31, tras una
-   edición que reescribió el archivo con saltos de Windows. */
-const fuente = enScript[1].replace(/\r\n/g, '\n')
-const lineaBase = html.slice(0, enScript.index + '<script>'.length).split('\n').length - 1
+   script que el arnés insertó. Sin esto, el fuente medido es un carácter más
+   largo por línea que el que V8 registró, ningún rango casa con
+   `fuente.length` y el informe sale vacío: «no se registró cobertura». Pasó de
+   verdad el 2026-07-31, tras una edición que reescribió el archivo con saltos
+   de Windows. */
+const ARCHIVO = 'assets/sitio.js'
+const fuente = readFileSync(join(RAIZ, ARCHIVO), 'utf8').replace(/\r\n/g, '\n')
 
 // ── 3. Fundir los contadores de todas las instancias de jsdom ────────────
 /* Cada test construye un JSDOM nuevo, así que V8 compila el mismo script una
@@ -163,21 +165,21 @@ for (let i = 0; i < lineas.length; i++) {
   }
 
   if (tocada) cubiertas++
-  else sinCubrir.push({ linea: lineaBase + i + 1, texto: podado.slice(0, 68) })
+  else sinCubrir.push({ linea: i + 1, texto: podado.slice(0, 68) })
 }
 
 // ── 6. Funciones ─────────────────────────────────────────────────────────
 const lista = [...porFuncion.values()].sort((a, b) => a.inicio - b.inicio)
 const ejecutadas = lista.filter(f => f.count > 0)
 
-const lineaDe = off => lineaBase + fuente.slice(0, off).split('\n').length
+const lineaDe = off => fuente.slice(0, off).split('\n').length
 
 const pct = (a, b) => b === 0 ? 100 : (a / b) * 100
 const pctFunciones = pct(ejecutadas.length, lista.length)
 const pctLineas = pct(cubiertas, ejecutables)
 
 // ── 7. Informe ───────────────────────────────────────────────────────────
-console.log('\nCobertura del <script> inline de index.html')
+console.log(`\nCobertura de ${ARCHIVO}`)
 console.log(`  líneas    ${pctLineas.toFixed(1).padStart(6)} %   (${cubiertas}/${ejecutables} ejecutables)`)
 console.log(`  funciones ${pctFunciones.toFixed(1).padStart(6)} %   (${ejecutadas.length}/${lista.length})`)
 
@@ -193,13 +195,13 @@ const noEjecutadas = lista.filter(f => f.count === 0)
 if (noEjecutadas.length) {
   console.log('\n  Funciones nunca ejecutadas:')
   for (const f of noEjecutadas) {
-    console.log(`    index.html:${lineaDe(f.inicio)}  ${f.nombre || '(anónima)'}`)
+    console.log(`    ${ARCHIVO}:${lineaDe(f.inicio)}  ${f.nombre || '(anónima)'}`)
   }
 }
 
 if (sinCubrir.length) {
   console.log('\n  Líneas sin cubrir:')
-  for (const l of sinCubrir) console.log(`    index.html:${l.linea}  ${l.texto}`)
+  for (const l of sinCubrir) console.log(`    ${ARCHIVO}:${l.linea}  ${l.texto}`)
 }
 
 if (pctFunciones < UMBRAL_FUNCIONES) {

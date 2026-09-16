@@ -7,10 +7,11 @@
 * **Versión:** 0.7.0
 * **Gate:** 3 — **sigue no superado**: el nivel unitario existe, faltan E2E, accesibilidad,
   rendimiento, DAST y mutation testing
-* **Ejecución:** `npm test` — `node --test` sobre el `index.html` real, ~4 s.
-  `npm run coverage` mide y gatea la cobertura del script inline
+* **Ejecución:** `npm test` — `node --test` sobre el `index.html` y el `assets/sitio.js`
+  reales, ~19 s. `npm run coverage` mide y gatea la cobertura de `assets/sitio.js`
 * **Arnés elegido:** `node:test` (stdlib) + `jsdom`
-* **Alcance:** la lógica de `index.html:884-992` y los invariantes del HTML que esa lógica asume
+* **Alcance:** la lógica de `assets/sitio.js` —hasta el 2026-09-16 vivía en
+  `index.html:884-992` (ADR-0007)— y los invariantes del HTML que esa lógica asume
 
 ## Por qué existe este documento
 
@@ -45,22 +46,28 @@ falta que nadie rompa en silencio lo que ya está funcionando.
 
 ## El fallo que justifica el suite
 
-El script **no tiene aislamiento de errores**. Las líneas 903-904, 919-920, 972-973 y 989
-desreferencian nodos del DOM sin ninguna guarda, y `.reveal` está en `opacity: 0`
-(`index.html:109`) esperando que el JS le añada `.in`. La consecuencia es asimétrica según
-*dónde* se lance:
+El script **no tiene aislamiento de errores**. Las líneas 49-50, 65-66, 118-119 y 135 de
+`assets/sitio.js` desreferencian nodos del DOM sin ninguna guarda, y `.reveal` está en
+`opacity: 0` (`index.html:180`) esperando que el JS le añada `.in`. La consecuencia es
+asimétrica según *dónde* se lance.
+
+Los números son de `assets/sitio.js` desde **ADR-0007** (2026-09-16); hasta entonces el
+script vivía en `index.html:884-992` y este documento citaba esas líneas. La cadena de fallo
+no cambió al mudarse, pero ganó una puerta más: si alguien devuelve un `<script>` inline al
+marcado, la CSP —que ya no lleva `'unsafe-inline'` en `script-src`— lo bloquea, y el
+resultado es indistinguible de la excepción temprana. De eso avisa **U11.8**.
 
 ```mermaid
 flowchart TB
-    A[884 script inline empieza] --> B[891 initWhatsApp<br/>guardado con if !cta]
-    B --> C[919 navToggle.addEventListener]
+    A[35 sitio.js empieza] --> B[37 initWhatsApp<br/>guardado con if !cta]
+    B --> C[65 navToggle.addEventListener]
     C -->|falta #nav-toggle o #nav-links| X1[Excepcion temprana]
-    C --> D[972 btn-es.addEventListener]
+    C --> D[118 btn-es.addEventListener]
     D -->|falta #btn-es o #btn-en| X1
-    D --> E[978 scroll reveal<br/>anade .in a los .reveal]
-    E --> F[989 year.textContent]
+    D --> E[124 scroll reveal<br/>anade .in a los .reveal]
+    E --> F[135 year.textContent]
     F -->|falta #year| X2[Excepcion tardia]
-    F --> G[991 setLang idiomaInicial]
+    F --> G[137 setLang idiomaInicial]
     G --> Z([Carga correcta])
 
     X1 --> Y1[Los .reveal se quedan en opacity 0<br/>PAGINA EN BLANCO + i18n muerto]
@@ -76,11 +83,11 @@ flowchart TB
 
 Tres cosas que hacen esto peor de lo que parece:
 
-1. **El `<noscript>` no cubre este caso.** `index.html:40` fuerza `.reveal { opacity: 1 }`
+1. **El `<noscript>` no cubre este caso.** `index.html:95` fuerza `.reveal { opacity: 1 }`
    cuando el JS está **deshabilitado**. Si el JS está habilitado y *lanza*, el `<noscript>` no
    se aplica y no hay red de seguridad.
 2. **El único grupo inmune son los usuarios con `prefers-reduced-motion`**, porque
-   `index.html:123` también fuerza `opacity: 1`. Es decir: el sitio se caería para la mayoría y
+   `index.html:194` también fuerza `opacity: 1`. Es decir: el sitio se caería para la mayoría y
    seguiría bien para una minoría, que es el patrón más difícil de reproducir a partir de un
    reporte.
 3. **El disparador es una errata de un carácter** en un `id`. Coste de detección con un test
@@ -94,9 +101,25 @@ capas que eligió no lo alcanzan, y T7 quedó marcado ✅ Cerrado. Ver §Lo que 
 ## Arnés
 
 `node:test` de la stdlib como runner, `jsdom` como DOM. La decisión de fondo: **los tests
-cargan el `index.html` real**, no una copia ni un fixture reducido. Como el JS vive inline
-(ADR-0003) no se puede importar, pero sí se puede ejecutar en su archivo verdadero, y eso
+cargan el `index.html` y el `assets/sitio.js` reales**, no copias ni fixtures reducidos. Eso
 elimina de raíz la posibilidad de que el test y el artefacto desplegado se desvíen.
+
+**Desde ADR-0007 (2026-09-16) el JS ya no está dentro del HTML**, y el arnés no lo importa:
+lo **inserta** en el `index.html` real, en el sitio exacto donde el navegador pondría su
+`<script src>` —al final del `<body>`—, y deja que jsdom lo compile. Se hace así, y no con
+`resources: 'usable'`, por tres razones que no son de estilo:
+
+1. El documento se parsea con `url: 'https://higerotech.com/'`. Con la carga de recursos
+   activada, jsdom saldría a buscar el script **a esa URL, por red**.
+2. Esa carga es asíncrona y `cargarDOM()` es sincrónico: los tests afirman sobre el DOM en
+   cuanto vuelve.
+3. Un script externo que lanza **no pasa por `jsdomError`**, y ese es el mecanismo que pone
+   U1.1 y U1.5 en rojo.
+
+El texto insertado es el del archivo byte a byte, porque `tests/cobertura.mjs` depende de
+que el script compilado y `assets/sitio.js` tengan la misma longitud para alinear los rangos
+de V8. Una consecuencia práctica: **`cargarDOM()` no sirve para afirmar sobre cómo se carga
+el script** —en su DOM no hay `script[src]`—, y por eso U2.6 y U2.7 parsean el fuente crudo.
 
 ```js
 // tests/helpers/cargar-dom.mjs
@@ -149,10 +172,10 @@ Cuatro detalles del arnés que no son opcionales:
 
 | Detalle | Por qué |
 |---|---|
-| `runScripts: 'dangerously'` | Es lo que ejecuta el script inline. Sin esto el DOM se parsea pero la lógica no corre |
-| Stub de `matchMedia` | jsdom no lo trae; la línea 928 lo llama sin guarda. Es el stub que hace viable todo lo demás |
+| `runScripts: 'dangerously'` | Es lo que ejecuta el script que el arnés inserta. Sin esto el DOM se parsea pero la lógica no corre |
+| Stub de `matchMedia` | jsdom no lo trae; `assets/sitio.js` lo llama sin guarda al crear `mqEscritorio`. Es el stub que hace viable todo lo demás |
 | `IntersectionObserver` ausente por defecto | jsdom tampoco lo trae, así que **la rama de fallback se prueba gratis**. La rama con IO necesita un doble explícito |
-| `VirtualConsole` escuchando `jsdomError` | Es el mecanismo que convierte «el script lanzó» en un test rojo. Sin esto, una excepción dentro del inline se traga en silencio y el test pasa |
+| `VirtualConsole` escuchando `jsdomError` | Es el mecanismo que convierte «el script lanzó» en un test rojo. Sin esto, una excepción dentro del script se traga en silencio y el test pasa. Es también la razón de insertar el JS en vez de cargarlo como recurso externo |
 
 **Acceso a las funciones.** En un script clásico las declaraciones `function` van al objeto
 global, así que `win.setLang`, `win.setMenu`, `win.syncToggleLabel` y `win.idiomaInicial` son
@@ -460,18 +483,22 @@ file             | line % | branch % | funcs % | uncovered lines
 all files        | 100.00 |  100.00  |   75.00 |
 ```
 
-**100 % de líneas, midiendo exclusivamente el arnés.** Ni una línea de `index.html`. Es el peor
+**100 % de líneas, midiendo exclusivamente el arnés.** Ni una línea del script del sitio. Es el peor
 modo de fallar que tiene una métrica: no da error, da un número excelente sobre el conjunto
 vacío. Si el Gate 2 se hubiera cerrado con esa cifra, habría quedado documentado un 100 % de
 cobertura sobre código que nadie mide.
 
 ### Cómo se mide de verdad
 
-Los datos crudos **sí existen**: V8 registra el script inline bajo la URL del documento con
-contadores por rango, y sus offsets coinciden **byte a byte** con el texto del `<script>`
-(4713 bytes, verificado). `tests/cobertura.mjs` ejecuta el suite con `NODE_V8_COVERAGE`, recoge
-esas entradas y las traduce a números de línea de `index.html`. Tres detalles que costaron un
-intento cada uno:
+Los datos crudos **sí existen**: V8 registra ese script bajo la URL del documento con
+contadores por rango, y sus offsets coinciden **byte a byte** con `assets/sitio.js`, porque el
+arnés lo inserta verbatim. `tests/cobertura.mjs` ejecuta el suite con `NODE_V8_COVERAGE`,
+recoge esas entradas y las traduce a números de línea del archivo.
+
+ADR-0007 no cambió el mecanismo —jsdom sigue compilando bajo la URL del documento, así que el
+reporter de Node seguiría midiendo solo el arnés— pero sí lo simplificó: ya no hay que
+localizar el bloque dentro del HTML ni desplazar los números de línea. El archivo es el
+fuente y la línea 1 es la línea 1. Tres detalles que costaron un intento cada uno:
 
 1. **Fundir por máximo, no sumando.** V8 emite un sub-rango *solo cuando un bloque no se
    ejecutó*, así que su ausencia en una instancia significa «cubierto ahí». Sumando por clave de

@@ -22,6 +22,27 @@ Sale del charter §Métricas de éxito, no de lo que la herramienta dé por buen
 | best-practices | ≥ 95 | 96 |
 | seo | = 100 | 100 |
 
+### Remedición tras ADR-0007 (2026-09-16)
+
+Extraer el JS a `assets/sitio.js` añade **una petición** a la primera carga, y era el riesgo
+que había que medir antes de dar el cambio por bueno: con `.reveal` en `opacity: 0`, un viaje
+extra antes de ejecutar el script no es latencia, es página en blanco.
+
+| Métrica | Objetivo | Antes | Tras ADR-0007 |
+|---|---|---|---|
+| LCP en 3G lento | < 2 500 ms | 1 933 ms | **1 864 ms** |
+| Peso de la primera carga | < 350 KB | 104 KB | **107 KB** |
+| performance | ≥ 90 | 98 | **97** |
+
+Mismo método —`devtools`, 3G lento, 3 ejecuciones, mediana— contra el contenedor. La
+diferencia de LCP está dentro del ruido entre ejecuciones, así que lo que se puede afirmar es
+que **el presupuesto se mantiene**, no que la página haya mejorado. Los 3 KB de más son el
+archivo servido aparte, con su propia cabecera.
+
+Lo que evita el coste del viaje es el `<link rel="preload">` del `<head>`: sin él, el GET del
+script empezaría donde ahora termina, con el documento ya parseado. U2.6 existe para que ese
+preload no se separe del `src` sin que nadie se dé cuenta.
+
 ## Tres decisiones de medición que cambian el resultado
 
 ### 1. Throttling real, no simulado

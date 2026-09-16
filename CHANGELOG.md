@@ -7,7 +7,47 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
+### Seguridad
+- **La CSP ya no lleva `'unsafe-inline'` en `script-src`** (**ADR-0007**). Es la mitad de la
+  deuda **T4** que ADR-0003 dejó registrada, y se paga porque el JS salió de `index.html` a
+  `assets/sitio.js`: con el marcado sin JavaScript, la directiva puede cerrarse a `'self'` y la
+  CSP vuelve a hacer aquello para lo que existe — un `<script>` inyectado en el marcado no se
+  ejecuta. El cambio va en los **dos** caminos a producción, `security-headers.conf` y
+  `cloudflare/_headers`, y U12.2 falla si se separan.
+  **`style-src 'unsafe-inline'` se queda**: el CSS sigue dentro de `index.html` por ADR-0003.
+  T4 no desaparece del threat model, reduce alcance a la mitad. El aviso 10055 de ZAP sigue en
+  IGNORE por eso mismo, y por una limitación del formato de `.zap/rules.tsv`, que no distingue
+  directivas: aceptar el de estilos y vigilar el de scripts en la misma regla no se puede
+  expresar. La ceguera la cubren U11.8 y U12.2, que fallan antes de que ZAP corra.
+  **El `<script type="application/ld+json">` no estorbaba**: es un bloque de datos, el parser no
+  lo prepara como script y la CSP no lo evalúa. E5.1 lo confirma contra un navegador real.
+
 ### Añadido
+- **`assets/sitio.js`**: todo el JavaScript del sitio, fuera del HTML (**ADR-0007**). El
+  disparador no fue el que ADR-0003 había previsto —no ha aparecido ninguna entrada de usuario—
+  sino que **el sitio deja de ser una sola página**: las cuatro páginas legales en camino
+  necesitan el mismo conmutador ES/EN, el mismo menú móvil y el mismo año del pie, y con el
+  script dentro del HTML la única salida era copiarlo cinco veces. Cinco copias de `setLang()`
+  divergiendo, en un sitio cuyo riesgo **R2** documentado es justamente la deriva del texto
+  bilingüe, es crear el problema a sabiendas: U2.5 existe porque un `@font-face` duplicado se
+  desvió, y U12 entera existe porque las cabeceras viven en dos archivos.
+  **Sigue sin haber build step**: el archivo se sirve tal cual, sin minificar y sin hash en el
+  nombre. Se carga al final del `<body>` y **sin `defer`**, porque el script desreferencia nodos
+  en su nivel superior; el `<link rel="preload">` del `<head>` es lo que evita que esa posición
+  cueste un viaje extra, y no es cosmético: con `.reveal` en `opacity: 0`, cada milisegundo de
+  espera es página en blanco, no solo latencia.
+- **U2.6, U2.7, U11.8 y U12.5**, una por cada forma nueva de romperse que introduce la
+  extracción, y ninguna de las cuatro es hipotética:
+  **U2.6** — el `preload` y el `src` apuntan al mismo archivo. Divergir no rompe nada visible:
+  devuelve el viaje que el `preload` ahorra, una regresión de rendimiento que nadie atribuiría a
+  un preload mal escrito.
+  **U2.7** — el `<script>` sigue al final del `<body>` y sin `defer`/`async`. En el `<head>` sin
+  `defer` no encontraría el DOM: la cadena de T17 por otra puerta.
+  **U11.8** — no queda ni un `<script>` inline ejecutable ni un manejador `on*=` en el marcado.
+  Si vuelve uno, la CSP lo bloquea **en silencio** y la página se queda en blanco; esto lo dice
+  en la unitaria, no en el navegador.
+  **U12.5** — `nginx.conf` sigue teniendo su `location =` para el script, y el Worker sigue sin
+  fijar `Cache-Control` para ninguno de los dos.
 - **Tres assets de marca se pueden incrustar desde otros orígenes**:
   `/assets/isotipo_charcoal.svg`, `/assets/og-card.png` y `/assets/logo_white_trans.png`. Salen
   con `Cross-Origin-Resource-Policy: cross-origin`; **el resto del sitio sigue en `same-origin`**.
@@ -33,6 +73,30 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   incrustaría por un camino y no por el otro según qué hostname sirvió la página.
 
 ### Cambiado
+- **La cobertura y el mutation testing miden `assets/sitio.js`**, no un trozo de `index.html`.
+  `tests/cobertura.mjs` ya no localiza el bloque dentro del HTML ni desplaza números de línea, y
+  `stryker.config.json` muta el archivo. Las dos métricas salen **idénticas** a las de antes de
+  mover nada —100 % de funciones (17/17), 100 % de líneas (99/99) y **92,36 % de mutación con los
+  mismos 144 mutantes y 133 muertos**—, que es la prueba de que esto fue un traslado y no una
+  reescritura.
+  Lo que había que cuidar era el **«0 sin cobertura»**: el puente de realms del arnés detectaba
+  la instrumentación de Stryker mirando el HTML, y de no haberlo movido a mirar el JS, los 144
+  mutantes habrían salido sin cobertura con un score del 0 % que no mide nada. Ya pasó una vez y
+  está documentado en `docs/04-testing/mutacion.md`.
+- **El arnés de las unitarias inserta el JS en el `index.html` real** en lugar de encontrarlo
+  dentro. Se hace así, y no con `resources: 'usable'` de jsdom, por tres razones concretas: el
+  documento se parsea con la URL de producción y jsdom saldría a buscar el script **por red**;
+  esa carga es asíncrona y `cargarDOM()` es sincrónico; y un script externo que lanza **no pasa
+  por `jsdomError`**, que es el mecanismo que pone U1.1 y U1.5 en rojo. `sustituir` aplica ahora
+  sobre el fuente que case —el marcado o el script— manteniendo el guardia que impide el test
+  vacuo, y `fuente()` se acompaña de `fuenteJS()`: una prueba que afirma sobre el script debe
+  decir que mira el script.
+- **`assets/sitio.js` no hereda el `immutable` de 30 días de `/assets/`.** Tiene su propio
+  `location =` en `nginx.conf` con la política del HTML, porque el HTML se revalida siempre y un
+  visitante podría quedarse un mes con el script viejo y la página nueva — no falla, se comporta
+  raro, que es peor de diagnosticar. Con el JS dentro del HTML el problema no existía: viajaban
+  en la misma respuesta. En el camino del Worker la política se comparte sin hacer nada, porque
+  `cloudflare/_headers` no fija `Cache-Control` para ninguno de los dos.
 - **El sitio deja de ser «solo assets» en el borde** (enmienda a ADR-0006, que ya contemplaba
   este caso). Hay ahora un `worker/index.mjs` de quince líneas, y hace falta porque
   **`cloudflare/_headers` no puede expresar la excepción** — medido con `wrangler dev`, no

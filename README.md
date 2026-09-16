@@ -54,6 +54,7 @@ No son optimizaciones opcionales: son requisitos, y hay ADRs que explican por qu
 ├── 404.html                    # Página de error con la identidad del sitio
 ├── robots.txt  sitemap.xml     # Indexación
 ├── assets/
+│   ├── sitio.js                # Todo el JS (ADR-0007) — el HTML solo trae CSS
 │   ├── fonts/                  # Inter y Space Grotesk autoalojadas (SIL OFL 1.1)
 │   ├── isotipo.svg             # Isotipo (3 hexágonos, nodo coral)
 │   ├── og-card.png             # Tarjeta social 1200×630
@@ -113,7 +114,7 @@ Los gates abiertos lo están con su razón documentada. Ninguno se marca por con
 motivos distintos y consecutivos —faltaba pipeline, luego faltaban pruebas, luego faltaba
 medirlas— y cada uno fue un trabajo aparte. Sus cinco ítems tienen hoy evidencia ejecutable.
 
-Dos salvedades siguen vigentes: la cobertura es del `<script>` inline y no dice nada del marcado
+Dos salvedades siguen vigentes: la cobertura es de `assets/sitio.js` y no dice nada del marcado
 ni del navegador, y cerrar Gate 2 **no adelanta a Gate 3**, que sigue con un solo nivel de la
 pirámide. La tercera —«los gates pasan pero no bloquean»— **dejó de aplicar el 2026-07-31**: ver
 abajo.
@@ -122,12 +123,12 @@ abajo.
 
 ```bash
 npm ci
-npm test          # node --test sobre el index.html real, ~4 s
-npm run coverage  # mide y gatea la cobertura del <script> inline
+npm test          # node --test sobre el index.html y el sitio.js reales, ~19 s
+npm run coverage  # mide y gatea la cobertura de assets/sitio.js
 ```
 
-Las unitarias cargan el `index.html` **real** en jsdom y ejecutan su script inline, así que no
-pueden desviarse del archivo que se despliega. Diseño, catálogo de casos y límites del nivel en
+Las unitarias cargan el `index.html` **real** en jsdom e insertan en él el `assets/sitio.js`
+**real** para ejecutarlo, así que no pueden desviarse de los archivos que se despliegan. Diseño, catálogo de casos y límites del nivel en
 [`docs/04-testing/unit-tests.md`](docs/04-testing/unit-tests.md).
 
 `node_modules/` es solo para las pruebas: **el sitio no se construye con npm** y nada de esto

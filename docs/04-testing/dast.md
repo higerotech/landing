@@ -40,7 +40,7 @@ cross-origin sin CORP, y no hay ninguno. Verificado con las E2E de CSP y fuentes
 
 | Regla | Riesgo ZAP | Motivo |
 |---|---|---|
-| **10055** CSP `unsafe-inline` | Medium | **T4** del threat model, aceptado con DREAD 5,6. El CSS y el JS viven en `index.html` por **ADR-0003**, que fija el disparador de revisión: se elimina en cuanto se extraigan a archivos propios. Mitigado mientras tanto porque no existe vector de entrada de contenido no confiable, cosa que vigila la unitaria U3.5 |
+| **10055** CSP `unsafe-inline` | Medium | **T4** del threat model, aceptado con DREAD 5,6. Desde el 2026-09-16 el aviso es **solo por `style-src`**: el JS salió a `assets/sitio.js` y `script-src` quedó en `'self'` (**ADR-0007**). La regla sigue en IGNORE porque el formato de `.zap/rules.tsv` no permite aceptar la directiva de estilos y vigilar la de scripts por separado; de que `script-src` no vuelva a abrirse se ocupan **U11.8** y **U12.2**. El CSS sigue en `index.html` por **ADR-0003** |
 | **10109** Modern Web Application | Informational | No es un hallazgo: ZAP hace constar que la página usa JS y que un escaneo pasivo no lo ve todo. Cierto, y de eso se ocupan las 61 E2E en navegador real |
 | **10049** Storable but Non-Cacheable | Informational | Deliberado: el HTML va con `no-cache, must-revalidate` para que un despliegue se vea de inmediato. Los assets sí van `immutable` |
 
@@ -107,7 +107,7 @@ FAIL-NEW: 0   WARN-NEW: 0   IGNORE: 1   PASS: 140
 ```
 
 **140 reglas, más del doble que las 64 del baseline, y ni un hallazgo nuevo.** El único aviso fue
-el `unsafe-inline` ya aceptado.
+el `unsafe-inline` ya aceptado — que desde ADR-0007 se reduce a `style-src`.
 
 Queda como comando bajo demanda —`npm run dast -- --activo`— y **no** como gate: en un sitio sin
 formularios, sin API y sin sesión, ejecutarlo en cada PR gasta minutos para confirmar lo mismo.

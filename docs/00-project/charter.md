@@ -89,8 +89,10 @@ mindmap
   de supply chain que hoy es exactamente cero.
 - **Sin recursos de terceros.** Todo same-origin (ADR-0004). Habilita una CSP cerrada y
   evita filtrar IPs de visitantes a terceros.
-- **Un solo archivo HTML.** El CSS y el JS viven dentro de `index.html` (ADR-0003). Se
-  acepta el coste: obliga a `'unsafe-inline'` en la CSP.
+- **Un solo archivo HTML.** El CSS vive dentro de `index.html` (ADR-0003). Se acepta el
+  coste: obliga a `'unsafe-inline'` en `style-src`. El JS salió a `assets/sitio.js` el
+  2026-09-16 (ADR-0007), cuando las páginas legales obligaron a elegir entre extraerlo o
+  tener cinco copias del mismo script; `script-src` quedó en `'self'`.
 - El entorno de destino es un único host con Docker; no hay orquestador ni réplica.
 
 **Supuestos**

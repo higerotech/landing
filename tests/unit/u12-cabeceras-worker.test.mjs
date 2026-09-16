@@ -125,6 +125,56 @@ describe('U12 · las cabeceras de los dos caminos no divergen', () => {
     )
   })
 
+  test('U12.5 · el JS extraído no hereda el \`immutable\` de /assets/', {
+    skip: estaInstrumentado() && 'afirma sobre archivos del repositorio'
+  }, () => {
+    /* ADR-0007 sacó el JS de index.html a `assets/sitio.js`, y ese directorio
+       se sirve `immutable` 30 días mientras el HTML se revalida siempre. Sin
+       una regla propia, quien ya tenga el JS en caché puede quedarse un mes con
+       el script viejo y la página nueva: no falla, se comporta raro, que es
+       peor de diagnosticar.
+
+       Con el JS dentro del HTML no podía pasar —viajaban en la misma
+       respuesta—, así que es deuda que introduce la extracción, y esta prueba
+       es su recibo.
+
+       El camino del Worker no necesita regla: `cloudflare/_headers` no fija
+       `Cache-Control` para ninguno de los dos y comparten el comportamiento por
+       defecto. Se comprueba también eso, porque el día que alguien añada un
+       `Cache-Control` allí solo para el HTML, los dos caminos volverían a
+       divergir en silencio. */
+    /* El `src` sale del fuente y NO del DOM del arnés: `cargarDOM()` sustituye
+       la etiqueta por el JS ya inlinado, así que ahí no hay ningún
+       `script[src]` que leer. Se quitan los comentarios antes de buscarlo
+       porque los de index.html hablan de `<script src>` al explicar por qué
+       está donde está. */
+    const html = leer('index.html').replace(/<!--[\s\S]*?-->/g, '')
+    const src = (html.match(/<script\s+src="([^"]+)"/) ?? [])[1]
+    assert.ok(src, 'index.html ya no carga un script externo: ¿volvió a estar inline?')
+
+    const bloque = leer('nginx.conf').match(
+      new RegExp(`location\\s*=\\s*/${src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`)
+    )
+
+    assert.ok(
+      bloque,
+      `nginx.conf no tiene un \`location = /${src}\`: el script heredaría el immutable de /assets/`
+    )
+    assert.match(
+      bloque[1], /Cache-Control\s+"no-cache, must-revalidate"/,
+      'el JS debe revalidarse como el HTML, no cachearse como un asset'
+    )
+    assert.match(
+      bloque[1], /include\s+\S*security-headers\.conf/,
+      'add_header no se hereda: sin el include el JS sale sin cabeceras de seguridad (ADR-0002)'
+    )
+
+    assert.ok(
+      !/Cache-Control/i.test(leer('cloudflare/_headers')),
+      'el Worker empezó a fijar Cache-Control: revisa que el HTML y el JS sigan con la misma política'
+    )
+  })
+
   test('U12.4 · los assets abiertos a otros orígenes son los mismos en los dos caminos', {
     skip: estaInstrumentado() && 'afirma sobre archivos del repositorio'
   }, () => {

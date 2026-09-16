@@ -11,10 +11,14 @@
 
 import { describe, test } from 'node:test'
 import assert from 'node:assert/strict'
-import { cargarDOM, fuente, estaInstrumentado } from '../helpers/cargar-dom.mjs'
+import { cargarDOM, fuenteJS, estaInstrumentado } from '../helpers/cargar-dom.mjs'
 
 /* Casa el literal sea cual sea su valor actual: si se fijara la forma vacía,
-   configurar el número rompería el fixture en vez de probarlo. */
+   configurar el número rompería el fixture en vez de probarlo.
+
+   Desde ADR-0007 el literal vive en `assets/sitio.js`, no en el HTML, y estas
+   pruebas miran ahí con `fuenteJS()`. El arnés aplica `sustituir` sobre el
+   fuente que case, así que U8.1 y U8.2 no cambiaron. */
 const RE_CONTACT = /const CONTACT = \{ whatsapp: '([^']*)' \};/
 const NUMERO_VALIDO = '584121234567'
 
@@ -53,7 +57,7 @@ describe('U8 · botón de WhatsApp (RF05)', () => {
        real: llegó como '+13235543854' y `https://wa.me/+1323...` no es la forma
        documentada —wa.me exige dígitos, sin `+`, espacios ni guiones—, o sea
        exactamente el «enlace muerto» que el comentario del código dice evitar. */
-    const coincidencia = fuente().match(RE_CONTACT)
+    const coincidencia = fuenteJS().match(RE_CONTACT)
 
     assert.ok(coincidencia, 'no se encontró la constante CONTACT: cambió su forma en el fuente')
 
@@ -89,6 +93,6 @@ describe('U8 · botón de WhatsApp (RF05)', () => {
       'el arnés debe fallar cuando la sustitución no encuentra su objetivo'
     )
 
-    assert.ok(RE_CONTACT.test(fuente()), 'el literal de CONTACT cambió de forma')
+    assert.ok(RE_CONTACT.test(fuenteJS()), 'el literal de CONTACT cambió de forma')
   })
 })

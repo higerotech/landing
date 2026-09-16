@@ -44,7 +44,7 @@ C4Container
 
     System_Boundary(sitio, "Landing corporativa") {
         Container(nginx, "Servidor web", "nginx 1.30-alpine", "Sirve archivos estaticos, aplica cabeceras de seguridad y politica de cache")
-        Container(pagina, "Documento de la pagina", "HTML + CSS + JS inline", "Todo el contenido, estilos y comportamiento en un archivo")
+        Container(pagina, "Documento de la pagina", "HTML + CSS inline", "Contenido y estilos en un archivo; el comportamiento salio a assets/sitio.js (ADR-0007)")
         Container(estaticos, "Recursos estaticos", "woff2, svg, png", "Fuentes autoalojadas, isotipo, logotipo, tarjeta social")
         Container(indexacion, "Archivos de indexacion", "robots.txt, sitemap.xml", "Directivas para rastreadores")
     }
@@ -334,7 +334,7 @@ lo comprueba en cada PR.
 | T1 · Cabeceras ausentes por herencia de `add_header` | Snippet incluido explícitamente en cada `location` + verificación en CI | A02 | ADR-0002 |
 | T2 · Clickjacking / suplantación por enmarcado | `X-Frame-Options: DENY` + `frame-ancestors 'none'` | A02 | ADR-0002 |
 | T3 · MIME sniffing | `X-Content-Type-Options: nosniff` | A02 | ADR-0002 |
-| T4 · XSS con CSP permisiva | CSP cerrada salvo `'unsafe-inline'`; **riesgo aceptado** con disparador de revisión | A05 | ADR-0003 |
+| T4 · XSS con CSP permisiva | `script-src 'self'` desde ADR-0007; `'unsafe-inline'` solo en `style-src`, **riesgo aceptado** con disparador de revisión | A05 | ADR-0003, ADR-0007 |
 | T5 · Compromiso de recurso de terceros | Eliminado: todo same-origin | A03, A08 | ADR-0004 |
 | T6 · Fingerprinting del servidor | `server_tokens off` | A02 | ADR-0002 |
 | T7 · Degradación no controlada (página en blanco) | Tres capas de respaldo | A10 | ADR-0005 |

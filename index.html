@@ -34,6 +34,13 @@
   <!-- Fuentes autoalojadas: sin dependencia de CDN externo (ADR-0004) -->
   <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="assets/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+  <!-- El JS se ejecuta al final del <body> (ADR-0007). Sin este preload esa
+       posición costaría un viaje extra con la página ya parseada y `.reveal` en
+       `opacity: 0`; con él, la descarga arranca junto al parseo. U2.6 vigila que
+       este href y el `src` del <script> no se separen. -->
+  <link rel="preload" href="assets/sitio.js" as="script" />
+
   <style>
 /* Fuentes autoalojadas — Inter y Space Grotesk (SIL Open Font License 1.1).
    Derivado de fonts.googleapis.com; ver docs/00-project/adr/0004-autoalojar-fuentes.md
@@ -965,115 +972,11 @@
   </footer>
 
   <!-- ── Scripts ───────────────────────────────────── -->
-  <script>
-    /* ── Contacto ─────────────────────────────────────────────────────
-       Número de WhatsApp en formato internacional, **solo dígitos**: `wa.me`
-       no admite `+`, espacios ni guiones. Vacío ⇒ el botón no se muestra,
-       preferible a publicar un enlace muerto. La prueba U8.3 lo verifica. */
-    const CONTACT = { whatsapp: '13235543854' };
-
-    (function initWhatsApp() {
-      const cta = document.getElementById('wa-cta');
-      if (!cta || !CONTACT.whatsapp) return;
-      cta.href = 'https://wa.me/' + CONTACT.whatsapp;
-      cta.target = '_blank';
-      cta.rel = 'noopener noreferrer';
-      cta.hidden = false;
-    })();
-
-    /* ── Menú móvil ───────────────────────────────────────────────────
-       Antes .nav-links se ocultaba en ≤980px sin reemplazo y las cuatro
-       secciones quedaban inalcanzables desde el móvil. */
-    const navToggle = document.getElementById('nav-toggle');
-    const navLinks  = document.getElementById('nav-links');
-
-    function syncToggleLabel() {
-      const abierto = navToggle.getAttribute('aria-expanded') === 'true';
-      const attr = (abierto ? 'data-label-close' : 'data-label-open') +
-                   (currentLang === 'en' ? '-en' : '');
-      navToggle.setAttribute('aria-label', navToggle.getAttribute(attr));
-    }
-
-    function setMenu(abierto) {
-      navLinks.classList.toggle('open', abierto);
-      navToggle.setAttribute('aria-expanded', String(abierto));
-      syncToggleLabel();
-    }
-
-    navToggle.addEventListener('click', () => setMenu(!navLinks.classList.contains('open')));
-    navLinks.addEventListener('click', e => { if (e.target.closest('a')) setMenu(false); });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && navLinks.classList.contains('open')) {
-        setMenu(false);
-        navToggle.focus();
-      }
-    });
-    // Al volver a escritorio el panel no debe quedar en estado abierto
-    const mqEscritorio = matchMedia('(min-width: 981px)');
-    const alCambiarAncho = e => { if (e.matches) setMenu(false); };
-    if (mqEscritorio.addEventListener) mqEscritorio.addEventListener('change', alCambiarAncho);
-    else if (mqEscritorio.addListener) mqEscritorio.addListener(alCambiarAncho);
-
-    /* ── Idioma ───────────────────────────────────────────────────── */
-    const IDIOMAS = ['es', 'en'];
-    let currentLang = 'es';
-
-    function setLang(lang) {
-      if (IDIOMAS.indexOf(lang) === -1) lang = 'es';
-      currentLang = lang;
-      document.documentElement.lang = lang;
-
-      const btnEs = document.getElementById('btn-es');
-      const btnEn = document.getElementById('btn-en');
-      btnEs.classList.toggle('active', lang === 'es');
-      btnEn.classList.toggle('active', lang === 'en');
-      btnEs.setAttribute('aria-pressed', String(lang === 'es'));
-      btnEn.setAttribute('aria-pressed', String(lang === 'en'));
-
-      /* La NodeList es estática. Si algún día un [data-es] quedara anidado
-         dentro de otro, reescribir el externo desconectaría al interno y su
-         asignación se perdería en silencio; isConnected lo evita. */
-      document.querySelectorAll('[data-es][data-en]').forEach(el => {
-        if (!el.isConnected) return;
-        el.innerHTML = el.getAttribute('data-' + lang);
-      });
-
-      syncToggleLabel();
-      try { localStorage.setItem('lang', lang); } catch (e) { /* modo privado */ }
-    }
-
-    // Prioridad: ?lang= (compartible e indexable) > preferencia guardada > es
-    function idiomaInicial() {
-      const q = new URLSearchParams(location.search).get('lang');
-      if (IDIOMAS.indexOf(q) !== -1) return q;
-      try {
-        const guardado = localStorage.getItem('lang');
-        if (IDIOMAS.indexOf(guardado) !== -1) return guardado;
-      } catch (e) { /* localStorage bloqueado */ }
-      return 'es';
-    }
-
-    document.getElementById('btn-es').addEventListener('click', () => setLang('es'));
-    document.getElementById('btn-en').addEventListener('click', () => setLang('en'));
-
-    /* ── Scroll reveal ────────────────────────────────────────────────
-       Con .reveal en opacity:0, si el observer no existe el contenido nunca
-       aparecería. El <noscript> del head cubre el caso de JS deshabilitado. */
-    if ('IntersectionObserver' in window) {
-      const io = new IntersectionObserver(entries => {
-        entries.forEach(e => {
-          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-        });
-      }, { threshold: 0.12 });
-      document.querySelectorAll('.reveal').forEach(el => io.observe(el));
-    } else {
-      document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
-    }
-
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    setLang(idiomaInicial());
-  </script>
+  <!-- Comportamiento del sitio. Vive fuera del HTML desde ADR-0007: es lo que
+       permite que la CSP no lleve 'unsafe-inline' en `script-src`. Va aquí, al
+       final del <body> y sin `defer`, porque el script desreferencia nodos en su
+       nivel superior; el `preload` del <head> paga el viaje por adelantado. -->
+  <script src="assets/sitio.js"></script>
 
   <!-- Datos estructurados para buscadores -->
   <script type="application/ld+json">
