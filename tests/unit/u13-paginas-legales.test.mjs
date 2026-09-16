@@ -27,7 +27,7 @@ import { JSDOM } from 'jsdom'
 import { cargarDOM, fuenteDe, estaInstrumentado } from '../helpers/cargar-dom.mjs'
 
 /* Los cuatro documentos y sus dos archivos. Esta tabla es la especificación:
-   si se añade un documento legal, se añade aquí y las nueve pruebas lo cubren. */
+   si se añade un documento legal, se añade aquí y las pruebas de este archivo lo cubren. */
 const DOCUMENTOS = [
   { nombre: 'privacidad',    es: 'privacidad.html',      en: 'privacy.html' },
   { nombre: 'términos',      es: 'terminos.html',        en: 'terms.html' },
@@ -256,5 +256,78 @@ describe('U13 · contrato de publicación', () => {
         }
       }
     }
+  })
+})
+
+describe('U13 · los tres huecos que destapó el mutation testing', () => {
+  /* Estas tres pruebas no salieron de leer el código: salieron de que Stryker
+     mutara el modo de idioma fijo y NADIE se enterara. Cada una mata un mutante
+     concreto que sobrevivía, y las tres describen comportamiento que un visitante
+     nota. */
+
+  test('U13.11 · pulsar el idioma que ya está activo no navega', () => {
+    /* El mutante: cambiar `IDIOMA_FIJO && lang !== lang actual` por `true` — o su
+       `&&` por `||`—. Con esa mutación, pulsar ES estando ya en la versión
+       castellana hace `location.assign('privacidad.html')`: la página se recarga
+       sola, pierde la posición de lectura y, en un documento largo, manda al
+       visitante de vuelta al principio sin motivo.
+
+       Sobrevivía porque ninguna prueba pulsaba el botón del idioma activo. */
+    const { doc, win, errores } = cargarDOM({
+      archivo: 'privacidad.html',
+      url: 'https://higerotech.com/privacidad.html'
+    })
+
+    doc.getElementById('btn-es').dispatchEvent(new win.Event('click'))
+
+    assert.deepEqual(
+      errores.filter(e => /navigation/i.test(e.message ?? String(e))), [],
+      'pulsar el idioma ya activo intentó navegar: la página se recargaría sola'
+    )
+    assert.equal(doc.documentElement.lang, 'es')
+  })
+
+  test('U13.12 · setLang cambia el DESTINO de los enlaces, no solo su etiqueta', () => {
+    /* Los mutantes: vaciar el cuerpo del bucle de `data-href-*`, o vaciar el
+       literal del atributo. Los dos dejan los enlaces legales del pie apuntando
+       al castellano para siempre, con la etiqueta traducida al inglés. El
+       resultado es un visitante inglés que pulsa «Privacy» y aterriza en un
+       documento en castellano que produce efectos jurídicos.
+
+       Sobrevivían porque U13.10 comprueba que los atributos existan y que sus
+       destinos existan, pero ninguna prueba comprobaba que el href CAMBIE. */
+    const { doc, win } = cargarDOM()
+    const enlace = doc.querySelector('.footer-legal a[data-href-es]')
+
+    assert.ok(enlace, 'el pie de la landing ya no trae enlaces legales con destino por idioma')
+    assert.equal(enlace.getAttribute('href'), enlace.getAttribute('data-href-es'))
+
+    win.setLang('en')
+    assert.equal(
+      enlace.getAttribute('href'), enlace.getAttribute('data-href-en'),
+      'al pasar a inglés el enlace siguió apuntando al documento en castellano'
+    )
+
+    win.setLang('es')
+    assert.equal(enlace.getAttribute('href'), enlace.getAttribute('data-href-es'))
+  })
+
+  test('U13.13 · en la landing el conmutador SÍ guarda la preferencia', () => {
+    /* El mutante: convertir la condición de persistencia en `false`, con lo que
+       `setLang` deja de escribir en `localStorage`. Nadie se enteraría hasta la
+       siguiente visita, cuando el sitio vuelve a abrir en castellano a quien
+       eligió inglés.
+
+       Sobrevivía porque la persistencia solo se comprobaba por el lado negativo
+       —U13.5 exige que una página de idioma fijo NO la pise— y el positivo no
+       estaba en ninguna parte. Las dos mitades hacen falta: sin esta, «no
+       persistir nunca» pasa todas las pruebas. */
+    const { win } = cargarDOM()
+
+    win.setLang('en')
+    assert.equal(win.localStorage.getItem('lang'), 'en', 'el conmutador de la landing no guardó la preferencia')
+
+    win.setLang('es')
+    assert.equal(win.localStorage.getItem('lang'), 'es')
   })
 })

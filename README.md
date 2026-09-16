@@ -1,7 +1,7 @@
 # Higerotech — Landing Page
 
 [![CI](https://github.com/higerotech/landing/actions/workflows/security-gates.yml/badge.svg)](https://github.com/higerotech/landing/actions/workflows/security-gates.yml)
-[![Pruebas](https://img.shields.io/badge/pruebas-109_unit_%2B_72_e2e_%2B_perf_dast_mut-e08000)](.ai-dlc/gates/gate-3-testing.md)
+[![Pruebas](https://img.shields.io/badge/pruebas-112_unit_%2B_72_e2e_%2B_perf_dast_mut-e08000)](.ai-dlc/gates/gate-3-testing.md)
 [![Versión](https://img.shields.io/github/v/tag/higerotech/landing?label=versi%C3%B3n)](CHANGELOG.md)
 
 <!--
@@ -12,7 +12,7 @@
   tocarlos a mano.
 
   El de Pruebas sigue ESTÁTICO porque no existe un endpoint que cuente pruebas: dice
-  "109 unit + 72 e2e + perf, dast y mutación" y se actualiza a mano. Subió de 65 y 63 el
+  "112 unit + 72 e2e + perf, dast y mutación" y se actualiza a mano. Subió de 65 y 63 el
   2026-09-16, con las páginas legales (U13, U2.8, U12.5, U12.6 y E11).
 
   Sigue en ÁMBAR, pero el motivo cambió el 2026-07-31 y conviene no arrastrar el viejo: ya
