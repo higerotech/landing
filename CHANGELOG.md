@@ -7,107 +7,6 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
-### Seguridad
-- **Siete vulnerabilidades de dependencias a cero**, cuatro de ellas *high*, que dejaban el gate
-  SCA (`npm audit --audit-level=high`) en rojo. Todas transitivas y todas de desarrollo:
-
-  | Paquete | Severidad | Cadena | Arreglo |
-  |---|---|---|---|
-  | `fast-uri` | high ×5 | `@stryker-mutator/core` → `ajv` | 3.1.4 → **3.1.8** |
-  | `qs` | moderate ×2 | `@stryker-mutator/core` → `typed-rest-client` | 6.15.3 → **6.16.0** |
-  | `sharp` | high | `wrangler` → `miniflare` | 0.35.2 → **0.35.4** |
-  | `undici` | high, +4 moderate | `wrangler` → `miniflare` | 7.28.0 → **7.29.0** |
-
-  **Ninguna necesitó forzar un major ni un `override` nuevo**, y eso es el hallazgo que conviene
-  recordar: el rango vulnerable de `fast-uri` acaba en 3.1.5 y `ajv` acepta `^3.0.1`, así que
-  bastaba refrescar el lockfile. Con `qs` pasó algo parecido y más sutil — el `override` de
-  `^6.15.2` que ya existía **permitía** 6.16.0; lo que lo mantenía en la versión vulnerable era un
-  lockfile resuelto cuando 6.16.0 todavía no existía. Un `override` no protege por sí solo: hay
-  que volver a resolver.
-  `sharp` y `undici` salen los dos de la misma `miniflare`, así que subir **wrangler a 4.132.0**
-  cierra ambas. Detalle que evitó trabajo de más: el `undici` que arrastra jsdom (7.29.0) ya
-  estaba fuera del rango vulnerable — el vulnerable era solo el de miniflare.
-  Verificado que la cadena de herramientas sigue entera: 112 unitarias en verde y
-  `wrangler deploy --dry-run` leyendo los 29 archivos de `dist/` con el binding `ASSETS`
-  correcto, que es el riesgo real de subir la herramienta de despliegue.
-  **Superado al fusionar `main`**: allí estos avisos ya se habían cerrado por su cuenta y llegaron
-  otros nuevos, así que el lockfile que queda es el de `main` (`wrangler ^4.147.0`, `undici`
-  7.29.1, `fast-uri` 3.1.8, `brace-expansion` 5.0.12), descrito en *Corregido*.
-- **El escaneo de imagen sigue limpio**: Trivy sobre `nginx:1.30-alpine` (alpine 3.24.1) no
-  reporta ninguna vulnerabilidad, ni siquiera de las que el gate ignora por no tener arreglo.
-  Comprobado a mano, no supuesto.
-- **El DAST tenía un punto ciego con las páginas legales, y estaba MEDIDO, no supuesto.** El
-  primer escaneo con los ocho documentos alcanzó las cuatro versiones castellanas y **ninguna de
-  las cuatro inglesas**: el spider de ZAP no ejecuta JavaScript, y las URL inglesas viven en
-  `data-href-en` hasta que `setLang()` las convierte en `href`. Es la misma clase de ceguera que
-  este archivo ya había corregido para `/404.html` —«el spider solo sigue enlaces»— así que se
-  arregla igual, con un objetivo más. Bastó **uno y no cuatro**: entrando por `/privacy.html`, sus
-  enlaces estáticos ya son los ingleses (ADR-0008) y el spider llega a las otras tres desde ahí.
-  Verificado: el objetivo inglés alcanza las ocho páginas.
-  Dar las inglesas por buenas «porque son iguales que las castellanas» era exactamente la
-  suposición que `tests/dast.mjs` se negó a hacer con el 404.
-- **Aceptada la regla 10027 de ZAP** («Suspicious Comments»), que apareció con ADR-0007: al
-  servirse el JS como archivo propio, ZAP lee sus comentarios —dentro del HTML no los miraba— y
-  salta con la palabra castellana **«todo»**, porque su lista de marcadores incluye el inglés
-  `TODO` y compara sin distinguir mayúsculas. La frase que lo dispara es «Todo el JavaScript de
-  index.html…».
-  No se arregla reescribiendo: «todo» es una de las palabras más comunes del idioma y volvería en
-  el siguiente comentario. Y el sitio publica sus comentarios **a propósito** —sin minificado ni
-  build, ADR-0003 y ADR-0007—, así que la premisa de la regla choca con una decisión de
-  arquitectura.
-  **La ceguera la cubre U11.9**, que es más afilada que la regla: exige `TODO` en mayúsculas
-  seguido de `:` o `>` —la forma que este repositorio usa para una decisión pendiente— y busca
-  **secretos literales** (una clave seguida de una asignación a un valor no trivial, o un prefijo
-  de credencial reconocible) en vez de palabras sueltas.
-  Su primera versión buscaba palabras y **repitió el error que venía a corregir**: «token» casó
-  con los *design tokens* de `legal.css`. Queda escrito junto a la lista, porque el fallo es más
-  instructivo que la regla.
-- **El gate de cabeceras comprueba tres tipos de ruta más**: `/privacidad.html`,
-  `/assets/sitio.js` y `/assets/legal.css`. Es un hueco que abrieron ADR-0007 y ADR-0008: ese job
-  existe porque `add_header` no se hereda (ADR-0002) y enumera **un tipo de ruta por cada
-  `location` de nginx.conf**, y los dos `location =` nuevos —los que evitan que el JS y el CSS
-  hereden el `immutable` de `/assets/`— son justo donde se puede caer el `include` del snippet sin
-  que nada más falle. U12.5 comprueba que esté escrito; esto comprueba que llegue a la respuesta.
-  Verificado sobre el contenedor: las siete rutas salen con las cinco cabeceras.
-- **La CSP ya no lleva `'unsafe-inline'` en `script-src`** (**ADR-0007**). Es la mitad de la
-  deuda **T4** que ADR-0003 dejó registrada, y se paga porque el JS salió de `index.html` a
-  `assets/sitio.js`: con el marcado sin JavaScript, la directiva puede cerrarse a `'self'` y la
-  CSP vuelve a hacer aquello para lo que existe — un `<script>` inyectado en el marcado no se
-  ejecuta. El cambio va en los **dos** caminos a producción, `security-headers.conf` y
-  `cloudflare/_headers`, y U12.2 falla si se separan.
-  **`style-src 'unsafe-inline'` se queda**: el CSS sigue dentro de `index.html` por ADR-0003.
-  T4 no desaparece del threat model, reduce alcance a la mitad. El aviso 10055 de ZAP sigue en
-  IGNORE por eso mismo, y por una limitación del formato de `.zap/rules.tsv`, que no distingue
-  directivas: aceptar el de estilos y vigilar el de scripts en la misma regla no se puede
-  expresar. La ceguera la cubren U11.8 y U12.2, que fallan antes de que ZAP corra.
-  **El `<script type="application/ld+json">` no estorbaba**: es un bloque de datos, el parser no
-  lo prepara como script y la CSP no lo evalúa. E5.1 lo confirma contra un navegador real.
-
-### Corregido
-- **El gate de dependencias (SCA) vuelve a verde** tras tres avisos publicados después del último
-  CI verde de `main`: `undici` 7.29.0 (alta, vía `wrangler` → `miniflare`), `brace-expansion` 5.0.9
-  (alta, vía `minimatch`) y `fast-uri` 3.1.7 (moderada, vía `ajv`). `wrangler` pasa a `^4.147.0`,
-  que trae `undici` 7.29.1, y las otras dos suben a 5.0.12 y 3.1.8 **dentro de los rangos ya
-  declarados**, sin `overrides`. Las dos correcciones van juntas porque el SCA es obligatorio y
-  estricto: la PR de Dependabot que subía `wrangler` (#40) no podía pasar sola, y el arreglo de
-  `brace-expansion` tampoco. No se usa `npm audit fix`, que de paso re-resuelve medio árbol. La
-  auditoría queda en cero hallazgos y las 65 pruebas unitarias siguen pasando.
-- **Los tres gates de seguridad que estaban en rojo vuelven a verde**, y uno de ellos no estaba
-  midiendo nada. **Detección de secretos**: `gitleaks-action` exige licencia de pago en repositorios
-  de organización y sin ella abortaba antes de leer un solo commit, así que el gate aparentaba cubrir
-  los secretos sin haber mirado. Se ejecuta la imagen oficial de gitleaks, como en yggdrasil: ahora
-  escanea los 54 commits de verdad. Al no publicar review comments, el job deja de necesitar
-  `pull-requests: write`.
-- **Container scan**: la imagen arrastraba CVEs de `expat` y `openssl` que Alpine ya tenía
-  corregidos, porque el tag de nginx se repuntea cada pocas semanas y entre repuntes queda atrás.
-  El Dockerfile actualiza los paquetes en cada construcción y Trivy ya no encuentra nada.
-- **Dependencias (SCA)**: `undici` (alta, vía `miniflare` y `wrangler`), `qs` (moderada, vía
-  `typed-rest-client`) y `sharp` (alta, vía `miniflare`). Se fijan las versiones corregidas con
-  `overrides` en vez de aceptar el `npm audit fix --force`, que **degradaba wrangler** a una versión
-  anterior. `qs` pasa de `^6.15.2` a `^6.15.4` porque el aviso llega hasta la 6.15.3 y el rango
-  anterior aún permitía instalar una versión vulnerable. La auditoría queda en cero hallazgos y las
-  65 pruebas unitarias siguen pasando.
-
 ### Añadido
 - **`scripts/verificar-publicable.mjs`: el sitio no se empaqueta con marcadores `<TODO: …>` sin
   resolver.** Hoy hay veinte, todos en la política de privacidad y los términos de uso, y son la
@@ -223,6 +122,23 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 - **U12.4**: las dos listas de assets abiertos —el `map` de `nginx.conf` y `run_worker_first` de
   `wrangler.jsonc`— tienen que coincidir. Divergir ahí no rompe nada visible: el asset se
   incrustaría por un camino y no por el otro según qué hostname sirvió la página.
+- **El logotipo de la barra se adapta a pantallas estrechas.** Importado del proyecto de Claude
+  Design. Por debajo de 560px el logotipo completo cede el sitio al isotipo: pasa de **160px de
+  ancho a 47**, y en un móvil de 360px eso era casi la mitad de la barra. Un `<picture>` descarga
+  **una sola** de las dos imágenes, y el isotipo ya viene en caché —es el favicon y el adorno del
+  hero—, así que en móvil además se ahorran los **11 KB del PNG**.
+  El `width: auto` que acompaña al cambio no es decorativo: el reset aplica `max-width: 100%` y
+  las dos imágenes tienen proporciones distintas (4:1 y 1,18:1), así que sin él una se deformaría
+  al estrecharse el contenedor.
+- **E1.8, E1.9 y E1.10**, porque el cambio llegaba sin una sola prueba que lo viera: ninguna
+  tocaba el logotipo, así que el suite daba verde con él y sin él. Comprueban el umbral por sus
+  **dos lados exactos** —560 y 561px, como ya hacían E1.1 y E1.2 con el menú— y que el nombre
+  accesible del enlace sobreviva en ambos anchos, que es lo que se rompería sin ruido si alguien
+  reescribe esto con dos `<img>` y un `display: none`.
+  Miden sobre **`currentSrc`**, no sobre el marcado: `<source>` e `<img>` están los dos en el DOM
+  en todos los anchos, así que afirmar sobre el HTML habría dado verde a ambos lados del umbral.
+  Verificado moviendo el breakpoint a 400px: **E1.8 cae y E1.9 aguanta**, que es exactamente lo
+  que debe pasar.
 
 ### Cambiado
 - **La cobertura y el mutation testing miden `assets/sitio.js`**, no un trozo de `index.html`.
@@ -264,8 +180,54 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   que existe ADR-0002: `add_header` **acumula**. Un segundo `add_header` habría dejado la
   respuesta con dos CORP, el mismo defecto por el otro camino. Con un `map` sale una sola cabecera
   cuyo valor depende de la ruta.
+- **Segundo barrido de coherencia, y esta vez el hallazgo principal es una contradicción, no un
+  dato viejo.** El **Gate 3** tenía el primer checkbox **sin marcar**, describiendo como pendiente
+  la seguridad dinámica —mientras el checkbox del DAST, tres líneas más abajo, ya estaba en ✅ y el
+  resumen del mismo documento afirmaba que todos estaban cumplidos—. Un gate que se contradice a
+  sí mismo no se puede leer, así que se marca y se deja escrito por qué se quedó atrás.
+- **Los conteos de pruebas**, desfasados en cinco documentos: el Gate 3 decía **50 unitarias y 51
+  E2E** cuando hay **64 y 61**; `e2e-tests.md`, ADR-0006, `dast.md`, el árbol del `README` y su
+  badge repetían variantes de lo mismo. Añadida además la fila de E1.8/E1.9 a la tabla de «lo que
+  solo un navegador puede decir», que es donde le toca.
+- **La cabecera de `e2e-tests.md`** seguía diciendo «Gate 3 sigue no superado: faltan rendimiento,
+  DAST y mutation testing». Los tres existen desde el 2026-07-31.
+- **El comentario de los badges del `README`** justificaba el ámbar con que «la pirámide continúa
+  incompleta». Ya no lo está: el ámbar es ahora porque **cerrar el gate es una decisión del owner
+  que no se ha tomado**, que es un motivo distinto. Arrastrar el viejo habría hecho parecer que
+  falta trabajo donde lo que falta es una firma.
+- **El `preload` de HSTS** figuraba en el `README` como «solicitarlo sigue sin hacerse a
+  propósito». Se solicitó el 2026-07-31 y está en `pending`.
+- **`SECURITY.md`** recoge ahora el criterio de forzar con `overrides` una dependencia transitiva
+  anclada por un **pin exacto** de su padre: es lo que hizo falta con `qs` y lo que
+  `npm audit fix` no podía resolver solo.
+
+Los conteos de las entradas ya publicadas **no se tocan**: dicen lo que se midió el día que se
+escribieron, y reescribirlos convertiría el registro en una foto del presente.
 
 ### Corregido
+- **El gate de dependencias (SCA) vuelve a verde** tras tres avisos publicados después del último
+  CI verde de `main`: `undici` 7.29.0 (alta, vía `wrangler` → `miniflare`), `brace-expansion` 5.0.9
+  (alta, vía `minimatch`) y `fast-uri` 3.1.7 (moderada, vía `ajv`). `wrangler` pasa a `^4.147.0`,
+  que trae `undici` 7.29.1, y las otras dos suben a 5.0.12 y 3.1.8 **dentro de los rangos ya
+  declarados**, sin `overrides`. Las dos correcciones van juntas porque el SCA es obligatorio y
+  estricto: la PR de Dependabot que subía `wrangler` (#40) no podía pasar sola, y el arreglo de
+  `brace-expansion` tampoco. No se usa `npm audit fix`, que de paso re-resuelve medio árbol. La
+  auditoría queda en cero hallazgos y las 65 pruebas unitarias siguen pasando.
+- **Los tres gates de seguridad que estaban en rojo vuelven a verde**, y uno de ellos no estaba
+  midiendo nada. **Detección de secretos**: `gitleaks-action` exige licencia de pago en repositorios
+  de organización y sin ella abortaba antes de leer un solo commit, así que el gate aparentaba cubrir
+  los secretos sin haber mirado. Se ejecuta la imagen oficial de gitleaks, como en yggdrasil: ahora
+  escanea los 54 commits de verdad. Al no publicar review comments, el job deja de necesitar
+  `pull-requests: write`.
+- **Container scan**: la imagen arrastraba CVEs de `expat` y `openssl` que Alpine ya tenía
+  corregidos, porque el tag de nginx se repuntea cada pocas semanas y entre repuntes queda atrás.
+  El Dockerfile actualiza los paquetes en cada construcción y Trivy ya no encuentra nada.
+- **Dependencias (SCA)**: `undici` (alta, vía `miniflare` y `wrangler`), `qs` (moderada, vía
+  `typed-rest-client`) y `sharp` (alta, vía `miniflare`). Se fijan las versiones corregidas con
+  `overrides` en vez de aceptar el `npm audit fix --force`, que **degradaba wrangler** a una versión
+  anterior. `qs` pasa de `^6.15.2` a `^6.15.4` porque el aviso llega hasta la 6.15.3 y el rango
+  anterior aún permitía instalar una versión vulnerable. La auditoría queda en cero hallazgos y las
+  65 pruebas unitarias siguen pasando.
 - **La clasificación de datos afirmaba algo que no era cierto.** `data-classification.md` decía
   en su portada que «este sistema no recolecta, procesa ni almacena datos personales», y a la vez
   reconocía en sus notas que una dirección IP es dato personal y clasificaba los logs como
@@ -305,51 +267,81 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   prueba cayó con un `EPERM` que no hablaba ni de cabeceras ni de listas. Ahora solo construye si
   se invoca. Una prueba no debería tener efectos secundarios sobre el árbol de trabajo.
 
-### Cambiado
-- **Segundo barrido de coherencia, y esta vez el hallazgo principal es una contradicción, no un
-  dato viejo.** El **Gate 3** tenía el primer checkbox **sin marcar**, describiendo como pendiente
-  la seguridad dinámica —mientras el checkbox del DAST, tres líneas más abajo, ya estaba en ✅ y el
-  resumen del mismo documento afirmaba que todos estaban cumplidos—. Un gate que se contradice a
-  sí mismo no se puede leer, así que se marca y se deja escrito por qué se quedó atrás.
-- **Los conteos de pruebas**, desfasados en cinco documentos: el Gate 3 decía **50 unitarias y 51
-  E2E** cuando hay **64 y 61**; `e2e-tests.md`, ADR-0006, `dast.md`, el árbol del `README` y su
-  badge repetían variantes de lo mismo. Añadida además la fila de E1.8/E1.9 a la tabla de «lo que
-  solo un navegador puede decir», que es donde le toca.
-- **La cabecera de `e2e-tests.md`** seguía diciendo «Gate 3 sigue no superado: faltan rendimiento,
-  DAST y mutation testing». Los tres existen desde el 2026-07-31.
-- **El comentario de los badges del `README`** justificaba el ámbar con que «la pirámide continúa
-  incompleta». Ya no lo está: el ámbar es ahora porque **cerrar el gate es una decisión del owner
-  que no se ha tomado**, que es un motivo distinto. Arrastrar el viejo habría hecho parecer que
-  falta trabajo donde lo que falta es una firma.
-- **El `preload` de HSTS** figuraba en el `README` como «solicitarlo sigue sin hacerse a
-  propósito». Se solicitó el 2026-07-31 y está en `pending`.
-- **`SECURITY.md`** recoge ahora el criterio de forzar con `overrides` una dependencia transitiva
-  anclada por un **pin exacto** de su padre: es lo que hizo falta con `qs` y lo que
-  `npm audit fix` no podía resolver solo.
-
-Los conteos de las entradas ya publicadas **no se tocan**: dicen lo que se midió el día que se
-escribieron, y reescribirlos convertiría el registro en una foto del presente.
-
-### Añadido
-- **El logotipo de la barra se adapta a pantallas estrechas.** Importado del proyecto de Claude
-  Design. Por debajo de 560px el logotipo completo cede el sitio al isotipo: pasa de **160px de
-  ancho a 47**, y en un móvil de 360px eso era casi la mitad de la barra. Un `<picture>` descarga
-  **una sola** de las dos imágenes, y el isotipo ya viene en caché —es el favicon y el adorno del
-  hero—, así que en móvil además se ahorran los **11 KB del PNG**.
-  El `width: auto` que acompaña al cambio no es decorativo: el reset aplica `max-width: 100%` y
-  las dos imágenes tienen proporciones distintas (4:1 y 1,18:1), así que sin él una se deformaría
-  al estrecharse el contenedor.
-- **E1.8, E1.9 y E1.10**, porque el cambio llegaba sin una sola prueba que lo viera: ninguna
-  tocaba el logotipo, así que el suite daba verde con él y sin él. Comprueban el umbral por sus
-  **dos lados exactos** —560 y 561px, como ya hacían E1.1 y E1.2 con el menú— y que el nombre
-  accesible del enlace sobreviva en ambos anchos, que es lo que se rompería sin ruido si alguien
-  reescribe esto con dos `<img>` y un `display: none`.
-  Miden sobre **`currentSrc`**, no sobre el marcado: `<source>` e `<img>` están los dos en el DOM
-  en todos los anchos, así que afirmar sobre el HTML habría dado verde a ambos lados del umbral.
-  Verificado moviendo el breakpoint a 400px: **E1.8 cae y E1.9 aguanta**, que es exactamente lo
-  que debe pasar.
-
 ### Seguridad
+- **Siete vulnerabilidades de dependencias a cero**, cuatro de ellas *high*, que dejaban el gate
+  SCA (`npm audit --audit-level=high`) en rojo. Todas transitivas y todas de desarrollo:
+
+  | Paquete | Severidad | Cadena | Arreglo |
+  |---|---|---|---|
+  | `fast-uri` | high ×5 | `@stryker-mutator/core` → `ajv` | 3.1.4 → **3.1.8** |
+  | `qs` | moderate ×2 | `@stryker-mutator/core` → `typed-rest-client` | 6.15.3 → **6.16.0** |
+  | `sharp` | high | `wrangler` → `miniflare` | 0.35.2 → **0.35.4** |
+  | `undici` | high, +4 moderate | `wrangler` → `miniflare` | 7.28.0 → **7.29.0** |
+
+  **Ninguna necesitó forzar un major ni un `override` nuevo**, y eso es el hallazgo que conviene
+  recordar: el rango vulnerable de `fast-uri` acaba en 3.1.5 y `ajv` acepta `^3.0.1`, así que
+  bastaba refrescar el lockfile. Con `qs` pasó algo parecido y más sutil — el `override` de
+  `^6.15.2` que ya existía **permitía** 6.16.0; lo que lo mantenía en la versión vulnerable era un
+  lockfile resuelto cuando 6.16.0 todavía no existía. Un `override` no protege por sí solo: hay
+  que volver a resolver.
+  `sharp` y `undici` salen los dos de la misma `miniflare`, así que subir **wrangler a 4.132.0**
+  cierra ambas. Detalle que evitó trabajo de más: el `undici` que arrastra jsdom (7.29.0) ya
+  estaba fuera del rango vulnerable — el vulnerable era solo el de miniflare.
+  Verificado que la cadena de herramientas sigue entera: 112 unitarias en verde y
+  `wrangler deploy --dry-run` leyendo los 29 archivos de `dist/` con el binding `ASSETS`
+  correcto, que es el riesgo real de subir la herramienta de despliegue.
+  **Superado al fusionar `main`**: allí estos avisos ya se habían cerrado por su cuenta y llegaron
+  otros nuevos, así que el lockfile que queda es el de `main` (`wrangler ^4.147.0`, `undici`
+  7.29.1, `fast-uri` 3.1.8, `brace-expansion` 5.0.12), descrito en *Corregido*.
+- **El escaneo de imagen sigue limpio**: Trivy sobre `nginx:1.30-alpine` (alpine 3.24.1) no
+  reporta ninguna vulnerabilidad, ni siquiera de las que el gate ignora por no tener arreglo.
+  Comprobado a mano, no supuesto.
+- **El DAST tenía un punto ciego con las páginas legales, y estaba MEDIDO, no supuesto.** El
+  primer escaneo con los ocho documentos alcanzó las cuatro versiones castellanas y **ninguna de
+  las cuatro inglesas**: el spider de ZAP no ejecuta JavaScript, y las URL inglesas viven en
+  `data-href-en` hasta que `setLang()` las convierte en `href`. Es la misma clase de ceguera que
+  este archivo ya había corregido para `/404.html` —«el spider solo sigue enlaces»— así que se
+  arregla igual, con un objetivo más. Bastó **uno y no cuatro**: entrando por `/privacy.html`, sus
+  enlaces estáticos ya son los ingleses (ADR-0008) y el spider llega a las otras tres desde ahí.
+  Verificado: el objetivo inglés alcanza las ocho páginas.
+  Dar las inglesas por buenas «porque son iguales que las castellanas» era exactamente la
+  suposición que `tests/dast.mjs` se negó a hacer con el 404.
+- **Aceptada la regla 10027 de ZAP** («Suspicious Comments»), que apareció con ADR-0007: al
+  servirse el JS como archivo propio, ZAP lee sus comentarios —dentro del HTML no los miraba— y
+  salta con la palabra castellana **«todo»**, porque su lista de marcadores incluye el inglés
+  `TODO` y compara sin distinguir mayúsculas. La frase que lo dispara es «Todo el JavaScript de
+  index.html…».
+  No se arregla reescribiendo: «todo» es una de las palabras más comunes del idioma y volvería en
+  el siguiente comentario. Y el sitio publica sus comentarios **a propósito** —sin minificado ni
+  build, ADR-0003 y ADR-0007—, así que la premisa de la regla choca con una decisión de
+  arquitectura.
+  **La ceguera la cubre U11.9**, que es más afilada que la regla: exige `TODO` en mayúsculas
+  seguido de `:` o `>` —la forma que este repositorio usa para una decisión pendiente— y busca
+  **secretos literales** (una clave seguida de una asignación a un valor no trivial, o un prefijo
+  de credencial reconocible) en vez de palabras sueltas.
+  Su primera versión buscaba palabras y **repitió el error que venía a corregir**: «token» casó
+  con los *design tokens* de `legal.css`. Queda escrito junto a la lista, porque el fallo es más
+  instructivo que la regla.
+- **El gate de cabeceras comprueba tres tipos de ruta más**: `/privacidad.html`,
+  `/assets/sitio.js` y `/assets/legal.css`. Es un hueco que abrieron ADR-0007 y ADR-0008: ese job
+  existe porque `add_header` no se hereda (ADR-0002) y enumera **un tipo de ruta por cada
+  `location` de nginx.conf**, y los dos `location =` nuevos —los que evitan que el JS y el CSS
+  hereden el `immutable` de `/assets/`— son justo donde se puede caer el `include` del snippet sin
+  que nada más falle. U12.5 comprueba que esté escrito; esto comprueba que llegue a la respuesta.
+  Verificado sobre el contenedor: las siete rutas salen con las cinco cabeceras.
+- **La CSP ya no lleva `'unsafe-inline'` en `script-src`** (**ADR-0007**). Es la mitad de la
+  deuda **T4** que ADR-0003 dejó registrada, y se paga porque el JS salió de `index.html` a
+  `assets/sitio.js`: con el marcado sin JavaScript, la directiva puede cerrarse a `'self'` y la
+  CSP vuelve a hacer aquello para lo que existe — un `<script>` inyectado en el marcado no se
+  ejecuta. El cambio va en los **dos** caminos a producción, `security-headers.conf` y
+  `cloudflare/_headers`, y U12.2 falla si se separan.
+  **`style-src 'unsafe-inline'` se queda**: el CSS sigue dentro de `index.html` por ADR-0003.
+  T4 no desaparece del threat model, reduce alcance a la mitad. El aviso 10055 de ZAP sigue en
+  IGNORE por eso mismo, y por una limitación del formato de `.zap/rules.tsv`, que no distingue
+  directivas: aceptar el de estilos y vigilar el de scripts en la misma regla no se puede
+  expresar. La ceguera la cubren U11.8 y U12.2, que fallan antes de que ZAP corra.
+  **El `<script type="application/ld+json">` no estorbaba**: es un bloque de datos, el parser no
+  lo prepara como script y la CSP no lo evalúa. E5.1 lo confirma contra un navegador real.
 - **Forzada una versión parcheada de `qs`** (GHSA-q8mj-m7cp-5q26, DoS moderado). Dependabot lo
   avisó y `npm audit fix` **no pudo arreglarlo**: `typed-rest-client` —que llega por
   `@stryker-mutator/core`— declara `qs` con una **versión exacta**, `6.15.1`, así que npm no
