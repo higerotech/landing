@@ -7,31 +7,6 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 
 ## [Unreleased]
 
-### Corregido
-- **El gate de dependencias (SCA) vuelve a verde** tras tres avisos publicados después del último
-  CI verde de `main`: `undici` 7.29.0 (alta, vía `wrangler` → `miniflare`), `brace-expansion` 5.0.9
-  (alta, vía `minimatch`) y `fast-uri` 3.1.7 (moderada, vía `ajv`). `wrangler` pasa a `^4.147.0`,
-  que trae `undici` 7.29.1, y las otras dos suben a 5.0.12 y 3.1.8 **dentro de los rangos ya
-  declarados**, sin `overrides`. Las dos correcciones van juntas porque el SCA es obligatorio y
-  estricto: la PR de Dependabot que subía `wrangler` (#40) no podía pasar sola, y el arreglo de
-  `brace-expansion` tampoco. No se usa `npm audit fix`, que de paso re-resuelve medio árbol. La
-  auditoría queda en cero hallazgos y las 65 pruebas unitarias siguen pasando.
-- **Los tres gates de seguridad que estaban en rojo vuelven a verde**, y uno de ellos no estaba
-  midiendo nada. **Detección de secretos**: `gitleaks-action` exige licencia de pago en repositorios
-  de organización y sin ella abortaba antes de leer un solo commit, así que el gate aparentaba cubrir
-  los secretos sin haber mirado. Se ejecuta la imagen oficial de gitleaks, como en yggdrasil: ahora
-  escanea los 54 commits de verdad. Al no publicar review comments, el job deja de necesitar
-  `pull-requests: write`.
-- **Container scan**: la imagen arrastraba CVEs de `expat` y `openssl` que Alpine ya tenía
-  corregidos, porque el tag de nginx se repuntea cada pocas semanas y entre repuntes queda atrás.
-  El Dockerfile actualiza los paquetes en cada construcción y Trivy ya no encuentra nada.
-- **Dependencias (SCA)**: `undici` (alta, vía `miniflare` y `wrangler`), `qs` (moderada, vía
-  `typed-rest-client`) y `sharp` (alta, vía `miniflare`). Se fijan las versiones corregidas con
-  `overrides` en vez de aceptar el `npm audit fix --force`, que **degradaba wrangler** a una versión
-  anterior. `qs` pasa de `^6.15.2` a `^6.15.4` porque el aviso llega hasta la 6.15.3 y el rango
-  anterior aún permitía instalar una versión vulnerable. La auditoría queda en cero hallazgos y las
-  65 pruebas unitarias siguen pasando.
-
 ### Añadido
 - **Tres assets de marca se pueden incrustar desde otros orígenes**:
   `/assets/isotipo_charcoal.svg`, `/assets/og-card.png` y `/assets/logo_white_trans.png`. Salen
@@ -56,6 +31,23 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 - **U12.4**: las dos listas de assets abiertos —el `map` de `nginx.conf` y `run_worker_first` de
   `wrangler.jsonc`— tienen que coincidir. Divergir ahí no rompe nada visible: el asset se
   incrustaría por un camino y no por el otro según qué hostname sirvió la página.
+- **El logotipo de la barra se adapta a pantallas estrechas.** Importado del proyecto de Claude
+  Design. Por debajo de 560px el logotipo completo cede el sitio al isotipo: pasa de **160px de
+  ancho a 47**, y en un móvil de 360px eso era casi la mitad de la barra. Un `<picture>` descarga
+  **una sola** de las dos imágenes, y el isotipo ya viene en caché —es el favicon y el adorno del
+  hero—, así que en móvil además se ahorran los **11 KB del PNG**.
+  El `width: auto` que acompaña al cambio no es decorativo: el reset aplica `max-width: 100%` y
+  las dos imágenes tienen proporciones distintas (4:1 y 1,18:1), así que sin él una se deformaría
+  al estrecharse el contenedor.
+- **E1.8, E1.9 y E1.10**, porque el cambio llegaba sin una sola prueba que lo viera: ninguna
+  tocaba el logotipo, así que el suite daba verde con él y sin él. Comprueban el umbral por sus
+  **dos lados exactos** —560 y 561px, como ya hacían E1.1 y E1.2 con el menú— y que el nombre
+  accesible del enlace sobreviva en ambos anchos, que es lo que se rompería sin ruido si alguien
+  reescribe esto con dos `<img>` y un `display: none`.
+  Miden sobre **`currentSrc`**, no sobre el marcado: `<source>` e `<img>` están los dos en el DOM
+  en todos los anchos, así que afirmar sobre el HTML habría dado verde a ambos lados del umbral.
+  Verificado moviendo el breakpoint a 400px: **E1.8 cae y E1.9 aguanta**, que es exactamente lo
+  que debe pasar.
 
 ### Cambiado
 - **El sitio deja de ser «solo assets» en el borde** (enmienda a ADR-0006, que ya contemplaba
@@ -73,15 +65,6 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   que existe ADR-0002: `add_header` **acumula**. Un segundo `add_header` habría dejado la
   respuesta con dos CORP, el mismo defecto por el otro camino. Con un `map` sale una sola cabecera
   cuyo valor depende de la ruta.
-
-### Corregido
-- **`scripts/preparar-assets.mjs` construía `dist/` por el mero hecho de ser importado.** U12.3 lo
-  importa para leer `PUBLICABLES`, así que **cada `npm test` borraba y rehacía `dist/` de
-  refilón** — sin que se notara, hasta el día que otro proceso tenía el directorio abierto y la
-  prueba cayó con un `EPERM` que no hablaba ni de cabeceras ni de listas. Ahora solo construye si
-  se invoca. Una prueba no debería tener efectos secundarios sobre el árbol de trabajo.
-
-### Cambiado
 - **Segundo barrido de coherencia, y esta vez el hallazgo principal es una contradicción, no un
   dato viejo.** El **Gate 3** tenía el primer checkbox **sin marcar**, describiendo como pendiente
   la seguridad dinámica —mientras el checkbox del DAST, tres líneas más abajo, ya estaba en ✅ y el
@@ -106,24 +89,35 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 Los conteos de las entradas ya publicadas **no se tocan**: dicen lo que se midió el día que se
 escribieron, y reescribirlos convertiría el registro en una foto del presente.
 
-### Añadido
-- **El logotipo de la barra se adapta a pantallas estrechas.** Importado del proyecto de Claude
-  Design. Por debajo de 560px el logotipo completo cede el sitio al isotipo: pasa de **160px de
-  ancho a 47**, y en un móvil de 360px eso era casi la mitad de la barra. Un `<picture>` descarga
-  **una sola** de las dos imágenes, y el isotipo ya viene en caché —es el favicon y el adorno del
-  hero—, así que en móvil además se ahorran los **11 KB del PNG**.
-  El `width: auto` que acompaña al cambio no es decorativo: el reset aplica `max-width: 100%` y
-  las dos imágenes tienen proporciones distintas (4:1 y 1,18:1), así que sin él una se deformaría
-  al estrecharse el contenedor.
-- **E1.8, E1.9 y E1.10**, porque el cambio llegaba sin una sola prueba que lo viera: ninguna
-  tocaba el logotipo, así que el suite daba verde con él y sin él. Comprueban el umbral por sus
-  **dos lados exactos** —560 y 561px, como ya hacían E1.1 y E1.2 con el menú— y que el nombre
-  accesible del enlace sobreviva en ambos anchos, que es lo que se rompería sin ruido si alguien
-  reescribe esto con dos `<img>` y un `display: none`.
-  Miden sobre **`currentSrc`**, no sobre el marcado: `<source>` e `<img>` están los dos en el DOM
-  en todos los anchos, así que afirmar sobre el HTML habría dado verde a ambos lados del umbral.
-  Verificado moviendo el breakpoint a 400px: **E1.8 cae y E1.9 aguanta**, que es exactamente lo
-  que debe pasar.
+### Corregido
+- **El gate de dependencias (SCA) vuelve a verde** tras tres avisos publicados después del último
+  CI verde de `main`: `undici` 7.29.0 (alta, vía `wrangler` → `miniflare`), `brace-expansion` 5.0.9
+  (alta, vía `minimatch`) y `fast-uri` 3.1.7 (moderada, vía `ajv`). `wrangler` pasa a `^4.147.0`,
+  que trae `undici` 7.29.1, y las otras dos suben a 5.0.12 y 3.1.8 **dentro de los rangos ya
+  declarados**, sin `overrides`. Las dos correcciones van juntas porque el SCA es obligatorio y
+  estricto: la PR de Dependabot que subía `wrangler` (#40) no podía pasar sola, y el arreglo de
+  `brace-expansion` tampoco. No se usa `npm audit fix`, que de paso re-resuelve medio árbol. La
+  auditoría queda en cero hallazgos y las 65 pruebas unitarias siguen pasando.
+- **Los tres gates de seguridad que estaban en rojo vuelven a verde**, y uno de ellos no estaba
+  midiendo nada. **Detección de secretos**: `gitleaks-action` exige licencia de pago en repositorios
+  de organización y sin ella abortaba antes de leer un solo commit, así que el gate aparentaba cubrir
+  los secretos sin haber mirado. Se ejecuta la imagen oficial de gitleaks, como en yggdrasil: ahora
+  escanea los 54 commits de verdad. Al no publicar review comments, el job deja de necesitar
+  `pull-requests: write`.
+- **Container scan**: la imagen arrastraba CVEs de `expat` y `openssl` que Alpine ya tenía
+  corregidos, porque el tag de nginx se repuntea cada pocas semanas y entre repuntes queda atrás.
+  El Dockerfile actualiza los paquetes en cada construcción y Trivy ya no encuentra nada.
+- **Dependencias (SCA)**: `undici` (alta, vía `miniflare` y `wrangler`), `qs` (moderada, vía
+  `typed-rest-client`) y `sharp` (alta, vía `miniflare`). Se fijan las versiones corregidas con
+  `overrides` en vez de aceptar el `npm audit fix --force`, que **degradaba wrangler** a una versión
+  anterior. `qs` pasa de `^6.15.2` a `^6.15.4` porque el aviso llega hasta la 6.15.3 y el rango
+  anterior aún permitía instalar una versión vulnerable. La auditoría queda en cero hallazgos y las
+  65 pruebas unitarias siguen pasando.
+- **`scripts/preparar-assets.mjs` construía `dist/` por el mero hecho de ser importado.** U12.3 lo
+  importa para leer `PUBLICABLES`, así que **cada `npm test` borraba y rehacía `dist/` de
+  refilón** — sin que se notara, hasta el día que otro proceso tenía el directorio abierto y la
+  prueba cayó con un `EPERM` que no hablaba ni de cabeceras ni de listas. Ahora solo construye si
+  se invoca. Una prueba no debería tener efectos secundarios sobre el árbol de trabajo.
 
 ### Seguridad
 - **Forzada una versión parcheada de `qs`** (GHSA-q8mj-m7cp-5q26, DoS moderado). Dependabot lo
