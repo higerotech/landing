@@ -30,6 +30,9 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   Verificado que la cadena de herramientas sigue entera: 112 unitarias en verde y
   `wrangler deploy --dry-run` leyendo los 29 archivos de `dist/` con el binding `ASSETS`
   correcto, que es el riesgo real de subir la herramienta de despliegue.
+  **Superado al fusionar `main`**: allí estos avisos ya se habían cerrado por su cuenta y llegaron
+  otros nuevos, así que el lockfile que queda es el de `main` (`wrangler ^4.147.0`, `undici`
+  7.29.1, `fast-uri` 3.1.8, `brace-expansion` 5.0.12), descrito en *Corregido*.
 - **El escaneo de imagen sigue limpio**: Trivy sobre `nginx:1.30-alpine` (alpine 3.24.1) no
   reporta ninguna vulnerabilidad, ni siquiera de las que el gate ignora por no tener arreglo.
   Comprobado a mano, no supuesto.
@@ -79,6 +82,31 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   expresar. La ceguera la cubren U11.8 y U12.2, que fallan antes de que ZAP corra.
   **El `<script type="application/ld+json">` no estorbaba**: es un bloque de datos, el parser no
   lo prepara como script y la CSP no lo evalúa. E5.1 lo confirma contra un navegador real.
+
+### Corregido
+- **El gate de dependencias (SCA) vuelve a verde** tras tres avisos publicados después del último
+  CI verde de `main`: `undici` 7.29.0 (alta, vía `wrangler` → `miniflare`), `brace-expansion` 5.0.9
+  (alta, vía `minimatch`) y `fast-uri` 3.1.7 (moderada, vía `ajv`). `wrangler` pasa a `^4.147.0`,
+  que trae `undici` 7.29.1, y las otras dos suben a 5.0.12 y 3.1.8 **dentro de los rangos ya
+  declarados**, sin `overrides`. Las dos correcciones van juntas porque el SCA es obligatorio y
+  estricto: la PR de Dependabot que subía `wrangler` (#40) no podía pasar sola, y el arreglo de
+  `brace-expansion` tampoco. No se usa `npm audit fix`, que de paso re-resuelve medio árbol. La
+  auditoría queda en cero hallazgos y las 65 pruebas unitarias siguen pasando.
+- **Los tres gates de seguridad que estaban en rojo vuelven a verde**, y uno de ellos no estaba
+  midiendo nada. **Detección de secretos**: `gitleaks-action` exige licencia de pago en repositorios
+  de organización y sin ella abortaba antes de leer un solo commit, así que el gate aparentaba cubrir
+  los secretos sin haber mirado. Se ejecuta la imagen oficial de gitleaks, como en yggdrasil: ahora
+  escanea los 54 commits de verdad. Al no publicar review comments, el job deja de necesitar
+  `pull-requests: write`.
+- **Container scan**: la imagen arrastraba CVEs de `expat` y `openssl` que Alpine ya tenía
+  corregidos, porque el tag de nginx se repuntea cada pocas semanas y entre repuntes queda atrás.
+  El Dockerfile actualiza los paquetes en cada construcción y Trivy ya no encuentra nada.
+- **Dependencias (SCA)**: `undici` (alta, vía `miniflare` y `wrangler`), `qs` (moderada, vía
+  `typed-rest-client`) y `sharp` (alta, vía `miniflare`). Se fijan las versiones corregidas con
+  `overrides` en vez de aceptar el `npm audit fix --force`, que **degradaba wrangler** a una versión
+  anterior. `qs` pasa de `^6.15.2` a `^6.15.4` porque el aviso llega hasta la 6.15.3 y el rango
+  anterior aún permitía instalar una versión vulnerable. La auditoría queda en cero hallazgos y las
+  65 pruebas unitarias siguen pasando.
 
 ### Añadido
 - **`scripts/verificar-publicable.mjs`: el sitio no se empaqueta con marcadores `<TODO: …>` sin
