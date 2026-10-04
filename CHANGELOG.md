@@ -8,6 +8,14 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Corregido
+- **El gate de dependencias (SCA) vuelve a verde** tras tres avisos publicados después del último
+  CI verde de `main`: `undici` 7.29.0 (alta, vía `wrangler` → `miniflare`), `brace-expansion` 5.0.9
+  (alta, vía `minimatch`) y `fast-uri` 3.1.7 (moderada, vía `ajv`). `wrangler` pasa a `^4.147.0`,
+  que trae `undici` 7.29.1, y las otras dos suben a 5.0.12 y 3.1.8 **dentro de los rangos ya
+  declarados**, sin `overrides`. Las dos correcciones van juntas porque el SCA es obligatorio y
+  estricto: la PR de Dependabot que subía `wrangler` (#40) no podía pasar sola, y el arreglo de
+  `brace-expansion` tampoco. No se usa `npm audit fix`, que de paso re-resuelve medio árbol. La
+  auditoría queda en cero hallazgos y las 65 pruebas unitarias siguen pasando.
 - **Los tres gates de seguridad que estaban en rojo vuelven a verde**, y uno de ellos no estaba
   midiendo nada. **Detección de secretos**: `gitleaks-action` exige licencia de pago en repositorios
   de organización y sin ella abortaba antes de leer un solo commit, así que el gate aparentaba cubrir
