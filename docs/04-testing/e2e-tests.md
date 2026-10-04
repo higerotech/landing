@@ -1,6 +1,7 @@
 # Pruebas E2E y de accesibilidad — Landing corporativa Higerotech
 
-* **Estado:** **implementado** — 63 pruebas en verde
+* **Estado:** **implementado** — 72 pruebas en verde (63 + las 9 de **E11**, las páginas
+  legales, añadidas el 2026-09-16)
 * **Fecha:** 2026-07-31
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 04-testing

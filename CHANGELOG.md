@@ -8,6 +8,97 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
 ## [Unreleased]
 
 ### Añadido
+- **`scripts/verificar-publicable.mjs`: el sitio no se empaqueta con marcadores `<TODO: …>` sin
+  resolver.** Hoy hay veinte, todos en la política de privacidad y los términos de uso, y son la
+  identificación de la entidad —razón social, RIF, domicilio— más la institución arbitral. El
+  motivo del bloqueo es directo: **una política de privacidad cuyo responsable es «&lt;TODO: razón
+  social&gt;» no identifica a nadie**, y unos términos sin titular no obligan a nada. La
+  diferencia entre un documento y un borrador con estilo.
+  **Dónde muerde:** `npm run preparar` lo invoca antes de copiar nada, y ese comando es el paso
+  previo a `wrangler deploy` en el workflow de despliegue, así que el camino canónico queda
+  cerrado por construcción. El de contingencia se levanta a mano, así que no hay CI que lo
+  intercepte: para eso está `npm run verificar:publicable`, ahora el paso 0 del despliegue manual
+  en `deployment.md`.
+  **Y dónde NO muerde, que es una decisión:** no está en `npm test`. El propio workflow de
+  despliegue tiene escrita la razón — «un CI que falla por diseño enseña a ignorar los fallos» —
+  y unas unitarias en rojo hasta que alguien rellene un RIF dejarían de significar algo en una
+  semana. El bloqueo va donde el fallo es accionable y no se puede rodear.
+  **Detecta las dos formas del marcador**, y la segunda es la que importa: `<TODO: …>` tal cual
+  —en un comentario, en el CSS, en el JS— y `&lt;TODO: …&gt;` escapado, que es como viaja cuando
+  el marcador es **texto visible** de la página. Un `grep '<TODO'` a secas no encuentra esa
+  segunda forma, que es precisamente la de las páginas legales.
+- **U14, seis pruebas que comprueban que el guardia funciona — no que hoy pase.** La distinción
+  importa: un guardia que nadie ha visto detener nada es indistinguible de uno roto. U14.6 lanza
+  `preparar-assets.mjs` de verdad y exige que salga con código 1 y diga por qué; **se salta
+  cuando no quede ningún marcador**, porque ese día el comando debe pasar y exigir que «falle»
+  sería exigir que el repositorio siga incompleto. U14.3 cuida el falso positivo que ya mordió dos
+  veces hoy —la palabra castellana «todo» y los *design tokens*— y U14.5 no exige que haya
+  marcadores, sino que **no aparezcan en ninguna otra página publicada**: si el owner rellena los
+  datos, la lista se vacía y la prueba sigue pasando.
+- **Cuatro documentos legales, ocho archivos** (**ADR-0008**): política de privacidad, términos
+  de uso, aviso de cookies y política de IA responsable, con un archivo por idioma —
+  `privacidad.html` ↔ `privacy.html` y sus tres hermanos—. **La versión castellana es la única
+  que produce efectos** y lo dice en su propio texto; la inglesa es traducción de cortesía.
+  **Por qué no con `data-es`/`data-en` como la landing**, que era la decisión inicial: la
+  investigación de marco legal cambió una premisa —si se publica en inglés, la versión castellana
+  debe declararse prevalente— y con 9.000 palabras por idioma ese patrón pone cada párrafo legal
+  tres veces en el archivo. El riesgo **R2** del charter, «editar el texto visible y olvidar el
+  atributo», estropea un titular en la landing; en una política de privacidad deja publicados dos
+  textos distintos de los cuales uno tiene efectos jurídicos. Y con un solo archivo que conmuta en
+  caliente no hay forma de declarar cuál de las dos versiones vale.
+  **El contenido sale de la investigación y necesita revisión de un abogado venezolano** antes de
+  considerarse definitivo, sobre todo para clientes regulados por SUDEBAN. Los campos de
+  identificación de la entidad están como `<TODO>`: no se inventa una razón social.
+- **El conmutador ES/EN navega en las páginas de idioma fijo**, en vez de reescribir el DOM. La
+  página lo declara con `data-idioma-fijo` y `data-href-*` en el `<html>`, y `setLang()` aprendió
+  a cambiar el **destino** de un enlace y no solo su etiqueta, que es lo que necesita el pie para
+  llevar a un visitante inglés a `privacy.html` y no a un documento en castellano con efectos
+  jurídicos. Dos detalles con motivo:
+  **al cargar manda el idioma del documento y no la preferencia guardada** —aplicar el inglés
+  dejaría el cromo traducido sobre un texto legal en español y un `<html lang>` que miente— y
+  **esa carga no pisa la preferencia** de quien llegó por un enlace directo.
+  El destino sale del `<html>` y **no del `hreflang`**: ese lleva la URL canónica, sin extensión,
+  que es la del Worker y da 404 por el camino de nginx. Son dos necesidades distintas y forzarlas
+  en el mismo atributo obliga a romper una.
+- **`assets/legal.css`**, una hoja para las ocho páginas. Los tokens de `:root` sí se duplican
+  desde `index.html` —la landing no puede depender de un archivo externo para pintar su primera
+  vista— y **U2.8** compara los dos bloques. Esa prueba encontró un bug en su primera ejecución:
+  el comentario sobre contraste del `:root` de la landing menciona `--dark-3` y `--text-dim`, y el
+  parser los leía como declaraciones.
+- **U13, con 38 aserciones sobre las ocho páginas**, más **U2.8**, **U12.6** y las nueve **E11**.
+  La tabla `DOCUMENTOS` de `u13-paginas-legales.test.mjs` es la especificación: añadir un quinto
+  documento legal son dos archivos y una fila. U13.9 encontró un hueco real al primer intento —al
+  aviso de cookies en castellano le faltaba la nota de versión prevalente que sí llevaban los
+  otros tres—.
+- **`docs/00-project/legal/`**: la investigación de marco legal (893 líneas, 78 fuentes con fecha
+  de consulta) y la **plantilla de DPA** firmable para cuando Higerotech trate datos por cuenta de
+  un cliente. El DPA trae su propio tope de responsabilidad en vez de remitir a un contrato marco
+  que todavía no existe: un anexo sin tope y sin contrato al que remitir es un anexo sin tope.
+- **`assets/sitio.js`**: todo el JavaScript del sitio, fuera del HTML (**ADR-0007**). El
+  disparador no fue el que ADR-0003 había previsto —no ha aparecido ninguna entrada de usuario—
+  sino que **el sitio deja de ser una sola página**: las cuatro páginas legales en camino
+  necesitan el mismo conmutador ES/EN, el mismo menú móvil y el mismo año del pie, y con el
+  script dentro del HTML la única salida era copiarlo cinco veces. Cinco copias de `setLang()`
+  divergiendo, en un sitio cuyo riesgo **R2** documentado es justamente la deriva del texto
+  bilingüe, es crear el problema a sabiendas: U2.5 existe porque un `@font-face` duplicado se
+  desvió, y U12 entera existe porque las cabeceras viven en dos archivos.
+  **Sigue sin haber build step**: el archivo se sirve tal cual, sin minificar y sin hash en el
+  nombre. Se carga al final del `<body>` y **sin `defer`**, porque el script desreferencia nodos
+  en su nivel superior; el `<link rel="preload">` del `<head>` es lo que evita que esa posición
+  cueste un viaje extra, y no es cosmético: con `.reveal` en `opacity: 0`, cada milisegundo de
+  espera es página en blanco, no solo latencia.
+- **U2.6, U2.7, U11.8 y U12.5**, una por cada forma nueva de romperse que introduce la
+  extracción, y ninguna de las cuatro es hipotética:
+  **U2.6** — el `preload` y el `src` apuntan al mismo archivo. Divergir no rompe nada visible:
+  devuelve el viaje que el `preload` ahorra, una regresión de rendimiento que nadie atribuiría a
+  un preload mal escrito.
+  **U2.7** — el `<script>` sigue al final del `<body>` y sin `defer`/`async`. En el `<head>` sin
+  `defer` no encontraría el DOM: la cadena de T17 por otra puerta.
+  **U11.8** — no queda ni un `<script>` inline ejecutable ni un manejador `on*=` en el marcado.
+  Si vuelve uno, la CSP lo bloquea **en silencio** y la página se queda en blanco; esto lo dice
+  en la unitaria, no en el navegador.
+  **U12.5** — `nginx.conf` sigue teniendo su `location =` para el script, y el Worker sigue sin
+  fijar `Cache-Control` para ninguno de los dos.
 - **Tres assets de marca se pueden incrustar desde otros orígenes**:
   `/assets/isotipo_charcoal.svg`, `/assets/og-card.png` y `/assets/logo_white_trans.png`. Salen
   con `Cross-Origin-Resource-Policy: cross-origin`; **el resto del sitio sigue en `same-origin`**.
@@ -50,6 +141,30 @@ y este proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/
   que debe pasar.
 
 ### Cambiado
+- **La cobertura y el mutation testing miden `assets/sitio.js`**, no un trozo de `index.html`.
+  `tests/cobertura.mjs` ya no localiza el bloque dentro del HTML ni desplaza números de línea, y
+  `stryker.config.json` muta el archivo. Las dos métricas salen **idénticas** a las de antes de
+  mover nada —100 % de funciones (17/17), 100 % de líneas (99/99) y **92,36 % de mutación con los
+  mismos 144 mutantes y 133 muertos**—, que es la prueba de que esto fue un traslado y no una
+  reescritura.
+  Lo que había que cuidar era el **«0 sin cobertura»**: el puente de realms del arnés detectaba
+  la instrumentación de Stryker mirando el HTML, y de no haberlo movido a mirar el JS, los 144
+  mutantes habrían salido sin cobertura con un score del 0 % que no mide nada. Ya pasó una vez y
+  está documentado en `docs/04-testing/mutacion.md`.
+- **El arnés de las unitarias inserta el JS en el `index.html` real** en lugar de encontrarlo
+  dentro. Se hace así, y no con `resources: 'usable'` de jsdom, por tres razones concretas: el
+  documento se parsea con la URL de producción y jsdom saldría a buscar el script **por red**;
+  esa carga es asíncrona y `cargarDOM()` es sincrónico; y un script externo que lanza **no pasa
+  por `jsdomError`**, que es el mecanismo que pone U1.1 y U1.5 en rojo. `sustituir` aplica ahora
+  sobre el fuente que case —el marcado o el script— manteniendo el guardia que impide el test
+  vacuo, y `fuente()` se acompaña de `fuenteJS()`: una prueba que afirma sobre el script debe
+  decir que mira el script.
+- **`assets/sitio.js` no hereda el `immutable` de 30 días de `/assets/`.** Tiene su propio
+  `location =` en `nginx.conf` con la política del HTML, porque el HTML se revalida siempre y un
+  visitante podría quedarse un mes con el script viejo y la página nueva — no falla, se comporta
+  raro, que es peor de diagnosticar. Con el JS dentro del HTML el problema no existía: viajaban
+  en la misma respuesta. En el camino del Worker la política se comparte sin hacer nada, porque
+  `cloudflare/_headers` no fija `Cache-Control` para ninguno de los dos.
 - **El sitio deja de ser «solo assets» en el borde** (enmienda a ADR-0006, que ya contemplaba
   este caso). Hay ahora un `worker/index.mjs` de quince líneas, y hace falta porque
   **`cloudflare/_headers` no puede expresar la excepción** — medido con `wrangler dev`, no
@@ -113,6 +228,39 @@ escribieron, y reescribirlos convertiría el registro en una foto del presente.
   anterior. `qs` pasa de `^6.15.2` a `^6.15.4` porque el aviso llega hasta la 6.15.3 y el rango
   anterior aún permitía instalar una versión vulnerable. La auditoría queda en cero hallazgos y las
   65 pruebas unitarias siguen pasando.
+- **La clasificación de datos afirmaba algo que no era cierto.** `data-classification.md` decía
+  en su portada que «este sistema no recolecta, procesa ni almacena datos personales», y a la vez
+  reconocía en sus notas que una dirección IP es dato personal y clasificaba los logs como
+  Confidencial. La contradicción estaba dentro del mismo archivo, y había dos huecos más:
+  **Cloudflare no figuraba en ninguna fila** del inventario, siendo el encargado que ve la IP de
+  cada visitante, y el charter había convertido «no hay formulario» en «no hay tratamiento», que
+  es un salto inválido mientras se publique un `mailto:`. Corregido: el documento sube a 0.2.0,
+  entra Cloudflare con su transferencia internacional, entra la correspondencia de prospectos con
+  su base de licitud y su plazo, y queda **pendiente de re-aprobación del owner** — era un
+  artefacto aprobado en Gate 0 y que la corrección sea correcta no la convierte en aprobada.
+- **Se citaba una norma que no existe.** El mismo documento decía que «no aplican GDPR, LOPD ni
+  normativa de protección de datos». **No hay ninguna «LOPD» venezolana**, ni ley general de
+  protección de datos, ni autoridad de control: lo que aplica son los artículos 28 y 60 de la
+  Constitución y la jurisprudencia vinculante de la Sala Constitucional. Citar una norma
+  inexistente en un documento aprobado es peor que no citar ninguna.
+- **El registro de IP en nginx, desactivado** — el `<TODO>` que llevaba abierto desde julio. Hay
+  un `log_format sin_ip` propio, porque el `combined` de serie empieza por `$remote_addr`, y omite
+  también `$http_x_forwarded_for`. Los logs bajan de **Confidencial a Interno**: sin IP no
+  identifican a nadie.
+  Lo que desatascó la decisión no fue un argumento técnico nuevo, fue tener que escribir en un
+  documento público qué se registra: la versión honesta de «guardamos la IP unos días» es peor
+  producto que «no la guardamos». **U12.6** la vigila, y no por pulcritud — la política publicada
+  afirma que no se conservan IPs, así que volver al formato de serie deja de ser una regresión de
+  configuración y pasa a ser una declaración falsa.
+  El precio se asume y queda escrito: sin IP no se distingue un rastreo abusivo de tráfico
+  legítimo repartido, ni se correlacionan las peticiones de un mismo visitante.
+- **E8.2 exigía un único landmark `nav`** y el pie legal de la landing añade un segundo. Varios
+  landmarks de navegación son correctos —en las páginas legales son tres— con una condición: que
+  cada uno tenga nombre accesible, o un lector de pantalla anuncia «navegación» tres veces sin
+  decir cuál es cuál. La aserción pasa de «hay exactamente uno» a «hay al menos uno y todos tienen
+  nombre», que es lo que la pauta pide de verdad.
+- **El charter decía «página única»** y el sitio tiene nueve. Corregido, junto con la
+  justificación del no-scope del formulario.
 - **`scripts/preparar-assets.mjs` construía `dist/` por el mero hecho de ser importado.** U12.3 lo
   importa para leer `PUBLICABLES`, así que **cada `npm test` borraba y rehacía `dist/` de
   refilón** — sin que se notara, hasta el día que otro proceso tenía el directorio abierto y la
@@ -120,6 +268,80 @@ escribieron, y reescribirlos convertiría el registro en una foto del presente.
   se invoca. Una prueba no debería tener efectos secundarios sobre el árbol de trabajo.
 
 ### Seguridad
+- **Siete vulnerabilidades de dependencias a cero**, cuatro de ellas *high*, que dejaban el gate
+  SCA (`npm audit --audit-level=high`) en rojo. Todas transitivas y todas de desarrollo:
+
+  | Paquete | Severidad | Cadena | Arreglo |
+  |---|---|---|---|
+  | `fast-uri` | high ×5 | `@stryker-mutator/core` → `ajv` | 3.1.4 → **3.1.8** |
+  | `qs` | moderate ×2 | `@stryker-mutator/core` → `typed-rest-client` | 6.15.3 → **6.16.0** |
+  | `sharp` | high | `wrangler` → `miniflare` | 0.35.2 → **0.35.4** |
+  | `undici` | high, +4 moderate | `wrangler` → `miniflare` | 7.28.0 → **7.29.0** |
+
+  **Ninguna necesitó forzar un major ni un `override` nuevo**, y eso es el hallazgo que conviene
+  recordar: el rango vulnerable de `fast-uri` acaba en 3.1.5 y `ajv` acepta `^3.0.1`, así que
+  bastaba refrescar el lockfile. Con `qs` pasó algo parecido y más sutil — el `override` de
+  `^6.15.2` que ya existía **permitía** 6.16.0; lo que lo mantenía en la versión vulnerable era un
+  lockfile resuelto cuando 6.16.0 todavía no existía. Un `override` no protege por sí solo: hay
+  que volver a resolver.
+  `sharp` y `undici` salen los dos de la misma `miniflare`, así que subir **wrangler a 4.132.0**
+  cierra ambas. Detalle que evitó trabajo de más: el `undici` que arrastra jsdom (7.29.0) ya
+  estaba fuera del rango vulnerable — el vulnerable era solo el de miniflare.
+  Verificado que la cadena de herramientas sigue entera: 112 unitarias en verde y
+  `wrangler deploy --dry-run` leyendo los 29 archivos de `dist/` con el binding `ASSETS`
+  correcto, que es el riesgo real de subir la herramienta de despliegue.
+  **Superado al fusionar `main`**: allí estos avisos ya se habían cerrado por su cuenta y llegaron
+  otros nuevos, así que el lockfile que queda es el de `main` (`wrangler ^4.147.0`, `undici`
+  7.29.1, `fast-uri` 3.1.8, `brace-expansion` 5.0.12), descrito en *Corregido*.
+- **El escaneo de imagen sigue limpio**: Trivy sobre `nginx:1.30-alpine` (alpine 3.24.1) no
+  reporta ninguna vulnerabilidad, ni siquiera de las que el gate ignora por no tener arreglo.
+  Comprobado a mano, no supuesto.
+- **El DAST tenía un punto ciego con las páginas legales, y estaba MEDIDO, no supuesto.** El
+  primer escaneo con los ocho documentos alcanzó las cuatro versiones castellanas y **ninguna de
+  las cuatro inglesas**: el spider de ZAP no ejecuta JavaScript, y las URL inglesas viven en
+  `data-href-en` hasta que `setLang()` las convierte en `href`. Es la misma clase de ceguera que
+  este archivo ya había corregido para `/404.html` —«el spider solo sigue enlaces»— así que se
+  arregla igual, con un objetivo más. Bastó **uno y no cuatro**: entrando por `/privacy.html`, sus
+  enlaces estáticos ya son los ingleses (ADR-0008) y el spider llega a las otras tres desde ahí.
+  Verificado: el objetivo inglés alcanza las ocho páginas.
+  Dar las inglesas por buenas «porque son iguales que las castellanas» era exactamente la
+  suposición que `tests/dast.mjs` se negó a hacer con el 404.
+- **Aceptada la regla 10027 de ZAP** («Suspicious Comments»), que apareció con ADR-0007: al
+  servirse el JS como archivo propio, ZAP lee sus comentarios —dentro del HTML no los miraba— y
+  salta con la palabra castellana **«todo»**, porque su lista de marcadores incluye el inglés
+  `TODO` y compara sin distinguir mayúsculas. La frase que lo dispara es «Todo el JavaScript de
+  index.html…».
+  No se arregla reescribiendo: «todo» es una de las palabras más comunes del idioma y volvería en
+  el siguiente comentario. Y el sitio publica sus comentarios **a propósito** —sin minificado ni
+  build, ADR-0003 y ADR-0007—, así que la premisa de la regla choca con una decisión de
+  arquitectura.
+  **La ceguera la cubre U11.9**, que es más afilada que la regla: exige `TODO` en mayúsculas
+  seguido de `:` o `>` —la forma que este repositorio usa para una decisión pendiente— y busca
+  **secretos literales** (una clave seguida de una asignación a un valor no trivial, o un prefijo
+  de credencial reconocible) en vez de palabras sueltas.
+  Su primera versión buscaba palabras y **repitió el error que venía a corregir**: «token» casó
+  con los *design tokens* de `legal.css`. Queda escrito junto a la lista, porque el fallo es más
+  instructivo que la regla.
+- **El gate de cabeceras comprueba tres tipos de ruta más**: `/privacidad.html`,
+  `/assets/sitio.js` y `/assets/legal.css`. Es un hueco que abrieron ADR-0007 y ADR-0008: ese job
+  existe porque `add_header` no se hereda (ADR-0002) y enumera **un tipo de ruta por cada
+  `location` de nginx.conf**, y los dos `location =` nuevos —los que evitan que el JS y el CSS
+  hereden el `immutable` de `/assets/`— son justo donde se puede caer el `include` del snippet sin
+  que nada más falle. U12.5 comprueba que esté escrito; esto comprueba que llegue a la respuesta.
+  Verificado sobre el contenedor: las siete rutas salen con las cinco cabeceras.
+- **La CSP ya no lleva `'unsafe-inline'` en `script-src`** (**ADR-0007**). Es la mitad de la
+  deuda **T4** que ADR-0003 dejó registrada, y se paga porque el JS salió de `index.html` a
+  `assets/sitio.js`: con el marcado sin JavaScript, la directiva puede cerrarse a `'self'` y la
+  CSP vuelve a hacer aquello para lo que existe — un `<script>` inyectado en el marcado no se
+  ejecuta. El cambio va en los **dos** caminos a producción, `security-headers.conf` y
+  `cloudflare/_headers`, y U12.2 falla si se separan.
+  **`style-src 'unsafe-inline'` se queda**: el CSS sigue dentro de `index.html` por ADR-0003.
+  T4 no desaparece del threat model, reduce alcance a la mitad. El aviso 10055 de ZAP sigue en
+  IGNORE por eso mismo, y por una limitación del formato de `.zap/rules.tsv`, que no distingue
+  directivas: aceptar el de estilos y vigilar el de scripts en la misma regla no se puede
+  expresar. La ceguera la cubren U11.8 y U12.2, que fallan antes de que ZAP corra.
+  **El `<script type="application/ld+json">` no estorbaba**: es un bloque de datos, el parser no
+  lo prepara como script y la CSP no lo evalúa. E5.1 lo confirma contra un navegador real.
 - **Forzada una versión parcheada de `qs`** (GHSA-q8mj-m7cp-5q26, DoS moderado). Dependabot lo
   avisó y `npm audit fix` **no pudo arreglarlo**: `typed-rest-client` —que llega por
   `@stryker-mutator/core`— declara `qs` con una **versión exacta**, `6.15.1`, así que npm no

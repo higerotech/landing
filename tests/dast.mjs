@@ -29,17 +29,31 @@ const PUERTO = process.env.PUERTO || '80'
    en los runners de Linux; `--network host` no. */
 const BASE = `http://host.docker.internal:${PUERTO}`
 
-/* Dos objetivos, no uno.
+/* Tres objetivos, no uno. Los dos añadidos lo están por el mismo motivo, y
+   vale la pena entenderlo una vez: **el spider solo sigue enlaces del HTML
+   servido, y no ejecuta JavaScript.** Todo lo que no cuelgue de un `href`
+   estático es invisible para el escaneo.
 
-   Al validar el gate se midió desde el log de nginx qué pedía ZAP de verdad:
-   8 URLs —la home, robots, sitemap, imágenes y fuentes— y **nunca la página
-   404**. El spider solo sigue enlaces, y a `/404.html` no apunta ninguno: es
-   nginx quien la sirve ante una ruta inexistente. Era un punto ciego real,
-   sobre una página que los visitantes sí ven.
+   `/404.html` — al validar el gate se midió desde el log de nginx qué pedía ZAP
+   de verdad: 8 URLs —la home, robots, sitemap, imágenes y fuentes— y **nunca la
+   página 404**. A ella no apunta ningún enlace: es nginx quien la sirve ante una
+   ruta inexistente. Era un punto ciego real, sobre una página que los visitantes
+   sí ven.
 
-   Que las cabeceras y la ausencia de versión en el 404 ya las comprueben E9.2
-   y E9.3 no lo cubre: esas son dos aserciones concretas, y aquí pasan 64
-   reglas pasivas. */
+   Que las cabeceras y la ausencia de versión en el 404 ya las comprueben E9.2 y
+   E9.3 no lo cubre: esas son dos aserciones concretas, y aquí pasan 63 reglas
+   pasivas.
+
+   `/privacy.html` — MEDIDO el 2026-09-16, en el primer escaneo con las páginas
+   legales: el spider alcanzó las cuatro versiones castellanas y **ninguna de las
+   cuatro inglesas**. Las URL inglesas viven en `data-href-en` y solo se
+   convierten en `href` cuando `setLang()` corre, así que sin JavaScript no
+   existen. Bastaba un objetivo más y no cuatro: entrando por una página inglesa,
+   sus enlaces estáticos ya son los ingleses (ADR-0008), así que el spider llega
+   a las otras tres desde ahí.
+
+   Dar por buenas las inglesas «porque son iguales que las castellanas» es
+   exactamente la suposición que este archivo se negó a hacer con el 404. */
 /* Se lee de argv y no de una variable de entorno: `ACTIVO=1 npm run …` no es
    portable a Windows sin dependencias añadidas, y `npm run dast -- --activo`
    funciona igual en los dos sitios. */
@@ -47,7 +61,8 @@ const ACTIVO = process.argv.includes('--activo')
 
 const OBJETIVOS = [
   { nombre: 'sitio', url: BASE },
-  { nombre: 'pagina-404', url: `${BASE}/404.html` }
+  { nombre: 'pagina-404', url: `${BASE}/404.html` },
+  { nombre: 'legales-en', url: `${BASE}/privacy.html` }
 ]
 
 if (existsSync(TRABAJO)) rmSync(TRABAJO, { recursive: true, force: true })

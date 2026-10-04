@@ -5,7 +5,15 @@
 import { describe, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { JSDOM } from 'jsdom'
 import { cargarDOM, fuente, estaInstrumentado } from '../helpers/cargar-dom.mjs'
+
+/* El `index.html` real parseado SIN ejecutar nada.
+   `cargarDOM()` no sirve para afirmar sobre cómo se carga el script: el arnés
+   sustituye la etiqueta `<script src>` por el JS ya inlinado, así que en su DOM
+   ese elemento no existe. Aquí hace falta el documento tal cual sale del
+   repositorio, con la etiqueta en su sitio. */
+const domCrudo = () => new JSDOM(fuente()).window.document
 
 const IDS_EXIGIDOS = ['wa-cta', 'nav-toggle', 'nav-links', 'btn-es', 'btn-en', 'year']
 
@@ -91,6 +99,106 @@ describe('U2 · contrato entre el script y el DOM', () => {
       [],
       'el bloque inlinado de index.html ya no coincide con assets/fonts/fonts.css'
     )
+  })
+
+  test('U2.6 · el <script src> y su preload apuntan al mismo archivo', {
+    skip: estaInstrumentado() && 'afirma sobre el fuente publicado'
+  }, () => {
+    /* Desde ADR-0007 el JS se carga al final del <body> y se precarga desde el
+       <head>. Son dos referencias escritas a mano al mismo archivo, y divergir
+       no rompe nada visible: el navegador descarga el script igual, solo que un
+       viaje más tarde y con la página entera en `opacity: 0` mientras espera.
+       Una regresión de rendimiento silenciosa, del tipo que nadie atribuye a un
+       preload mal escrito.
+
+       Se afirma sobre el DOM y no sobre el texto porque lo que importa es qué
+       resuelve el navegador, no cómo está escrito el atributo. */
+    const doc = domCrudo()
+
+    const script = doc.querySelector('script[src]')
+    assert.ok(script, 'index.html ya no carga ningún script externo: ¿volvió a estar inline?')
+
+    const preloads = [...doc.querySelectorAll('link[rel="preload"][as="script"]')]
+    assert.equal(preloads.length, 1, 'debe haber exactamente un preload de script')
+
+    assert.equal(
+      preloads[0].getAttribute('href'),
+      script.getAttribute('src'),
+      'el preload y el <script src> apuntan a archivos distintos'
+    )
+
+    /* Y el archivo tiene que existir: un preload a un 404 es una petición
+       perdida; un `src` a un 404 es la página en blanco. */
+    const ruta = new URL(`../../${script.getAttribute('src')}`, import.meta.url)
+    assert.ok(
+      readFileSync(ruta, 'utf8').length > 0,
+      `${script.getAttribute('src')} no existe o está vacío`
+    )
+  })
+
+  test('U2.7 · el script se carga al final del <body>, no en el <head>', {
+    skip: estaInstrumentado() && 'afirma sobre el fuente publicado'
+  }, () => {
+    /* El script desreferencia nodos en su nivel superior. En el <head> y sin
+       `defer` no encontraría ninguno: la página quedaría en blanco, que es la
+       cadena de fallo de T17 por otra puerta. Si algún día se mueve, tendrá que
+       ser con `defer`, y esta prueba obliga a decidirlo a mano en vez de
+       descubrirlo en producción.
+
+       El arnés de las unitarias depende además de esta posición: inserta el JS
+       donde está la etiqueta. */
+    const doc = domCrudo()
+    const script = doc.querySelector('script[src]')
+
+    assert.ok(
+      script.closest('body'),
+      'el <script src> salió del <body>: sin defer no encontrará el DOM'
+    )
+    assert.ok(
+      !script.hasAttribute('defer') && !script.hasAttribute('async'),
+      'con defer o async el arnés de las unitarias deja de reflejar el momento de ejecución real'
+    )
+  })
+
+  test('U2.8 · los tokens de legal.css no se han desviado de los de index.html', {
+    skip: estaInstrumentado() && 'afirma sobre el fuente publicado'
+  }, () => {
+    /* ADR-0008 duplica el bloque `:root` de index.html en `assets/legal.css`, y
+       lo hace a propósito: la landing no puede depender de un archivo externo
+       para pintar su primera vista, y la hoja de las páginas legales no puede
+       depender del CSS de la landing.
+
+       Es la misma clase de duplicación que U2.5 vigila para el `@font-face`, y
+       con el mismo modo de fallo: nadie nota que el coral de las páginas legales
+       dejó de ser el coral de la marca. Si divergen, esto lo dice.
+
+       Se comparan solo los tokens que existen en AMBOS lados: `legal.css` añade
+       los suyos —`--maxw-prosa`— en un segundo bloque `:root`, y no tiene por
+       qué llevar todos los de la landing. */
+    const raiz = texto => {
+      /* Sin quitar los comentarios, el propio bloque `:root` de index.html
+         rompe el parseo: su comentario sobre el contraste MENCIONA --dark-3 y
+         --text-dim, y el regex los leía como declaraciones. Lo encontró esta
+         misma prueba en su primera ejecución. */
+      texto = texto.replace(/\/\*[\s\S]*?\*\//g, '')
+      const bloque = texto.match(/:root\s*\{([^}]*)\}/)
+      assert.ok(bloque, 'no se encontró un bloque :root')
+      return Object.fromEntries(
+        [...bloque[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)]
+          .map(([, nombre, valor]) => [nombre, valor.trim().replace(/\s+/g, ' ')])
+      )
+    }
+
+    const deLanding = raiz(fuente())
+    const deLegal = raiz(readFileSync(new URL('../../assets/legal.css', import.meta.url), 'utf8'))
+
+    assert.ok(Object.keys(deLegal).length >= 15, 'no se parsearon los tokens de legal.css')
+
+    const distintos = Object.keys(deLegal)
+      .filter(k => k in deLanding && deLanding[k] !== deLegal[k])
+      .map(k => `${k}\n      index.html: ${deLanding[k]}\n      legal.css:  ${deLegal[k]}`)
+
+    assert.deepEqual(distintos, [], 'los tokens de marca divergen entre index.html y legal.css')
   })
 
   test('U2.3 · #wa-cta sale del HTML oculto', () => {

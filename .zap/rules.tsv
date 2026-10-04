@@ -11,19 +11,44 @@
 # no puede señalar a un ADR o a una amenaza del threat model, sobra.
 
 # ── Aceptado y registrado como riesgo ────────────────────────────────────
-# T4 del threat model (DREAD 5,6, ⚠️ Aceptado). El CSS y el JS viven dentro
-# de index.html por ADR-0003, así que la CSP necesita 'unsafe-inline' en
-# script-src y style-src. El propio ADR fija el disparador de revisión: se
-# elimina en cuanto se extraigan a archivos propios. Mitigado mientras tanto
-# por no existir ningún vector de entrada de contenido no confiable, cosa que
-# vigila la unitaria U3.5.
-10055	IGNORE	CSP unsafe-inline — T4 aceptado, ver ADR-0003 §Disparador de revisión
+# T4 del threat model (DREAD 5,6, ⚠️ Aceptado). Desde el 2026-09-16 el aviso
+# es SOLO por style-src: el JS salió a assets/sitio.js y script-src quedó en
+# 'self' (ADR-0007). El CSS sigue dentro de index.html por ADR-0003.
+#
+# Sigue en IGNORE y no en FAIL porque el formato de este archivo no distingue
+# directivas: aceptar el aviso de style-src y vigilar el de script-src en la
+# misma regla no se puede expresar. La ceguera se cubre desde las unitarias —
+# U11.8 exige que no quede script inline ni manejador on*= en el marcado, y
+# U12.2 compara la CSP de los dos caminos— que fallan antes de que ZAP corra.
+10055	IGNORE	CSP unsafe-inline — solo style-src, T4 aceptado; ver ADR-0007
 
 # ── Informativo, no es un hallazgo ───────────────────────────────────────
 # ZAP solo hace constar que la página usa JavaScript y que por tanto un
 # escaneo pasivo no ve todo. Es cierto y ya está cubierto: de lo que el
 # escaneo pasivo no alcanza se ocupan las 63 pruebas E2E en navegador real.
 10109	IGNORE	«Modern Web Application» es informativo; el JS lo cubren las E2E
+
+# ── Falso positivo por idioma ────────────────────────────────────────────
+# «Suspicious Comments» salta desde ADR-0007: al servirse el JS como archivo
+# propio, ZAP lee sus comentarios — dentro del HTML no los miraba—. Y lo que
+# encuentra es la palabra castellana «todo»:
+#
+#   Todo el JavaScript de `index.html`, extraído a un archivo propio el …
+#
+# Su lista de marcadores sospechosos incluye el inglés TODO y compara sin
+# distinguir mayúsculas. No se arregla reescribiendo la frase: «todo» es una de
+# las palabras más comunes del idioma y volvería en el siguiente comentario.
+#
+# Además, el sitio publica sus comentarios A PROPÓSITO: no hay minificado ni
+# build (ADR-0003, ADR-0007), así que la premisa de la regla —que un comentario
+# en producción es un descuido— choca con una decisión de arquitectura.
+#
+# La ceguera que esto deja la cubre la unitaria U11.9, que es más afilada que la
+# regla: exige TODO en mayúsculas y seguido de `:` o `>` —la forma que este
+# repositorio usa— y busca secretos literales (una clave seguida de una
+# asignación a un valor no trivial, o un prefijo de credencial reconocible) en
+# vez de palabras sueltas. Falla en la unitaria, antes de que ZAP corra.
+10027	IGNORE	Comentarios sospechosos — falso positivo por el «todo» castellano; ver U11.9
 
 # ── Deliberado ───────────────────────────────────────────────────────────
 # El HTML se sirve con `no-cache, must-revalidate` a propósito: es lo que

@@ -1,0 +1,321 @@
+/* ── Hoja de las páginas legales ──────────────────────────────────────────
+   Una sola hoja para privacidad, términos, cookies e IA responsable, en sus dos
+   idiomas: ocho páginas, un archivo.
+
+   Por qué existe, y por qué no está dentro de cada página como en la landing:
+   ADR-0003 acepta el CSS inline porque `index.html` es UNA página. Ocho copias
+   del mismo bloque serían la deriva que U2.5 y U12 existen para impedir, y esta
+   vez sobre documentos con efectos jurídicos. Mismo razonamiento que ADR-0007
+   aplicó al JS.
+
+   Consecuencias que hay que respetar al tocarla:
+
+   1. **Los tokens de `:root` están copiados de `index.html`.** Es duplicación
+      deliberada: la landing no puede depender de un archivo externo para pintar
+      su primera vista, y esta hoja no puede depender del CSS de la landing. La
+      prueba U2.8 compara los dos bloques y falla si divergen.
+
+   2. **No se cachea como el resto de `/assets/`.** Ese directorio se sirve
+      `immutable` 30 días; el HTML se revalida siempre. Tiene su propio
+      `location =` en `nginx.conf`, igual que `sitio.js`. U12.5 lo comprueba.
+
+   3. **Las clases que el JS toca no se pueden renombrar a la ligera**:
+      `.nav-links.open`, `.nav-toggle[aria-expanded]` y `.lang-btn.active` las
+      manipula `assets/sitio.js`.
+
+   4. **Las fuentes vienen de `assets/fonts/fonts.css`**, no duplicadas aquí.  */
+
+/* ─── Tokens (copiados de index.html — los vigila U2.8) ─────────── */
+:root {
+  --ink:      #15181B;
+  --dark:     #1E2226;
+  --dark-2:   #262B30;
+  --dark-3:   #2D3134;
+  --dark-4:   #353B41;
+  --teal:     #8AD6CC;
+  --teal-dim: #6FB9B0;
+  --coral:    #F97171;
+  --sage:     #9EBCB6;
+  --white:    #FFFFFF;
+  --text:     #E7ECEF;
+  --text-muted: #97A4AE;
+  --text-dim: #909EA9;
+  --font-sans:    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --border:   rgba(255,255,255,0.08);
+  --border-2: rgba(255,255,255,0.14);
+  --radius:   14px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --maxw: 1180px;
+  --shadow:   0 8px 40px rgba(0,0,0,0.35);
+}
+
+/* Medida de lectura propia de estas páginas: un texto legal a 1180px es
+   ilegible. 68 caracteres por línea es el rango cómodo. */
+:root { --maxw-prosa: 760px; }
+
+/* ─── Reset y base ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--ink);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  font-size: 17px;
+  line-height: 1.75;
+}
+
+a { color: var(--teal); text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { display: block; max-width: 100%; }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.25; }
+::selection { background: var(--teal); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; border-radius: 4px; }
+
+.container { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0; z-index: 200;
+  background: var(--teal); color: var(--ink);
+  padding: 12px 20px; border-radius: 0 0 8px 0;
+  font-family: var(--font-sans); font-size: 15px; font-weight: 700;
+}
+.skip-link:focus { left: 0; }
+
+/* ─── Barra de navegación ───────────────────────────────────────── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(21,24,27,0.88);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 18px; height: 68px;
+}
+
+.nav-logo img { height: 30px; width: auto; }
+
+.nav-links { display: flex; align-items: center; gap: 22px; }
+.nav-links a {
+  color: var(--text-muted); font-size: 14.5px; font-weight: 500;
+}
+.nav-links a:hover { color: var(--text); text-decoration: none; }
+.nav-links a[aria-current="page"] { color: var(--teal); }
+
+.nav-right { display: flex; align-items: center; gap: 12px; }
+
+.lang-toggle {
+  display: inline-flex; border: 1px solid var(--border-2);
+  border-radius: 100px; overflow: hidden;
+}
+.lang-btn {
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--text-dim); font-family: var(--font-sans);
+  font-size: 12.5px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 7px 13px;
+}
+.lang-btn:hover { color: var(--text); }
+.lang-btn.active { background: var(--teal); color: var(--ink); }
+
+.nav-toggle {
+  display: none; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  background: transparent; border: 1px solid var(--border-2);
+  border-radius: 10px; color: var(--text); cursor: pointer;
+}
+.nav-toggle:hover { border-color: var(--teal); color: var(--teal); }
+.nav-toggle .ic-close { display: none; }
+.nav-toggle[aria-expanded="true"] .ic-open { display: none; }
+.nav-toggle[aria-expanded="true"] .ic-close { display: block; }
+
+@media (max-width: 860px) {
+  .nav-toggle { display: inline-flex; }
+  .nav-links {
+    position: absolute; top: 68px; left: 0; right: 0;
+    display: none; flex-direction: column; align-items: flex-start; gap: 0;
+    background: var(--dark); border-bottom: 1px solid var(--border);
+    padding: 8px 24px 16px;
+  }
+  .nav-links.open { display: flex; }
+  .nav-links a { padding: 12px 0; width: 100%; font-size: 16px; }
+}
+
+/* ─── Encabezado del documento ──────────────────────────────────── */
+.doc-head {
+  border-bottom: 1px solid var(--border);
+  padding: 52px 0 34px;
+  margin-bottom: 40px;
+}
+
+.doc-head .container { max-width: var(--maxw-prosa); }
+
+.tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(138,214,204,0.10);
+  border: 1px solid rgba(138,214,204,0.28);
+  color: var(--teal);
+  font-size: 12.5px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 7px 15px; border-radius: 100px;
+}
+.tag::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--teal); box-shadow: 0 0 10px var(--teal);
+}
+.tag.coral { color: var(--coral); border-color: rgba(249,113,113,0.30); background: rgba(249,113,113,0.10); }
+.tag.coral::before { background: var(--coral); box-shadow: 0 0 10px var(--coral); }
+
+.doc-title {
+  font-size: clamp(30px, 5vw, 44px);
+  margin: 18px 0 12px;
+  letter-spacing: -0.02em;
+}
+.doc-title .accent { color: var(--teal); }
+
+.doc-meta {
+  display: flex; flex-wrap: wrap; gap: 8px 22px;
+  color: var(--text-dim); font-size: 14px;
+  margin-top: 16px;
+}
+.doc-meta strong { color: var(--text-muted); font-weight: 600; }
+
+/* ─── Cuerpo del documento ──────────────────────────────────────── */
+.doc {
+  max-width: var(--maxw-prosa);
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+.doc h2 {
+  font-size: 23px;
+  margin: 46px 0 14px;
+  padding-top: 6px;
+  letter-spacing: -0.01em;
+}
+.doc h2:first-child { margin-top: 0; }
+.doc h3 { font-size: 18.5px; margin: 30px 0 10px; color: var(--text); }
+
+.doc p { margin: 0 0 18px; color: var(--text); }
+.doc p.lead { font-size: 18.5px; color: var(--text-muted); }
+
+.doc ul, .doc ol { margin: 0 0 18px; padding-left: 26px; }
+.doc li { margin-bottom: 9px; }
+.doc li::marker { color: var(--teal-dim); }
+
+.doc strong { color: var(--white); font-weight: 600; }
+
+.doc hr { border: 0; border-top: 1px solid var(--border); margin: 44px 0; }
+
+.doc code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+/* Bloque de aviso: lo que el lector no debería saltarse. */
+.nota {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--teal);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 18px 22px;
+  margin: 0 0 26px;
+  color: var(--text-muted);
+  font-size: 15.5px;
+}
+.nota.aviso { border-left-color: var(--coral); }
+.nota p:last-child { margin-bottom: 0; }
+.nota strong { color: var(--text); }
+
+/* Tablas: inventarios de datos, plazos, subencargados. */
+.doc-tabla { overflow-x: auto; margin: 0 0 26px; }
+.doc table {
+  width: 100%; border-collapse: collapse;
+  font-size: 15px;
+}
+.doc th, .doc td {
+  text-align: left; vertical-align: top;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.doc th {
+  font-family: var(--font-display);
+  color: var(--text);
+  font-size: 13.5px; font-weight: 600;
+  letter-spacing: 0.02em; text-transform: uppercase;
+  background: var(--dark-2);
+  white-space: nowrap;
+}
+.doc tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+/* Índice del documento. */
+.indice {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 0 0 40px;
+}
+.indice h2 {
+  font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-dim); margin: 0 0 12px;
+}
+.indice ol { margin: 0; padding-left: 22px; }
+.indice li { margin-bottom: 6px; }
+.indice a { color: var(--text-muted); }
+.indice a:hover { color: var(--teal); }
+
+/* Pie del documento: versión, histórico, documentos hermanos. */
+.doc-pie {
+  border-top: 1px solid var(--border);
+  margin-top: 44px; padding-top: 26px;
+  color: var(--text-dim); font-size: 14.5px;
+}
+.doc-pie .otros {
+  display: flex; flex-wrap: wrap; gap: 10px 20px;
+  margin-top: 14px;
+}
+
+/* ─── Pie del sitio ─────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--dark);
+  padding: 40px 0 28px;
+}
+
+footer .footer-inner {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 16px 28px;
+}
+
+footer .footer-nav {
+  display: flex; flex-wrap: wrap; gap: 10px 20px;
+  font-size: 14.5px;
+}
+footer .footer-nav a { color: var(--text-muted); }
+footer .footer-nav a:hover { color: var(--teal); text-decoration: none; }
+
+footer .copy { color: var(--text-dim); font-size: 14px; }
+
+@media (max-width: 560px) {
+  body { font-size: 16px; }
+  .doc-head { padding: 36px 0 26px; }
+  .doc h2 { font-size: 21px; }
+}
+
+/* Quien pide menos movimiento no debería recibir desplazamiento suave. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

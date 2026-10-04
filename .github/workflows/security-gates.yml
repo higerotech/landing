@@ -137,11 +137,23 @@ jobs:
             sleep 1
           done
 
+      # La lista enumera un tipo de ruta por cada `location` de nginx.conf,
+      # porque de eso protege este job: `add_header` NO se hereda cuando el
+      # nivel define el suyo (ADR-0002), así que cada `location` necesita su
+      # propio `include` del snippet y cada uno puede olvidarlo por separado.
+      #
+      # Ampliada el 2026-09-16 con los tres tipos que aparecieron con ADR-0007 y
+      # ADR-0008: el script, la hoja de las páginas legales y una página legal.
+      # Los dos primeros tienen `location =` propio para no heredar el
+      # `immutable` de /assets/, y ese `location` propio es exactamente el sitio
+      # donde se puede quedar sin cabeceras sin que nada más falle. U12.5
+      # comprueba que el `include` esté escrito; esto comprueba que llegue a la
+      # respuesta, que es la afirmación fuerte.
       - name: Verificar cabeceras en cada tipo de ruta
         run: |
           set -euo pipefail
           fallos=0
-          for ruta in / /index.html /assets/fonts/fonts.css /robots.txt; do
+          for ruta in / /index.html /privacidad.html /assets/sitio.js /assets/legal.css /assets/fonts/fonts.css /robots.txt; do
             cab=$(curl -sI "http://localhost:8080$ruta")
             for h in "X-Frame-Options" "X-Content-Type-Options" "Referrer-Policy" \
                      "Permissions-Policy" "Content-Security-Policy"; do
@@ -184,15 +196,18 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: node --test sobre el index.html real
+      - name: node --test sobre el index.html y el sitio.js reales
         run: npm test
 
       # `--experimental-test-coverage` de Node no vale aquí: su reporter solo
-      # incluye rutas de archivo y el JS del sitio vive en un <script> inline,
-      # así que informaba «100 %» midiendo únicamente el arnés. Este medidor lee
-      # los datos crudos de V8, que sí registran el script. Gatea sobre
-      # funciones; el porcentaje de líneas es informativo y una cota inferior.
-      - name: Cobertura del script inline
+      # incluye rutas de archivo, y aunque desde ADR-0007 el JS tenga archivo
+      # propio, el arnés lo INSERTA en el index.html real para ejecutarlo, así
+      # que jsdom lo compila bajo la URL del documento y no bajo una ruta. El
+      # reporter seguiría informando «100 %» midiendo únicamente el arnés. Este
+      # medidor lee los datos crudos de V8, que sí registran el script. Gatea
+      # sobre funciones; el porcentaje de líneas es informativo y una cota
+      # inferior.
+      - name: Cobertura de assets/sitio.js
         run: npm run coverage
 
   # ── Gate 2 · Dependencias (SCA) ──────────────────────────────────────

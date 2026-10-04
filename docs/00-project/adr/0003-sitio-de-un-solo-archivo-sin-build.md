@@ -6,7 +6,7 @@
 * **Fase AI-DLC:** 02-design
 * **Versión:** 1.0.0
 * **ID:** ADR-0003
-* **Supersede / Superseded-by:** —
+* **Supersede / Superseded-by:** **parcialmente superada por ADR-0007** (2026-09-16) — el JS se extrajo a `assets/sitio.js` y `script-src` ya no lleva `'unsafe-inline'`. Todo lo relativo al CSS, al archivo único y a la ausencia de build sigue vigente
 * **Controles OWASP afectados:** A03, A05
 
 ## Contexto
@@ -65,6 +65,11 @@ que hoy no existe.
 **Negativas / deuda asumida**
 - `'unsafe-inline'` en `script-src` y `style-src`. Registrado como **T4 aceptado** en el
   threat model, no como control cumplido.
+  **Actualización 2026-09-16 (ADR-0007):** la mitad de `script-src` está pagada. El JS vive
+  en `assets/sitio.js` y la directiva quedó en `script-src 'self'`. El disparador que lo
+  provocó no fue el que este ADR había previsto —no apareció ninguna entrada de usuario—
+  sino que el sitio dejó de ser una sola página: cinco páginas necesitando el mismo script
+  significaban cinco copias divergiendo. `style-src 'unsafe-inline'` sigue aquí.
 - El archivo tiene ~900 líneas y crece. Cuando el CSS supere lo manejable, la extracción
   se hará por legibilidad y de paso resolverá la CSP.
 - Cada cadena existe tres veces (visible + `data-es` + `data-en`): 130 nodos i18n. Es la

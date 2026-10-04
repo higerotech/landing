@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<!-- Fixed-language page. The Spanish version (`privacidad.html`) is the one that
+     produces legal effects; this is a courtesy translation. `data-idioma-fijo`
+     tells assets/sitio.js the ES/EN switch must NAVIGATE rather than rewrite the
+     DOM. See the Spanish page for the full rationale. -->
+<html lang="en" data-idioma-fijo data-href-es="privacidad.html" data-href-en="privacy.html">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Higerotech</title>
+  <meta name="description" content="What higerotech.com processes and what it does not: no cookies, no analytics, no forms. Privacy policy of Higerotech, an AI-First technology consultancy." />
+  <meta name="theme-color" content="#15181B" />
+
+  <link rel="canonical" href="https://higerotech.com/privacy" />
+  <link rel="alternate" hreflang="es" href="https://higerotech.com/privacidad" />
+  <link rel="alternate" hreflang="en" href="https://higerotech.com/privacy" />
+  <link rel="alternate" hreflang="x-default" href="https://higerotech.com/privacidad" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Higerotech" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:url" content="https://higerotech.com/privacy" />
+  <meta property="og:title" content="Privacy Policy — Higerotech" />
+  <meta property="og:description" content="No cookies, no analytics, no forms. What we do process, stated precisely." />
+  <meta property="og:image" content="https://higerotech.com/assets/og-card.png" />
+
+  <link rel="icon" type="image/svg+xml" href="assets/isotipo.svg" />
+  <link rel="apple-touch-icon" href="assets/isotipo_charcoal_lg.png" />
+
+  <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/sitio.js" as="script" />
+
+  <link rel="stylesheet" href="assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="assets/legal.css" />
+</head>
+<body>
+
+  <a href="#contenido" class="skip-link" data-es="Saltar al contenido" data-en="Skip to content">Skip to content</a>
+
+  <header>
+  <nav aria-label="Principal">
+    <div class="container nav-inner">
+      <a href="/" class="nav-logo"><picture><source media="(max-width: 560px)" srcset="assets/isotipo.svg" /><img src="assets/logo_white_trans.png" alt="Higerotech — home" /></picture></a>
+      <div class="nav-links" id="nav-links">
+        <a href="/" data-es="Inicio" data-en="Home">Home</a>
+        <a href="privacy.html" aria-current="page"
+           data-es="Privacidad" data-en="Privacy"
+           data-href-es="privacidad.html" data-href-en="privacy.html">Privacy</a>
+        <a href="terms.html"
+           data-es="Términos" data-en="Terms"
+           data-href-es="terminos.html" data-href-en="terms.html">Terms</a>
+        <a href="cookie-notice.html"
+           data-es="Cookies" data-en="Cookies"
+           data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookies</a>
+        <a href="responsible-ai.html"
+           data-es="IA responsable" data-en="Responsible AI"
+           data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">Responsible AI</a>
+      </div>
+      <div class="nav-right">
+        <div class="lang-toggle" role="group" aria-label="Idioma / Language">
+          <button type="button" class="lang-btn" id="btn-es" aria-pressed="false" lang="es">ES</button>
+          <button type="button" class="lang-btn active" id="btn-en" aria-pressed="true" lang="en">EN</button>
+        </div>
+        <button type="button" class="nav-toggle" id="nav-toggle"
+                aria-expanded="false" aria-controls="nav-links"
+                aria-label="Open menu" data-label-open="Abrir menú" data-label-close="Cerrar menú"
+                data-label-open-en="Open menu" data-label-close-en="Close menu">
+          <svg class="ic-open" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="ic-close" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+  </header>
+
+  <main id="contenido">
+
+  <div class="doc-head">
+    <div class="container">
+      <span class="tag">Legal document</span>
+      <h1 class="doc-title">Privacy <span class="accent">Policy</span></h1>
+      <p class="doc-meta">
+        <span><strong>Effective from:</strong> 16 September 2026</span>
+        <span><strong>Version:</strong> 1.0</span>
+        <span><strong>Scope:</strong> higerotech.com</span>
+      </p>
+    </div>
+  </div>
+
+  <article class="doc">
+
+    <div class="nota">
+      <p><strong>The honest summary, with the detail below.</strong> This site sets no cookies,
+      runs no analytics, has no forms and no database, and builds no profile of anyone who visits
+      it. That is not an unfinished task: it is an architectural decision, and you can verify it
+      yourself in the site's source code.</p>
+      <p>What does happen is small, and worth stating precisely: our infrastructure provider sees
+      your IP address for the moment it takes to deliver the page, and if you write to us by
+      email or WhatsApp we keep your message. Nothing else.</p>
+    </div>
+
+    <nav class="indice" aria-label="Document contents">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#controller">Who we are and how to reach us</a></li>
+        <li><a href="#scope">What this policy covers, and what it does not</a></li>
+        <li><a href="#what">What data is processed, and what is not</a></li>
+        <li><a href="#cloudflare">Cloudflare, our infrastructure provider</a></li>
+        <li><a href="#writing">If you write to us</a></li>
+        <li><a href="#bases">Purposes and legal basis</a></li>
+        <li><a href="#retention">How long it is kept</a></li>
+        <li><a href="#transfers">International transfers</a></li>
+        <li><a href="#rights">Your rights and how to exercise them</a></li>
+        <li><a href="#security">Security</a></li>
+        <li><a href="#minors">Minors</a></li>
+        <li><a href="#law">Applicable legal framework</a></li>
+        <li><a href="#changes">Changes and earlier versions</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="controller">1. Who we are and how to reach us</h2>
+
+    <p>The controller of the data described in this policy is
+    <strong>&lt;TODO: registered name&gt;</strong>, tax ID (RIF) <strong>&lt;TODO&gt;</strong>,
+    with registered address at <strong>&lt;TODO&gt;</strong>, Bolivarian Republic of Venezuela,
+    trading as <strong>Higerotech</strong>.</p>
+
+    <p>For anything related to this policy, including the exercise of your rights, write to
+    <a href="mailto:contacto@higerotech.com">contacto@higerotech.com</a>. The person who answers
+    is the person who decides on these matters, so there is no intermediate desk.</p>
+
+    <h2 id="scope">2. What this policy covers, and what it does not</h2>
+
+    <p>This policy covers <strong>the higerotech.com website</strong>: what happens when you visit
+    it and when you contact us through the channels we publish.</p>
+
+    <p><strong>It does not cover the applications we build or operate for our clients.</strong>
+    That distinction is not a technicality — it determines who answers to you:</p>
+
+    <ul>
+      <li>On this site, Higerotech <strong>decides</strong> what data is processed and why. We are
+      the controller, and this policy is our commitment.</li>
+      <li>In a system we build or operate for a client, <strong>the client decides</strong>.
+      Higerotech acts as a processor, on documented instructions and under a data processing
+      agreement. If your data is there, that company is the controller, and its privacy policy
+      applies to you, not this one.</li>
+    </ul>
+
+    <p>If you are not sure which of the two applies to you, write to us and we will tell you.</p>
+
+    <h2 id="what">3. What data is processed, and what is not</h2>
+
+    <h3>What does not exist on this site</h3>
+
+    <ul>
+      <li><strong>No cookies.</strong> None: neither first-party nor third-party. That is why you
+      will not see a consent banner — there would be nothing to consent to.</li>
+      <li><strong>No analytics.</strong> We do not use Google Analytics or any equivalent tool. We
+      do not know how many people visit this site or where they come from.</li>
+      <li><strong>No forms, no accounts.</strong> Nothing to fill in, nothing to register, no
+      password.</li>
+      <li><strong>No third-party resources.</strong> Fonts, images and code are all served from
+      our own domain. No third party receives a request from your browser when this page loads,
+      which means none of them can see your IP address that way.</li>
+      <li><strong>No profiling, no advertising.</strong> We do not track you, segment you, or sell
+      anything to anyone.</li>
+    </ul>
+
+    <h3>What is involved</h3>
+
+    <div class="doc-tabla">
+      <table>
+        <thead>
+          <tr><th>Data</th><th>What it is</th><th>Where it lives</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Language preference</td>
+            <td>If you choose ES or EN, we remember it for your next visit</td>
+            <td>In <strong>your browser's</strong> local storage. It is not a cookie and it
+            travels in no request: our server never sees it, and you can delete it by clearing
+            the site's data in your browser</td>
+          </tr>
+          <tr>
+            <td>IP address</td>
+            <td>Any server needs it to send you a response; it is the address the answer goes to</td>
+            <td>Seen by <strong>Cloudflare</strong>, our infrastructure provider, transiently while
+            it delivers the page (see §4). <strong>We neither log it nor keep it</strong>: our
+            server's technical logs are configured to exclude it, and log retention is not enabled
+            in Cloudflare</td>
+          </tr>
+          <tr>
+            <td>Technical logs</td>
+            <td>Requested path, response code, browser type</td>
+            <td>Used to spot errors and abuse. Without the IP address they cannot identify you.
+            They rotate aggressively: the real window is days</td>
+          </tr>
+          <tr>
+            <td>What you write to us</td>
+            <td>Your name, email, company and the content of your message</td>
+            <td>Only if you choose to write. See §5</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="cloudflare">4. Cloudflare, our infrastructure provider</h2>
+
+    <p>This site is served through <strong>Cloudflare, Inc.</strong>, which acts as a
+    <strong>processor</strong> on our behalf. We say so explicitly because it is the part most
+    sites leave out: however static and self-contained a site may be, someone has to deliver the
+    bytes, and whoever delivers them sees the address they are going to.</p>
+
+    <ul>
+      <li>Cloudflare receives your IP address and the technical details of the connection in order
+      to deliver the page and protect it from abuse.</li>
+      <li>The processing is governed by Cloudflare's <em>Data Processing Addendum</em>, which
+      obliges it to process that data only on our behalf and on our instructions.</li>
+      <li><strong>We have not enabled log retention</strong> in Cloudflare. That is a decision,
+      not an oversight: we could turn it on for better diagnostics and have chosen not to.</li>
+      <li>Cloudflare publishes its own sub-processor list and privacy policy at
+      <code>cloudflare.com</code>.</li>
+    </ul>
+
+    <p>It is the only processor involved in delivering this site. When we add another, it will
+    appear in this section, with its purpose, before it starts operating.</p>
+
+    <h2 id="writing">5. If you write to us</h2>
+
+    <p>We publish an email address and a WhatsApp number instead of a contact form. That reduces
+    the site's technical surface, but <strong>it does not remove the processing</strong>: when you
+    write, we receive and keep your name, your email address or number, your company if you
+    mention it, and the content of your message.</p>
+
+    <p>We use it <strong>only to reply and to carry forward the commercial conversation you
+    started</strong>. We do not add it to any mailing list, we do not send newsletters you did not
+    ask for, and we do not pass it to third parties.</p>
+
+    <p>One thing that is not up to us: email and WhatsApp are third-party services, and their
+    providers process those messages under their own terms. If you need to send us something
+    sensitive, tell us and we will agree on a suitable channel before you send it.</p>
+
+    <h2 id="bases">6. Purposes and legal basis</h2>
+
+    <div class="doc-tabla">
+      <table>
+        <thead>
+          <tr><th>Processing</th><th>Purpose</th><th>Basis</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Page delivery and transient IP at the edge</td>
+            <td>Making the site work and resist abuse</td>
+            <td>Legitimate interest in the security and availability of the service — which is
+            also your interest when you request a page</td>
+          </tr>
+          <tr>
+            <td>Technical logs without IP</td>
+            <td>Detecting errors and anomalous behaviour</td>
+            <td>Legitimate interest. Without the IP address they identify no one</td>
+          </tr>
+          <tr>
+            <td>Language preference</td>
+            <td>Not asking you twice</td>
+            <td>It never leaves your device, so there is no processing on our side</td>
+          </tr>
+          <tr>
+            <td>Prospect correspondence</td>
+            <td>Replying to you and handling your request</td>
+            <td>Pre-contractual performance: managing the relationship you started by writing</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="retention">7. How long it is kept</h2>
+
+    <p>In figures, not in formulas such as "as long as necessary":</p>
+
+    <div class="doc-tabla">
+      <table>
+        <thead>
+          <tr><th>Data</th><th>Period</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>IP address</td>
+            <td><strong>Not kept.</strong> Processed transiently to deliver the response, and not
+            logged</td>
+          </tr>
+          <tr>
+            <td>Technical logs without IP</td>
+            <td>Rotated by size: three 10 MB files. At current traffic the real window is
+            <strong>days</strong></td>
+          </tr>
+          <tr>
+            <td>Prospect correspondence</td>
+            <td><strong>24 months from the last contact.</strong> That is a reasonable margin for
+            resuming a conversation that paused; after that, it is deleted</td>
+          </tr>
+          <tr>
+            <td>Correspondence that led to a contract</td>
+            <td>For the duration of the relationship and then for the period imposed by applicable
+            accounting and tax obligations. That one is not ours to choose</td>
+          </tr>
+          <tr>
+            <td>Language preference</td>
+            <td>Until you clear the site's data in your browser. It is on your device, not ours</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="transfers">8. International transfers</h2>
+
+    <p>Cloudflare runs a global network, so delivering this page may involve processing your IP
+    address outside Venezuelan territory. <strong>We could not promise you otherwise</strong>, and
+    you should be sceptical of any site served by a global network that tells you your data never
+    leaves the country.</p>
+
+    <p>Where those transfers affect people in the European Economic Area or the United Kingdom,
+    they are covered by the mechanisms incorporated into our agreement with Cloudflare: the
+    European Commission's Standard Contractual Clauses and the UK International Data Transfer
+    Addendum.</p>
+
+    <h2 id="rights">9. Your rights and how to exercise them</h2>
+
+    <p>The Venezuelan Constitution grants you, in <strong>article 28</strong>, the right to access
+    the information held about you in registries of any kind, to know its use and purpose, and to
+    request its updating, rectification or destruction where it is inaccurate or unlawfully
+    affects your rights. <strong>Article 60</strong> protects your private life and honour. That
+    is what is known as <em>habeas data</em>, and it is the basis of this section.</p>
+
+    <p>In practice, you can ask us for:</p>
+
+    <ul>
+      <li><strong>Access</strong>: what we hold about you and what we use it for.</li>
+      <li><strong>Rectification</strong>: correcting anything that is wrong.</li>
+      <li><strong>Erasure</strong>: deleting your correspondence before the 24-month period.</li>
+      <li><strong>Objection</strong>: that we stop processing your data for commercial
+      purposes.</li>
+      <li><strong>A copy</strong> of what you sent us, in a readable format.</li>
+    </ul>
+
+    <p><strong>How:</strong> write to
+    <a href="mailto:contacto@higerotech.com">contacto@higerotech.com</a> from the address you are
+    asking about, or give us something that lets us locate the conversation. We answer
+    <strong>within 30 calendar days</strong>. If we cannot meet a request, we will tell you why
+    and what the alternative is.</p>
+
+    <p>We do not charge for handling these requests. If a request were manifestly excessive or
+    repetitive, we would tell you before doing anything, not afterwards.</p>
+
+    <p>If you live in a jurisdiction whose law grants you equivalent rights — the European Union,
+    the United Kingdom, Brazil, Colombia, Mexico, Chile, Argentina or California, among others —
+    you can exercise them through the same channel and the same procedure. We do not keep separate
+    processes depending on where the person asking lives.</p>
+
+    <h2 id="security">10. Security</h2>
+
+    <p>What we do, without embellishment:</p>
+
+    <ul>
+      <li>All traffic is encrypted with TLS.</li>
+      <li>The server does not write to its own file system and runs without unnecessary
+      privileges.</li>
+      <li>The site applies strict security headers and a content policy that prevents loading code
+      from another origin.</li>
+      <li>The site has no database, no sessions and no admin panel. A good part of our security
+      consists of there being nothing to steal.</li>
+      <li>Security checks run automatically on every change to the code.</li>
+    </ul>
+
+    <p><strong>What we will not tell you:</strong> we are not certified under ISO 27001, SOC 2 or
+    PCI DSS, and we will not claim to be until we are. Nor do we promise that no incident is
+    possible. If you find a vulnerability, our disclosure policy is in the
+    <code>SECURITY.md</code> file of the site's public repository.</p>
+
+    <h2 id="minors">11. Minors</h2>
+
+    <p>This site is aimed at companies and professionals, not at minors, and it does not knowingly
+    collect data from children or adolescents. If you believe we have received a minor's data
+    through our contact channels, write to us and we will delete it.</p>
+
+    <h2 id="law">12. Applicable legal framework</h2>
+
+    <p>Precision matters here, because this is a field rich in comfortable claims:</p>
+
+    <ul>
+      <li><strong>Venezuela currently has no general data protection statute</strong>, and no
+      national supervisory authority for the matter. What protects your data are articles 28 and
+      60 of the Constitution and the case law of the Constitutional Chamber of the Supreme Court
+      that develops them, which binds private parties too.</li>
+      <li><strong>We do not claim "GDPR compliance"</strong>, because that claim carries a whole
+      apparatus of formal obligations that a company of this size does not have in place. What we
+      do is <strong>apply its principles</strong> — minimisation, purpose limitation, defined
+      retention, transparency — and describe in this document exactly what happens, which is the
+      substance of the regulation.</li>
+      <li>This policy is governed by Venezuelan law. Its interpretation and any disputes are
+      subject to our
+      <a href="terms.html" data-href-es="terminos.html" data-href-en="terms.html">Terms of
+      Use</a>.</li>
+    </ul>
+
+    <h2 id="changes">13. Changes and earlier versions</h2>
+
+    <p>When we change this policy, the effective date and version number in the header will
+    change. If the change affects what we do with your data — and not merely the wording — we will
+    say so in this section.</p>
+
+    <p>The site is developed in a public repository, so the <strong>full history of this document
+    is auditable</strong>: every change carries its date, its author and its reason. You do not
+    have to take our word for what the previous version said.</p>
+
+    <div class="nota aviso">
+      <p><strong>Prevailing version.</strong> The Spanish version of this policy is the only one
+      that produces legal effects. This English translation is offered for the reader's
+      convenience and, in case of discrepancy, the Spanish text prevails.</p>
+    </div>
+
+    <div class="doc-pie">
+      <p>Higerotech · Privacy Policy · version 1.0, effective from 16 September 2026.</p>
+      <p class="otros">
+        <a href="terms.html" data-href-es="terminos.html" data-href-en="terms.html">Terms of Use</a>
+        <a href="cookie-notice.html" data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookie notice</a>
+        <a href="responsible-ai.html" data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">Responsible AI</a>
+      </p>
+    </div>
+
+  </article>
+
+
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <p class="copy">© <span id="year">2026</span> Higerotech.
+        <span data-es="Todos los derechos reservados." data-en="All rights reserved.">All rights reserved.</span>
+      </p>
+      <nav class="footer-nav" aria-label="Legal">
+        <a href="/" data-es="Inicio" data-en="Home">Home</a>
+        <a href="privacy.html" data-es="Privacidad" data-en="Privacy"
+           data-href-es="privacidad.html" data-href-en="privacy.html">Privacy</a>
+        <a href="terms.html" data-es="Términos" data-en="Terms"
+           data-href-es="terminos.html" data-href-en="terms.html">Terms</a>
+        <a href="cookie-notice.html" data-es="Cookies" data-en="Cookies"
+           data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookies</a>
+        <a href="responsible-ai.html" data-es="IA responsable" data-en="Responsible AI"
+           data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">Responsible AI</a>
+        <a href="mailto:contacto@higerotech.com">contacto@higerotech.com</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="assets/sitio.js"></script>
+
+</body>
+</html>

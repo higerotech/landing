@@ -1,16 +1,55 @@
 /* ── Arnés de las pruebas unitarias ──────────────────────────────────────
-   Carga el `index.html` REAL, no una copia ni un fixture reducido. El JS vive
-   inline (ADR-0003) y no se puede importar, pero sí ejecutarlo en su archivo
-   verdadero, y eso elimina de raíz que el test y el artefacto desplegado se
-   desvíen.
+   Carga el `index.html` REAL y el `assets/sitio.js` REAL, no copias ni
+   fixtures reducidos. Eso elimina de raíz que el test y el artefacto
+   desplegado se desvíen.
+
+   Desde ADR-0007 el JS ya no está dentro del HTML, y el arnés no lo importa:
+   lo INSERTA en el `index.html` real, en el sitio exacto donde el navegador
+   pondría su `<script src>` —al final del `<body>`—, y deja que jsdom lo
+   compile. Se hace así, y no con `resources: 'usable'`, por tres razones que
+   no son de estilo:
+
+   1. El documento se parsea con `url: 'https://higerotech.com/'`. Con la carga
+      de recursos activada, jsdom saldría a buscar el script A ESA URL, por red.
+   2. Esa carga es asíncrona, y `cargarDOM()` es sincrónico: los tests afirman
+      sobre el DOM en cuanto vuelve.
+   3. Un script externo que lanza no pasa por `jsdomError`, y ese es el
+      mecanismo que convierte «el script lanzó» en un test rojo (U1.1, U1.5).
+
+   El texto insertado es el del archivo, byte a byte: `tests/cobertura.mjs`
+   depende de que el script compilado y `assets/sitio.js` tengan la misma
+   longitud para alinear los rangos de V8.
 
    Diseño en `docs/04-testing/unit-tests.md`. */
 
 import { readFileSync } from 'node:fs'
 import { JSDOM, VirtualConsole } from 'jsdom'
 
-const RUTA_HTML = new URL('../../index.html', import.meta.url)
-const HTML = readFileSync(RUTA_HTML, 'utf8')
+const RUTA_JS = new URL('../../assets/sitio.js', import.meta.url)
+const JS = readFileSync(RUTA_JS, 'utf8')
+
+/* Las páginas legales son ocho archivos que comparten el mismo script y el
+   mismo cromo (ADR-0008), así que el arnés tiene que poder cargar cualquiera de
+   ellas y no solo la landing. Se leen a demanda y se memorizan: un mismo test
+   puede cargar la misma página varias veces. */
+const cache = new Map()
+
+function leerPagina (archivo) {
+  if (!cache.has(archivo)) {
+    cache.set(archivo, readFileSync(new URL(`../../${archivo}`, import.meta.url), 'utf8'))
+  }
+  return cache.get(archivo)
+}
+
+const HTML = leerPagina('index.html')
+
+/* La etiqueta que se sustituye por el script ya inlinado. Es una constante y
+   no una expresión regular a propósito: si alguien cambia la forma de cargar
+   el JS —añade `defer`, lo mueve al `<head>`, le pone otro nombre—, esto deja
+   de casar y TODAS las unitarias fallan con un mensaje que dice por qué. Una
+   regex permisiva se lo tragaría y el arnés seguiría midiendo un sitio que ya
+   no existe. */
+const ETIQUETA = '<script src="assets/sitio.js"></script>'
 
 /** Doble de `IntersectionObserver`: jsdom no lo trae. Registra lo observado y
  *  deja que el test dispare las entradas cuando quiera. */
@@ -42,18 +81,22 @@ export function crearIOFalso () {
 
 /**
  * @param {object}   [opciones]
+ * @param {string}   [opciones.archivo]    Página a cargar. Por defecto `index.html`;
+ *   las pruebas de las páginas legales pasan `privacidad.html` y compañía.
  * @param {string}   [opciones.url]        URL del documento; controla `location.search`.
  * @param {boolean}  [opciones.conIO]      Inyecta el doble de IntersectionObserver.
  * @param {object}   [opciones.sustituir]  `{de, a}` aplicado al HTML antes de parsear.
  * @param {Function} [opciones.alPreparar] Recibe `window` antes de que el script corra.
  */
 export function cargarDOM ({
+  archivo = 'index.html',
   url = 'https://higerotech.com/',
   conIO = false,
   sustituir = null,
   alPreparar = () => {}
 } = {}) {
-  let html = HTML
+  let html = leerPagina(archivo)
+  let js = JS
 
   if (sustituir) {
     /* Guarda contra el test vacuo: si el fuente se reescribe y el reemplazo
@@ -63,16 +106,25 @@ export function cargarDOM ({
        Se comprueba que el patrón CASE, no que el resultado cambie: sustituir
        un texto por sí mismo es legítimo —sirve para afirmar que sigue ahí— y
        comparar los resultados lo daría por fallido. */
-    const casa = sustituir.de instanceof RegExp
-      ? new RegExp(sustituir.de.source, sustituir.de.flags).test(html)
-      : html.includes(sustituir.de)
+    const casaEn = texto => sustituir.de instanceof RegExp
+      ? new RegExp(sustituir.de.source, sustituir.de.flags).test(texto)
+      : texto.includes(sustituir.de)
 
-    if (!casa) {
-      throw new Error(`La sustitución no casó con nada: ${sustituir.de}`)
-    }
-
-    html = html.replace(sustituir.de, sustituir.a)
+    /* Hay dos fuentes desde ADR-0007 y el patrón puede apuntar a cualquiera:
+       U1.5 rompe un `id` del marcado, U8 sustituye el literal de `CONTACT` en
+       el script. Se aplica en el que case, y si no casa en ninguno se lanza:
+       ese guardia es lo que impide un test vacuo. */
+    if (casaEn(html)) html = html.replace(sustituir.de, sustituir.a)
+    else if (casaEn(js)) js = js.replace(sustituir.de, sustituir.a)
+    else throw new Error(`La sustitución no casó con nada: ${sustituir.de}`)
   }
+
+  /* El JS entra donde estaba su etiqueta: mismo momento de ejecución que en el
+     navegador —DOM ya parseado— y mismo texto que el archivo publicado. */
+  if (!html.includes(ETIQUETA)) {
+    throw new Error(`${archivo} ya no carga el script con «${ETIQUETA}»: el arnés no sabe dónde insertarlo`)
+  }
+  html = html.replace(ETIQUETA, `<script>${js}</script>`)
 
   /* Sin esto, una excepción dentro del script inline se traga en silencio y el
      test pasa igual. Es el mecanismo que convierte «el script lanzó» en rojo. */
@@ -104,15 +156,16 @@ export function cargarDOM ({
 
          Se comparte el MISMO objeto `__stryker__` con la ventana —no una
          copia— para que lo que el script registre dentro aparezca fuera. */
-      if (HTML.includes('stryMutAct_')) {
+      if (estaInstrumentado()) {
         globalThis.__stryker__ ??= {}
         win.__stryker__ = globalThis.__stryker__
         win.process = { env: process.env }
       }
 
-      /* jsdom no implementa matchMedia y la línea 928 de index.html lo llama
-         sin guarda. Sin este stub el script muere entero y TODOS los tests
-         fallarían por un motivo que no existe en ningún navegador real. */
+      /* jsdom no implementa matchMedia y `assets/sitio.js` lo llama sin guarda
+         al crear `mqEscritorio`. Sin este stub el script muere entero y TODOS
+         los tests fallarían por un motivo que no existe en ningún navegador
+         real. */
       win.matchMedia = consulta => {
         const mq = {
           media: consulta,
@@ -159,13 +212,26 @@ export function cargarDOM ({
   }
 }
 
-/** Texto del fuente sin parsear, para las aserciones de contrato sobre el archivo. */
+/** Texto de `index.html` sin parsear, para las aserciones de contrato sobre el
+ *  marcado y sobre el CSS, que sigue viviendo dentro (ADR-0003). */
 export function fuente () {
   return HTML
 }
 
+/** Texto de `assets/sitio.js` sin parsear. Separado de `fuente()` a propósito:
+ *  una prueba que afirma sobre el script debe decir que mira el script. */
+export function fuenteJS () {
+  return JS
+}
+
+/** Texto sin parsear de cualquier página publicada. Para las aserciones de
+ *  contrato sobre las ocho páginas legales. */
+export function fuenteDe (archivo) {
+  return leerPagina(archivo)
+}
+
 /* ¿Está el fuente instrumentado por Stryker?
-   Durante una ejecución de mutation testing, Stryker reescribe `index.html`
+   Durante una ejecución de mutation testing, Stryker reescribe `assets/sitio.js`
    en un sandbox e inserta sus interruptores:
 
      whatsapp: stryMutAct_9fa48("1") ? "" : (stryCov_9fa48("1"), '13235543854')
@@ -180,5 +246,5 @@ export function fuente () {
    entorno de Stryker: así el día que cambie el nombre de la variable esto
    sigue funcionando, y quien lea el código ve POR QUÉ se salta. */
 export function estaInstrumentado () {
-  return HTML.includes('stryMutAct_')
+  return JS.includes('stryMutAct_') || HTML.includes('stryMutAct_')
 }

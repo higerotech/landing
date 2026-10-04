@@ -22,20 +22,31 @@ gerente de operaciones, dueño de empresa mediana) en una conversación de diagn
 ## Alcance
 
 **Incluye**
-- Página única, bilingüe ES/EN, en modo oscuro, con las siete secciones de contenido:
+- Página de inicio bilingüe ES/EN, en modo oscuro, con las siete secciones de contenido:
   dolores del contexto, servicios, metodología AI-DLC, arquitectura Edge-First, cumplimiento,
   valores y llamada a la acción.
+- **Cuatro documentos legales, un archivo por idioma** (ADR-0008): política de privacidad,
+  términos de uso, aviso de cookies y política de IA responsable. Añadidos el 2026-09-16.
+  **El sitio deja de ser una página única**: son nueve páginas. La restricción que sigue viva es
+  la de ADR-0003 —sin build y sin dependencias de paquetes—, no la de «un solo archivo», que
+  ADR-0007 y ADR-0008 dejaron atrás por motivos escritos.
 - Empaquetado reproducible en Docker sobre nginx, con configuración endurecida versionada.
 - Metadatos de indexación y previsualización al compartir (Open Graph, JSON-LD, sitemap).
 - Documentación AI-DLC del propio repositorio.
 
 **No incluye (no-scope)**
 - Backend, base de datos, API o cualquier estado en servidor.
-- Formulario de contacto. El contacto es por `mailto:` y WhatsApp — sin formulario no hay
-  datos personales que custodiar, ni validación de entrada, ni CAPTCHA, ni cumplimiento
-  de tratamiento de datos. Es una decisión, no una carencia.
+- Formulario de contacto. El contacto es por `mailto:` y WhatsApp: sin formulario no hay
+  validación de entrada que proteger, ni CAPTCHA, ni superficie de inyección. Es una decisión,
+  no una carencia.
+  **Corregido el 2026-09-16:** la versión anterior de esta línea añadía «ni datos personales que
+  custodiar, ni cumplimiento de tratamiento de datos», y ese salto no se sostiene. El canal de
+  contacto existe, y quien escribe envía su nombre, su correo y su empresa. Quitar el formulario
+  eliminó la validación de entrada, **no el tratamiento**. Ver `data-classification.md`
+  §Conclusión primero y la política de privacidad publicada.
 - Analítica y cookies. El sitio no emite ninguna cookie; por eso tampoco necesita banner
-  de consentimiento.
+  de consentimiento. Desde el 2026-09-16 eso está publicado y es verificable por el visitante:
+  ver `cookies.html`, cuya promesa comprueban E11.5 y E11.7.
 - Blog, casos de estudio o CMS.
 - Terminación TLS y borde de red (viven fuera de este repositorio).
 
@@ -89,8 +100,10 @@ mindmap
   de supply chain que hoy es exactamente cero.
 - **Sin recursos de terceros.** Todo same-origin (ADR-0004). Habilita una CSP cerrada y
   evita filtrar IPs de visitantes a terceros.
-- **Un solo archivo HTML.** El CSS y el JS viven dentro de `index.html` (ADR-0003). Se
-  acepta el coste: obliga a `'unsafe-inline'` en la CSP.
+- **Un solo archivo HTML.** El CSS vive dentro de `index.html` (ADR-0003). Se acepta el
+  coste: obliga a `'unsafe-inline'` en `style-src`. El JS salió a `assets/sitio.js` el
+  2026-09-16 (ADR-0007), cuando las páginas legales obligaron a elegir entre extraerlo o
+  tener cinco copias del mismo script; `script-src` quedó en `'self'`.
 - El entorno de destino es un único host con Docker; no hay orquestador ni réplica.
 
 **Supuestos**

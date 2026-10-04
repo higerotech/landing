@@ -1,6 +1,6 @@
 # Mutation testing — Landing corporativa Higerotech
 
-* **Estado:** **implementado** — 92,36 %, umbral en 90
+* **Estado:** **implementado** — 92,09 %, umbral en 90 (remedido el 2026-09-16)
 * **Fecha:** 2026-07-31
 * **Decisores:** Jeremi Alcalá
 * **Fase AI-DLC:** 04-testing
@@ -23,10 +23,11 @@ dos preguntas distintas.
 
 | | |
 |---|---|
-| Mutantes | 144 |
-| Muertos | **133** |
-| Supervivientes | 11 |
-| Score | **92,36 %** |
+| Mutantes | 177 — eran 144 hasta el 2026-09-16 |
+| Muertos | **163** |
+| Supervivientes | 14 |
+| Score | **92,09 %** |
+| Archivo mutado | `assets/sitio.js` — era `index.html` hasta **ADR-0007** (2026-09-16). El score no se movió: mismos 144 mutantes, mismos 133 muertos |
 | Umbral que rompe | **90** |
 
 ## Lo que encontró: cinco huecos reales
@@ -42,7 +43,31 @@ Ninguno era teórico.
 
 El score subió de **88,19 % a 92,36 %**.
 
-## Los 11 supervivientes: residuo estructural, no huecos
+## Segunda ronda (2026-09-16): tres huecos más, y un gate que hizo su trabajo
+
+Las páginas legales (ADR-0008) añadieron al script el modo de idioma fijo y el intercambio de
+`href` por idioma. Con 33 mutantes nuevos, el score **cayó a 89,83 % y el gate falló** — es la
+primera vez que rompe por código nuevo, y es exactamente para lo que está.
+
+De los 18 supervivientes de esa ejecución, 11 eran los de siempre. Los otros siete eran del
+código nuevo, y tres señalaban huecos de prueba reales:
+
+| Hueco | Por qué pasaba inadvertido | Cerrado con |
+|---|---|---|
+| **Pulsar el idioma ya activo navegaba** | Cambiar `IDIOMA_FIJO && lang !== actual` por `true` —o el `&&` por `||`— hacía que pulsar ES estando ya en la versión castellana recargase la página sola. Ninguna prueba pulsaba el botón del idioma activo: todas probaban el cambio | **U13.11** |
+| **El destino de los enlaces no cambiaba** | Vaciar el bucle de `data-href-*` dejaba los enlaces legales del pie apuntando al castellano con la etiqueta en inglés. U13.10 comprobaba que los atributos existan y que sus destinos existan, pero **nadie comprobaba que el `href` cambie** | **U13.12** |
+| **La preferencia de idioma no se guardaba** | Anular la condición de persistencia dejaba de escribir en `localStorage`. Solo estaba probado el lado negativo —U13.5 exige que una página de idioma fijo NO pise la preferencia— y sin el positivo, «no persistir nunca» pasaba todas las pruebas | **U13.13** |
+
+El tercero es el más instructivo, y repite el patrón de `idiomaInicial` de la primera ronda:
+**probar solo una mitad de una condición deja la otra sin red**. Ahí fue la defensa en profundidad
+la que enmascaraba el fallo; aquí, una aserción negativa sin su positiva.
+
+Tras cerrarlos: **92,09 %**, 163 de 177 muertos, 14 supervivientes. El score baja tres centésimas
+respecto al 92,36 % anterior porque el denominador creció más que los mutantes que se pudieron
+matar; los tres supervivientes nuevos que quedan son de la misma familia estructural que los 11
+de abajo —guardas `isConnected` y literales que el arnés no puede distinguir—.
+
+## Los 11 supervivientes de la primera ronda: residuo estructural, no huecos
 
 Ninguno es una prueba que falte. Se dejan documentados para que nadie los persiga en balde:
 
@@ -73,9 +98,10 @@ era distinta y ninguna se adivinaba desde el mensaje de error:
 
 ### Las pruebas que se saltan bajo instrumentación
 
-Seis pruebas afirman sobre el **texto del fuente** —que exista la regla `[hidden]`, que el
+Varias pruebas afirman sobre el **texto del fuente** —que exista la regla `[hidden]`, que el
 `@font-face` inlinado coincida con `fonts.css`, que el número sea solo dígitos—. Stryker reescribe
-`index.html` insertando sus interruptores:
+`assets/sitio.js` —`index.html` hasta ADR-0007, ver `stryker.config.json`— insertando sus
+interruptores:
 
 ```js
 whatsapp: stryMutAct_9fa48("1") ? "" : (stryCov_9fa48("1"), '13235543854')
@@ -107,12 +133,15 @@ actividad durante 60 días, sin avisar. Por eso el workflow también acepta `wor
 
 ## Por qué el umbral es 90 y no el 60 de la plantilla
 
-Con el techo estructural en 92,36 %, un 60 % **no podría fallar nunca**: sería otro gate
+Con el techo estructural en torno al 92 %, un 60 % **no podría fallar nunca**: sería otro gate
 decorativo, de los que este repositorio lleva semanas desmontando.
 
-El 90 deja dos puntos de holgura. Y aquí se puede apretar más que en otros gates porque **la
-medición es determinista**: las dos ejecuciones dieron exactamente 144 mutantes y el score solo
-se movió al cambiar las pruebas. No hay ruido que absorber, al contrario que en el presupuesto de
+El 90 deja unos dos puntos de holgura. Y aquí se puede apretar más que en otros gates porque **la
+medición es determinista**: el número de mutantes solo cambia cuando cambia el código, y el score
+solo cuando cambian las pruebas. No hay ruido que absorber, al contrario que en el presupuesto de
 rendimiento, donde el rango de 270 ms obligó a tomar medianas.
 
-Verificado que rompe: con el umbral en 95 y un score de 92,36, sale con código 1.
+Verificado que rompe **dos veces**: con el umbral en 95 y un score de 92,36 salió con código 1, y
+el 2026-09-16 rompió de verdad con un 89,83 % por código nuevo sin probar (ver §Segunda ronda).
+Esa segunda vez es la que demuestra que el umbral está donde tiene que estar: con el 60 % de la
+plantilla, tres huecos de prueba reales habrían entrado sin que nadie los mirara.

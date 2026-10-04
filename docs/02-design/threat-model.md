@@ -136,7 +136,7 @@ Escala 1–10 por criterio; **Score = media**. Umbral de atención obligatoria: 
 | **T3** | CTA de WhatsApp apuntando a `https://wa.me/` sin número | 7 | 10 | 10 | 8 | 1 | **7,2** | ✅ Cerrado | `CONTACT.whatsapp`. **Su mitigación tenía un defecto propio hasta el 2026-07-31**: ver abajo |
 | **T16** | Caída del sitio no detectada por ausencia de alertas | 8 | 8 | 7 | 7 | 4 | **6,8** | 🔴 **Abierto** | Ninguno. Gate 5 no superado · A09 |
 | **T5** | Recurso de terceros (Google Fonts) comprometido o caído | 8 | 3 | 2 | 9 | 6 | **5,6** | ✅ Cerrado | Fuentes autoalojadas · ADR-0004 |
-| **T4** | XSS aprovechando `'unsafe-inline'` en la CSP | 9 | 2 | 3 | 8 | 6 | **5,6** | ⚠️ **Aceptado** | Sin vector de entrada hoy. Disparador de revisión · ADR-0003 |
+| **T4** | XSS aprovechando `'unsafe-inline'` en la CSP | 9 | 2 | 3 | 8 | 6 | **5,6** | ⚠️ **Aceptado, medio cerrado** | Solo `style-src` desde el 2026-09-16: el JS salió a `assets/sitio.js` y `script-src` quedó en `'self'` · ADR-0007. Sigue sin vector de entrada |
 | **T2** | Enmarcado del sitio para clickjacking o suplantación | 6 | 4 | 5 | 6 | 5 | **5,2** | ✅ Cerrado | `X-Frame-Options: DENY` + `frame-ancestors 'none'` |
 | **T15** | Soft 404: cualquier ruta devolvía 200 con la landing | 4 | 10 | 8 | 3 | 2 | **5,4** | ✅ Cerrado | `try_files … =404` + página 404 propia |
 | **T13** | Fuga de la IP del visitante a Google al cargar fuentes | 3 | 10 | 1 | 5 | 8 | **5,4** | ✅ Cerrado | Fuentes autoalojadas · ADR-0004 |
@@ -236,7 +236,9 @@ El impacto, en cambio, es idéntico, y de ahí que aun así supere el umbral de 
 | T1 | `include security-headers.conf` en cada `location` | `nginx.conf` | A02 | Job `headers` del pipeline; `curl -sI` en 4 rutas |
 | T2 | `X-Frame-Options: DENY`, `frame-ancestors 'none'` | `security-headers.conf` | A02 | Intento de iframe bloqueado (comprobado) |
 | T3 | Constante única + ocultación del botón sin número + regla `[hidden]` en la hoja de estilos | `index.html` `CONTACT` y su CSS | — | **E6.4** de las E2E, con cascada real. La verificación anterior —`wa-cta.hidden === true`— no servía: ver §T3 |
-| T4 | CSP cerrada salvo `'unsafe-inline'`; riesgo aceptado | `security-headers.conf` | A05 | ADR-0003 §Disparador de revisión |
+| T4 | CSP cerrada salvo `'unsafe-inline'` en `style-src`; `script-src 'self'` desde ADR-0007 | `security-headers.conf`, `cloudflare/_headers` | A05 | **U11.8** comprueba que no quede script inline ni manejador `on*=` en el marcado; E5.1 lo confirma en navegador |
+| T17 | Las ocho páginas legales comparten el script, que desreferencia cinco `id` sin guarda | `privacidad.html` y sus siete hermanas | — | **U13.1** exige los cinco `id` en cada una; **U13.2** carga cada página y comprueba que el script llega al final; **E11.8** las lee sin JavaScript |
+| Nuevo · registro de IP | `log_format sin_ip` en `nginx.conf`: el registro no incluye la dirección IP ni `X-Forwarded-For` | `nginx.conf` | — | **U12.6**. Sostiene una afirmación de la política de privacidad publicada, así que su regresión es una declaración falsa, no solo un cambio de configuración |
 | T5, T13 | Fuentes autoalojadas; cero terceros | `assets/fonts/` | A03, A08 | Sin peticiones cross-origin en la pestaña de red |
 | T6 | `server_tokens off` | `nginx.conf` | A02 | Job del pipeline verifica la cabecera `Server` |
 | T7 | `<noscript>` + rama sin observer + `prefers-reduced-motion` | `index.html` | A10 | Pendiente prueba E2E · Gate 3 |
@@ -254,7 +256,7 @@ Se listan aparte para que no se confundan con controles cumplidos.
 
 | ID | Riesgo | Razón de aceptación | Disparador de revisión |
 |---|---|---|---|
-| T4 | CSP con `'unsafe-inline'` | No hay entrada de usuario que llegue al DOM | Añadir formulario, buscador o contenido de CMS |
+| T4 | CSP con `'unsafe-inline'` **en `style-src`** (el de `script-src` se eliminó con ADR-0007) | No hay entrada de usuario que llegue al DOM | Añadir formulario, buscador o contenido de CMS; o que el CSS crezca hasta justificar extraerlo, que cerraría T4 del todo |
 | T9 | HTTP plano borde→nginx | Tráfico interno del host, no atraviesa red no confiable. Desde el 2026-07-31 solo alcanza al camino de contingencia | Separar el borde a otra máquina |
 | T18 | Token de despliegue en el CI | Alcance mínimo y rotable; un despliegue automatizado y auditable vale más que el riesgo de la credencial. La alternativa —desplegar a mano— es la que produjo la deriva de dos semanas | Que el token necesite permiso sobre DNS, o que aparezca un segundo consumidor |
 | T10 | Sin rate limiting | Contenido estático cacheable; el coste de saturar supera el beneficio | Evidencia de abuso en los logs |

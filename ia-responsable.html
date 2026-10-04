@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<!-- Página de idioma fijo: el cuerpo está escrito solo en castellano y su par
+     inglés es `responsible-ai.html`. `data-idioma-fijo` le dice a assets/sitio.js que el
+     conmutador ES/EN debe NAVEGAR en vez de reescribir el DOM, y `data-href-*`
+     le dice a dónde. El `hreflang` lleva las URL canónicas —sin extensión, las
+     del Worker— y no sirve para navegar: por el camino de nginx dan 404. -->
+<html lang="es" data-idioma-fijo data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de IA Responsable — Higerotech</title>
+  <meta name="description" content="No entrenamos modelos con datos de clientes, ni con sus derivados anonimizados. Toda salida de IA es apoyo a una decisión humana, nunca la decisión." />
+  <meta name="theme-color" content="#15181B" />
+
+  <link rel="canonical" href="https://higerotech.com/ia-responsable" />
+  <link rel="alternate" hreflang="es" href="https://higerotech.com/ia-responsable" />
+  <link rel="alternate" hreflang="en" href="https://higerotech.com/responsible-ai" />
+  <link rel="alternate" hreflang="x-default" href="https://higerotech.com/ia-responsable" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Higerotech" />
+  <meta property="og:locale" content="es_VE" />
+  <meta property="og:url" content="https://higerotech.com/ia-responsable" />
+  <meta property="og:title" content="Política de IA Responsable — Higerotech" />
+  <meta property="og:description" content="No-entrenamiento con datos de cliente, revisión humana obligatoria y reparto explícito de responsabilidades en modelos AML/CFT." />
+  <meta property="og:image" content="https://higerotech.com/assets/og-card.png" />
+
+  <link rel="icon" type="image/svg+xml" href="assets/isotipo.svg" />
+  <link rel="apple-touch-icon" href="assets/isotipo_charcoal_lg.png" />
+
+  <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/sitio.js" as="script" />
+
+  <link rel="stylesheet" href="assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="assets/legal.css" />
+</head>
+<body>
+
+  <a href="#contenido" class="skip-link" data-es="Saltar al contenido" data-en="Skip to content">Saltar al contenido</a>
+
+  <header>
+  <nav aria-label="Principal">
+    <div class="container nav-inner">
+      <a href="/" class="nav-logo"><picture><source media="(max-width: 560px)" srcset="assets/isotipo.svg" /><img src="assets/logo_white_trans.png" alt="Higerotech — inicio" /></picture></a>
+      <div class="nav-links" id="nav-links">
+        <a href="/" data-es="Inicio" data-en="Home">Inicio</a>
+        <a href="privacidad.html"
+           data-es="Privacidad" data-en="Privacy"
+           data-href-es="privacidad.html" data-href-en="privacy.html">Privacidad</a>
+        <a href="terminos.html"
+           data-es="Términos" data-en="Terms"
+           data-href-es="terminos.html" data-href-en="terms.html">Términos</a>
+        <a href="cookies.html"
+           data-es="Cookies" data-en="Cookies"
+           data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookies</a>
+        <a href="ia-responsable.html" aria-current="page"
+           data-es="IA responsable" data-en="Responsible AI"
+           data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">IA responsable</a>
+      </div>
+      <div class="nav-right">
+        <div class="lang-toggle" role="group" aria-label="Idioma / Language">
+          <button type="button" class="lang-btn active" id="btn-es" aria-pressed="true" lang="es">ES</button>
+          <button type="button" class="lang-btn" id="btn-en" aria-pressed="false" lang="en">EN</button>
+        </div>
+        <button type="button" class="nav-toggle" id="nav-toggle"
+                aria-expanded="false" aria-controls="nav-links"
+                aria-label="Abrir menú" data-label-open="Abrir menú" data-label-close="Cerrar menú"
+                data-label-open-en="Open menu" data-label-close-en="Close menu">
+          <svg class="ic-open" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="ic-close" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+  </header>
+
+  <main id="contenido">
+
+  <div class="doc-head">
+    <div class="container">
+      <span class="tag">Documento legal</span>
+      <h1 class="doc-title">Política de <span class="accent">IA Responsable</span></h1>
+      <p class="doc-meta">
+        <span><strong>Vigente desde:</strong> 16 de septiembre de 2026</span>
+        <span><strong>Versión:</strong> 1.0</span>
+        <span><strong>Ámbito:</strong> Higerotech y sus proyectos</span>
+      </p>
+    </div>
+  </div>
+
+  <article class="doc">
+
+    <div class="nota">
+      <p><strong>Los dos compromisos que resumen este documento:</strong> no usamos los datos de
+      un cliente para entrenar, afinar ni desarrollar modelos —y esa prohibición alcanza también a
+      los derivados anonimizados o agregados—, y toda salida de un sistema de IA es
+      <strong>apoyo a una decisión humana</strong>, nunca la decisión.</p>
+    </div>
+
+    <nav class="indice" aria-label="Contenido del documento">
+      <h2>Contenido</h2>
+      <ol>
+        <li><a href="#principios">Principios</a></li>
+        <li><a href="#donde">Dónde usamos IA</a></li>
+        <li><a href="#datos">Qué no hacemos con los datos de un cliente</a></li>
+        <li><a href="#humano">Revisión humana obligatoria</a></li>
+        <li><a href="#aml">Modelos de perfilado y AML/CFT</a></li>
+        <li><a href="#trazabilidad">Trazabilidad</a></li>
+        <li><a href="#proveedores">Proveedores de modelos</a></li>
+        <li><a href="#limites">Limitaciones y qué no garantizamos</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="principios">1. Principios</h2>
+
+    <p>Higerotech se presenta como consultora AI-First. Esa etiqueta obliga a decir con precisión
+    qué hacemos con la inteligencia artificial y, sobre todo, qué no hacemos con los datos que nos
+    confían.</p>
+
+    <p>Los principios que aplicamos: <strong>supervisión humana</strong> de toda salida con
+    efectos; <strong>minimización</strong> —el modelo recibe el dato mínimo necesario—;
+    <strong>trazabilidad</strong> de qué produjo cada resultado; <strong>transparencia</strong>
+    sobre dónde interviene un sistema automático; y <strong>responsabilidad</strong>, en el
+    sentido concreto de que siempre hay una persona identificable que responde de la decisión.</p>
+
+    <p>Los adoptamos como <strong>marco voluntario</strong>. No declaramos cumplimiento de ninguna
+    norma de IA: el reglamento europeo de inteligencia artificial no nos resulta aplicable hoy, y
+    en Venezuela el instrumento nacional en materia de IA no tiene rango de ley vigente. Decir lo
+    contrario sería cómodo y falso.</p>
+
+    <h2 id="donde">2. Dónde usamos IA</h2>
+
+    <p>En dos lugares distintos, y conviene no confundirlos:</p>
+
+    <ul>
+      <li><strong>En nuestro propio proceso de desarrollo</strong>, como herramienta de asistencia
+      para escribir, revisar y documentar código. El resultado pasa por revisión humana y por las
+      mismas verificaciones automáticas que cualquier otro cambio.</li>
+      <li><strong>En los sistemas que construimos para clientes</strong>, cuando el proyecto lo
+      requiere: automatización de procesos, clasificación de documentos, detección de anomalías,
+      modelos de perfilado de transacciones. Ahí la IA es parte del producto, y su gobierno se
+      pacta en el contrato del proyecto.</li>
+    </ul>
+
+    <h2 id="datos">3. Qué no hacemos con los datos de un cliente</h2>
+
+    <div class="nota aviso">
+      <p><strong>No usamos los datos de un cliente para entrenar, afinar, evaluar ni desarrollar
+      modelos de inteligencia artificial</strong>, ni propios ni de terceros. La prohibición
+      alcanza a los datos <strong>en cualquier forma derivada</strong>: conjuntos anonimizados,
+      seudonimizados, agregados, datos sintéticos derivados de datos reales y representaciones
+      vectoriales.</p>
+    </div>
+
+    <p>El cierre sobre los derivados no es retórico. Sin él, «lo anonimizamos y entrenamos con
+    eso» sería compatible con la letra del compromiso, y es exactamente la práctica que el
+    compromiso quiere impedir.</p>
+
+    <p>Tampoco introducimos datos productivos de un cliente en herramientas de IA de terceros.
+    Cuando hace falta trabajar sobre datos reales, se hace en el entorno del cliente, con acceso
+    nominal y registro de la actividad; los entornos de desarrollo y prueba usan datos sintéticos
+    o anonimizados de forma irreversible.</p>
+
+    <p>Esto último es, además, la razón por la que existe una cláusula equivalente en nuestro
+    acuerdo de tratamiento de datos: en Venezuela, el apoderamiento y la revelación indebida de
+    datos personales son <strong>delitos con pena de prisión</strong>, y la conducta típica es
+    precisamente copiar datos productivos a un portátil o pegarlos en una herramienta ajena. La
+    regla protege al cliente y protege a quien tiene las credenciales.</p>
+
+    <h2 id="humano">4. Revisión humana obligatoria</h2>
+
+    <p>Las salidas de los sistemas de IA que entregamos tienen <strong>carácter consultivo y no
+    vinculante</strong>. El cliente conserva la decisión final y se compromete a no usarlas sin
+    revisión humana cuando la decisión tenga efectos jurídicos o económicos sobre una persona:
+    denegar una operación, bloquear una cuenta, rechazar una solicitud, calificar a alguien como
+    riesgo.</p>
+
+    <p>Diseñamos los sistemas para que esa revisión sea posible de verdad: con el dato a la vista,
+    el motivo del resultado y la trazabilidad de quién decidió qué y cuándo. Una revisión humana
+    que solo puede pulsar «aceptar» no es una revisión.</p>
+
+    <h2 id="aml">5. Modelos de perfilado y AML/CFT</h2>
+
+    <p>Construimos modelos que perfilan transacciones para prevención de legitimación de capitales
+    y financiamiento al terrorismo. El reparto de responsabilidades es explícito, porque es donde
+    se concentra el riesgo regulatorio:</p>
+
+    <div class="doc-tabla">
+      <table>
+        <thead>
+          <tr><th>Responsabilidad</th><th>De quién</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Construir el motor, documentarlo y hacerlo auditable</td><td>Higerotech</td></tr>
+          <tr><td>Fijar umbrales, reglas y parámetros de riesgo</td><td>El cliente</td></tr>
+          <tr><td>Decidir sobre cada alerta y ejecutar la decisión</td><td>El cliente</td></tr>
+          <tr><td>Reportar al supervisor y atender sus requerimientos</td><td>El cliente</td></tr>
+          <tr><td>Explicar la decisión a la persona afectada</td><td>El cliente</td></tr>
+          <tr><td>Obtener cualquier autorización o no objeción del supervisor</td><td>El cliente</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>La razón es jurídica y no negociable: el sujeto obligado por la normativa de prevención es
+    <strong>la entidad regulada</strong>, no su proveedor tecnológico. Higerotech no está
+    autorizada como institución del sector bancario ni presta servicios financieros por cuenta
+    propia, y <strong>no garantiza la aprobación regulatoria</strong> de ningún desarrollo. Quien
+    prometa lo contrario está vendiendo algo que no puede entregar.</p>
+
+    <h2 id="trazabilidad">6. Trazabilidad</h2>
+
+    <p>Los sistemas con IA que entregamos registran qué entrada produjo qué salida, con qué
+    versión del modelo o de las reglas, y en qué momento. Sin eso no hay auditoría posible, ni
+    forma de explicar una decisión seis meses después, ni manera de demostrar que el sistema
+    hacía lo que decía hacer.</p>
+
+    <h2 id="proveedores">7. Proveedores de modelos</h2>
+
+    <p>Cuando un desarrollo usa modelos de terceros, seleccionamos únicamente proveedores cuyas
+    condiciones contractuales <strong>excluyan el uso de las entradas para entrenamiento</strong>,
+    y los declaramos como subencargados en el acuerdo de tratamiento de datos del proyecto, con su
+    finalidad y su ubicación.</p>
+
+    <p>Verificamos esa exclusión antes de prometerla. Un compromiso de no-entrenamiento que
+    depende de una herramienta que sí entrena con lo que recibe no es un compromiso: es una
+    infracción con buena intención.</p>
+
+    <h2 id="limites">8. Limitaciones y qué no garantizamos</h2>
+
+    <ul>
+      <li><strong>No garantizamos resultados.</strong> Ni exactitud, ni exhaustividad, ni que un
+      modelo detecte todos los casos que debería detectar. Los sistemas estadísticos se equivocan
+      en ambos sentidos: falsos positivos y falsos negativos.</li>
+      <li><strong>No garantizamos ausencia de sesgo.</strong> Trabajamos para detectarlo y
+      reducirlo, con los datos y las métricas que el proyecto permita, y lo documentamos. Eso no
+      es lo mismo que eliminarlo.</li>
+      <li><strong>Un modelo caduca.</strong> Su calidad depende de datos que cambian; sin
+      monitorización y reentrenamiento, degrada. Si el cliente no contrata ese mantenimiento, la
+      degradación es previsible y no es un defecto del entregable.</li>
+      <li><strong>No tenemos certificaciones de IA</strong> ni las declararemos mientras no las
+      tengamos.</li>
+    </ul>
+
+    <div class="nota aviso">
+      <p><strong>Versión prevalente.</strong> La versión en castellano de esta política es la
+      única que produce efectos. La traducción al inglés se ofrece por comodidad del lector y, en
+      caso de discrepancia, prevalece este texto.</p>
+    </div>
+
+    <div class="doc-pie">
+      <p>Higerotech · Política de IA Responsable · versión 1.0, vigente desde el 16 de septiembre
+      de 2026.</p>
+      <p class="otros">
+        <a href="privacidad.html" data-href-es="privacidad.html" data-href-en="privacy.html">Política de Privacidad</a>
+        <a href="terminos.html" data-href-es="terminos.html" data-href-en="terms.html">Términos de Uso</a>
+        <a href="cookies.html" data-href-es="cookies.html" data-href-en="cookie-notice.html">Aviso de cookies</a>
+      </p>
+    </div>
+
+  </article>
+
+
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <p class="copy">© <span id="year">2026</span> Higerotech.
+        <span data-es="Todos los derechos reservados." data-en="All rights reserved.">Todos los derechos reservados.</span>
+      </p>
+      <nav class="footer-nav" aria-label="Legal">
+        <a href="/" data-es="Inicio" data-en="Home">Inicio</a>
+        <a href="privacidad.html" data-es="Privacidad" data-en="Privacy"
+           data-href-es="privacidad.html" data-href-en="privacy.html">Privacidad</a>
+        <a href="terminos.html" data-es="Términos" data-en="Terms"
+           data-href-es="terminos.html" data-href-en="terms.html">Términos</a>
+        <a href="cookies.html" data-es="Cookies" data-en="Cookies"
+           data-href-es="cookies.html" data-href-en="cookie-notice.html">Cookies</a>
+        <a href="ia-responsable.html" data-es="IA responsable" data-en="Responsible AI"
+           data-href-es="ia-responsable.html" data-href-en="responsible-ai.html">IA responsable</a>
+        <a href="mailto:contacto@higerotech.com">contacto@higerotech.com</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="assets/sitio.js"></script>
+
+</body>
+</html>

@@ -29,7 +29,10 @@
 - [x] Rendimiento dentro de SLOs — **LCP 1 933 ms** (mediana) contra un presupuesto de 2 500
       en **3G lento real**, y 104 KB contra 350. Gateado en el CI. Ver
       `docs/04-testing/rendimiento.md`
-- [x] Mutation testing ≥ 60% — **92,36 %** (133 de 144 mutantes muertos), muy por encima del
+- [x] Mutation testing ≥ 60% — **92,36 %** (133 de 144 mutantes muertos) al cerrar este gate;
+      remedido el 2026-09-16 tras las páginas legales: **92,09 %** (163 de 177). En esa remedición
+      el gate **falló primero** con 89,83 % y se cerró con tres pruebas nuevas, no bajando el
+      umbral. Ver `docs/04-testing/mutacion.md` §Segunda ronda. Muy por encima del
       60 % de la plantilla. Umbral propio en **90**, porque con el techo estructural en 92,36 un
       60 % no podría fallar nunca. Corre **semanal**, no por PR: tarda 6,5 min y doblaría el
       pipeline. Encontró **cinco huecos reales** que se cerraron. Ver `docs/04-testing/mutacion.md`

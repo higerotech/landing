@@ -97,7 +97,7 @@ curl -sI https://higerotech.com/ | grep -i -E 'frame|nosniff|referrer|permission
 
 | Brecha | Riesgo | Estado |
 |---|---|---|
-| CSP con `'unsafe-inline'` | Medio | Aceptado — CSS/JS inline por diseño (ADR-0003) |
+| CSP con `'unsafe-inline'` en `style-src` | Bajo | Aceptado — CSS inline por diseño (ADR-0003). El de `script-src` se eliminó el 2026-09-16 al extraer el JS a `assets/sitio.js` (ADR-0007) |
 | Sin alertas de disponibilidad | Medio | **Abierto** — Gate 5 no superado |
 | SBOM sin archivar por release y sin firma de imagen | Bajo | **Abierto** — Gate 4. El SBOM se genera, pero caduca con el artefacto del run |
 | Sin pruebas automatizadas | Medio | **Abierto** — Gate 3 |

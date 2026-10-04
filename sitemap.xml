@@ -10,4 +10,76 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://higerotech.com/?lang=en" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://higerotech.com/" />
   </url>
+  <url>
+    <loc>https://higerotech.com/privacidad</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://higerotech.com/privacidad" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://higerotech.com/privacy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://higerotech.com/privacidad" />
+  </url>
+  <url>
+    <loc>https://higerotech.com/privacy</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://higerotech.com/privacidad" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://higerotech.com/privacy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://higerotech.com/privacidad" />
+  </url>
+  <url>
+    <loc>https://higerotech.com/terminos</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://higerotech.com/terminos" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://higerotech.com/terms" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://higerotech.com/terminos" />
+  </url>
+  <url>
+    <loc>https://higerotech.com/terms</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://higerotech.com/terminos" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://higerotech.com/terms" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://higerotech.com/terminos" />
+  </url>
+  <url>
+    <loc>https://higerotech.com/cookies</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://higerotech.com/cookies" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://higerotech.com/cookie-notice" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://higerotech.com/cookies" />
+  </url>
+  <url>
+    <loc>https://higerotech.com/cookie-notice</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://higerotech.com/cookies" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://higerotech.com/cookie-notice" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://higerotech.com/cookies" />
+  </url>
+  <url>
+    <loc>https://higerotech.com/ia-responsable</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://higerotech.com/ia-responsable" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://higerotech.com/responsible-ai" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://higerotech.com/ia-responsable" />
+  </url>
+  <url>
+    <loc>https://higerotech.com/responsible-ai</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://higerotech.com/ia-responsable" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://higerotech.com/responsible-ai" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://higerotech.com/ia-responsable" />
+  </url>
 </urlset>

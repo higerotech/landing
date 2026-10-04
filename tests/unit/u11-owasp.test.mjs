@@ -15,7 +15,7 @@
 import { describe, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { cargarDOM, fuente, estaInstrumentado } from '../helpers/cargar-dom.mjs'
+import { cargarDOM, fuente, fuenteJS, estaInstrumentado } from '../helpers/cargar-dom.mjs'
 
 const leer = rel => readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8')
 
@@ -46,7 +46,7 @@ describe('U11 · A01 y A07 — la premisa de «No aplica»', () => {
     /* Refuerza A01/A07 y también la clasificación de datos: el sitio no
        identifica a nadie. `localStorage` sí se usa, para el idioma, y eso está
        documentado y es dato no personal. */
-    for (const archivo of ['index.html', '404.html']) {
+    for (const archivo of ['index.html', '404.html', 'assets/sitio.js']) {
       assert.ok(
         !/document\.cookie/.test(leer(archivo)),
         `${archivo} manipula cookies: revisar la clasificación de datos y A01/A07`
@@ -83,6 +83,59 @@ describe('U11 · A05 — inyección por el único parámetro que se lee', () => 
       assert.ok(
         permitidos.includes(doc.documentElement.lang),
         `setLang(${JSON.stringify(intento)}) dejó lang fuera de la lista permitida`
+      )
+    }
+  })
+})
+
+describe('U11 · A05 — la CSP ya no lleva `unsafe-inline` en script-src', () => {
+  test('U11.8 · no queda ni un script inline ejecutable ni un manejador on*=', {
+    skip: estaInstrumentado() && 'afirma sobre el fuente publicado'
+  }, () => {
+    /* ADR-0007 quitó `'unsafe-inline'` de `script-src`, y eso convierte en
+       contrato lo que antes era una preferencia: en el marcado no puede quedar
+       JavaScript.
+
+       Importa porque el fallo es SILENCIOSO y total. El navegador bloquea el
+       bloque inline sin romper nada más, deja un aviso en una consola que nadie
+       mira, y como `.reveal` está en `opacity: 0` esperando que el JS le añada
+       `.in`, el resultado es una página en blanco. Es T17 otra vez, con la CSP
+       como causa en lugar de una excepción.
+
+       E5.1 también lo vería, pero en un navegador y en el nivel E2E. Esto falla
+       en la unitaria, que es donde se mira primero.
+
+       El `<script type="application/ld+json">` NO cuenta, y por eso se filtra
+       por `type`: es un bloque de datos, el parser no lo prepara como script y
+       la CSP no lo evalúa. */
+    const TIPOS_DE_DATOS = ['application/ld+json', 'application/json', 'text/template']
+
+    /* Sin quitar los comentarios, esta prueba se dispara con la prosa que
+       explica la decisión: los comentarios de index.html mencionan `<script>`
+       y un falso positivo aquí acabaría con alguien borrando la explicación
+       para poner el test en verde. */
+    const sinComentarios = texto => texto.replace(/<!--[\s\S]*?-->/g, '')
+
+    for (const archivo of ['index.html', '404.html']) {
+      const texto = sinComentarios(leer(archivo))
+
+      for (const [etiqueta, atributos] of texto.matchAll(/<script([^>]*)>/gi)) {
+        if (/\bsrc\s*=/i.test(atributos)) continue // externo: lo cubre 'self'
+
+        const tipo = (atributos.match(/type\s*=\s*["']([^"']+)["']/i) ?? [])[1]
+        assert.ok(
+          tipo && TIPOS_DE_DATOS.includes(tipo.toLowerCase()),
+          `${archivo} tiene un <script> inline ejecutable (${etiqueta.trim()}): la CSP lo ` +
+          'bloqueará y la página se queda en blanco. Muévelo a assets/sitio.js'
+        )
+      }
+
+      /* Los manejadores del marcado también son script inline para la CSP, y ni
+         `'unsafe-inline'` sin `'unsafe-hashes'` los habría salvado. */
+      const manejadores = [...texto.matchAll(/\s(on[a-z]+)\s*=\s*["']/gi)].map(m => m[1])
+      assert.deepEqual(
+        manejadores, [],
+        `${archivo} tiene manejadores de evento en el marcado: la CSP los bloquea`
       )
     }
   })
@@ -131,6 +184,96 @@ describe('U11 · A10 — degradación declarada', () => {
         `la pila incluye serif como respaldo: ${pila}`
       )
     }
+  })
+})
+
+describe('U11 · A01 — los comentarios que se publican', () => {
+  test('U11.9 · ningún comentario del código servido filtra un marcador sensible', {
+    skip: estaInstrumentado() && 'afirma sobre el fuente publicado'
+  }, () => {
+    /* Esta prueba existe porque el DAST tuvo que aceptar la regla 10027 de ZAP
+       («Information Disclosure - Suspicious Comments») y hay que cubrir esa
+       ceguera desde aquí.
+
+       POR QUÉ SE ACEPTÓ ESA REGLA. Desde ADR-0007 el JS se sirve como archivo
+       propio, así que ZAP lee sus comentarios — antes, dentro del HTML, no los
+       miraba—. Y salta con la palabra castellana «todo»: su lista de marcadores
+       sospechosos incluye el inglés `TODO`, y la comparación es insensible a
+       mayúsculas. «Todo el JavaScript de index.html» es una frase normal en
+       español, no un marcador pendiente.
+
+       No se arregla reescribiendo la frase: «todo» es una de las palabras más
+       comunes del idioma y volvería a colarse en el siguiente comentario. Y el
+       sitio publica sus comentarios A PROPÓSITO —no hay minificado ni build,
+       ADR-0003 y ADR-0007—, así que la premisa de la regla choca con una
+       decisión de arquitectura.
+
+       QUÉ HACE ESTA PRUEBA EN SU LUGAR: busca marcadores de trabajo pendiente en
+       la forma inequívoca en que este repositorio los escribe, y secretos
+       literales — no palabras sueltas. El detalle, y el error que cometió su
+       primera versión, están junto a la lista. */
+    /* La lista busca DOS cosas, y ninguna es «una palabra»:
+
+       1. **Marcadores de trabajo pendiente**, en la forma inequívoca en que este
+          repositorio los escribe. `TODO` exige mayúsculas y `:` o `>` detrás,
+          para no confundirlo con el «todo» castellano — que es justo el error
+          de la regla 10027 de ZAP.
+       2. **Secretos literales**: una palabra clave seguida de una ASIGNACIÓN a
+          un valor no trivial, y los prefijos de credencial que se reconocen a
+          simple vista.
+
+       La primera versión de esta prueba buscaba las palabras sueltas y repitió
+       exactamente el error que venía a corregir: «token» casó con los **design
+       tokens** de `legal.css`. Buscar «la palabra token» en comentarios escritos
+       por personas produce ruido; buscar `token = "…"` produce hallazgos.
+
+       Tampoco entra «bug»: en los comentarios de este repositorio describe casi
+       siempre un fallo YA ARREGLADO —«el soft 404 fue un bug real»—, que es
+       documentación y no una fuga. */
+    const CLAVES = '(?:contrase(?:ñ|n)a|password|passwd|secret[oa]?|token|api[_\\- ]?key|credencial|credential|private[_\\- ]?key)'
+
+    const SOSPECHOSOS = [
+      { nombre: 'marcador TODO sin resolver', re: /\bTODO\s*[:>]/ },
+      { nombre: 'FIXME', re: /\bFIXME\b/i },
+      { nombre: 'XXX', re: /\bXXX\b/ },
+      { nombre: 'HACK', re: /\bHACK\b/i },
+      { nombre: 'secreto asignado a un literal', re: new RegExp(`${CLAVES}\\s*[:=]\\s*['"\`][^'"\`]{6,}`, 'i') },
+      { nombre: 'credencial con prefijo reconocible', re: /\b(?:sk|pk|rk)_[A-Za-z0-9]{16,}\b|\bAKIA[0-9A-Z]{16}\b|\bghp_[A-Za-z0-9]{20,}\b|\beyJ[A-Za-z0-9_-]{20,}\./ }
+    ]
+
+    /** Comentarios de bloque y de línea de un archivo JS o CSS. */
+    const comentariosDe = texto => [
+      ...texto.matchAll(/\/\*[\s\S]*?\*\//g),
+      ...texto.matchAll(/(?:^|[^:'"\\])\/\/.*$/gm)
+    ].map(m => m[0])
+
+    /** Comentarios HTML. */
+    const comentariosHTML = texto => [...texto.matchAll(/<!--[\s\S]*?-->/g)].map(m => m[0])
+
+    const objetivos = [
+      ['assets/sitio.js', comentariosDe(fuenteJS())],
+      ['index.html', comentariosHTML(fuente())],
+      ['assets/legal.css', comentariosDe(leer('assets/legal.css'))]
+    ]
+
+    const hallazgos = []
+
+    for (const [archivo, comentarios] of objetivos) {
+      for (const comentario of comentarios) {
+        for (const { nombre, re } of SOSPECHOSOS) {
+          const m = comentario.match(re)
+          if (m) {
+            const contexto = comentario.slice(Math.max(0, m.index - 40), m.index + 40).replace(/\s+/g, ' ')
+            hallazgos.push(`${archivo}: ${nombre} → «…${contexto}…»`)
+          }
+        }
+      }
+    }
+
+    assert.deepEqual(
+      hallazgos, [],
+      'hay un marcador sensible en un comentario que se publica tal cual, sin minificar'
+    )
   })
 })
 
